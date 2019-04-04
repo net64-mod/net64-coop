@@ -35,9 +35,10 @@ We recommend to follow these guidelines when writing code for Net64. They aren't
         - memory_handle.hpp
         - mem_ptr.hpp
 
-- Struct, class and enum names should be upper CamelCase:
+- Struct, class, namespace and enum names should be upper CamelCase:
     - `struct GenericBinObject`
     - `enum struct SectionType`
+    - `namespace Memory`
 
 - POD-types and typedefs to PODs should be lower snake_case with a `_t` postfix:
     - `struct my_pod_t`
@@ -46,7 +47,6 @@ We recommend to follow these guidelines when writing code for Net64. They aren't
 - Function, variable and namespace identifiers should be lower snake_case:
     - `int gather_symbols(const SymbolTable&)`
     - `std::size_t current_offset`
-    - `namespace file_formats`
 
 - Additionally please postfix **variables** in these cases:
     - Global variables: `_g` - `unsigned my_global_g`
@@ -107,7 +107,7 @@ Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spac
 #include "util/is_instantiation.hpp"
 
 
-namespace example
+namespace Example
 {
 
 // Namespace contents are not indented
@@ -223,7 +223,7 @@ void foo_bar()
     }
 }
 
-} // example
+} // Example
 
 ```
  
