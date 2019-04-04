@@ -15,6 +15,16 @@
 namespace Core::Memory
 {
 
+/// Indicates pointer in n64 memory
+template<typename T>
+struct be_ptr_t
+{
+    using Type = T;
+    n64_addr_t padding;
+};
+// Has to be 4 bytes large
+static_assert(sizeof(be_ptr_t<void>) == sizeof(n64_addr_t));
+
 // Forward declarations
 template<typename, typename>
 struct Ptr;
@@ -63,7 +73,7 @@ struct AggregateRef
     /// Return reference to struct field
     template<typename T, typename TMember,
              typename = std::enable_if_t<enable_member_v<T>>>
-    auto field(TMember (T::*const member)) const
+    const auto field(TMember (T::*const member)) const
     {
         return make_return_type<TMember>(mem_hdl_, addr_ + offset_u32(member));
     }
@@ -71,7 +81,7 @@ struct AggregateRef
     /// Return pointer to struct field
     template<typename T, typename TMember,
              typename = std::enable_if_t<enable_member_v<T>>>
-    auto field_ptr(TMember (T::*const member)) const
+    const auto field_ptr(TMember (T::*const member)) const
     {
         return Ptr<Qualified<TMember>, HandleType>{mem_hdl_, addr_ + offset_u32(member)};
     }
@@ -79,7 +89,7 @@ struct AggregateRef
     /// Return reference to struct field with array subscription
     template<typename T, typename TMember,
              typename = std::enable_if_t<enable_member_array_v<T, TMember>>>
-    auto field(TMember (T::*const member), AddrType index) const
+    const auto field(TMember (T::*const member), AddrType index) const
     {
         // Bounds checking
         assert(index * sizeof(std::remove_extent_t<TMember>) < sizeof(TMember));
@@ -92,7 +102,7 @@ struct AggregateRef
     /// Return pointer to struct field with array subscription
     template<typename T, typename TMember,
              typename = std::enable_if_t<enable_member_array_v<T, TMember>>>
-    auto field_ptr(TMember (T::*const member), AddrType index) const
+    const auto field_ptr(TMember (T::*const member), AddrType index) const
     {
         // Bounds checking
         assert(index * sizeof(std::remove_extent_t<TMember>) < sizeof(TMember));
@@ -115,11 +125,12 @@ private:
 
     /// Helper function to collapse references to pointers to just pointers
     template<typename T>
-    static auto make_return_type(HandleType hdl, AddrType addr)
+    const auto make_return_type(HandleType hdl, AddrType addr) const
     {
-        if constexpr(Common::is_instantiation_of_v<Ptr, T>)
+        if constexpr(Common::is_instantiation_of_v<be_ptr_t, T>)
         {
-            return T{hdl, addr};
+
+            return Ptr<typename T::Type, HandleType>{hdl, mem_hdl_.template read<AddrType>(addr)};
         }
         else
         {
