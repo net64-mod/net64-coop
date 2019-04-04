@@ -17,11 +17,9 @@ namespace Core::Memory
 namespace Impl
 {
 template<typename T>
-using if_no_specialized_conversion_t = std::enable_if_t<!(std::is_integral_v<T>)>;
-template<typename T>
 constexpr bool is_multibyte_int_v  = (std::is_integral_v<T> && sizeof(T) != 1);
 template<typename T>
-constexpr bool is_singlebyte_int_v = (std::is_integral_v<T> && sizeof(T) == 1);
+using if_no_specialized_conversion_t = std::enable_if_t<!(is_multibyte_int_v<T>)>;
 } // Impl
 
 
