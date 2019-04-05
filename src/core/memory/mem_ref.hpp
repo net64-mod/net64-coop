@@ -38,7 +38,7 @@ struct FundamentalRef;
 /// Typedef to matching reference class
 template<typename T, typename U = Handle>
 using Ref = std::conditional_t<std::is_standard_layout_v<T>,
-    std::conditional_t<std::is_fundamental_v<T>,
+    std::conditional_t<std::is_fundamental_v<T> || std::is_enum_v<T>,
         FundamentalRef<T, U>,
     AggregateRef<T, U>>,
 void>;
