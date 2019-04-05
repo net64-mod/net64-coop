@@ -194,13 +194,13 @@ struct Ptr : PtrBase<TType, sizeof(TType), THandle>
     {}
 
     /// Return reference wrapper to address
-    FundamentalRef<QualifiedType, HandleType> operator*() const
+    Ref<QualifiedType, HandleType> operator*() const
     {
         return {this->mem_hdl_, this->addr_};
     }
 
     /// Return reference wrapper to array field
-    FundamentalRef<QualifiedType, HandleType> operator[](USizeType i) const
+    Ref<QualifiedType, HandleType> operator[](USizeType i) const
     {
         return {this->mem_hdl_, this->addr_ + Base::SIZE * i};
     }
