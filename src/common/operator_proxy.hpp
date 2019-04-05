@@ -21,17 +21,17 @@ template<typename T>
 struct OperatorProxy
 {
     OperatorProxy(T val)
-    :m_val{std::move(val)}
+    :val_{std::move(val)}
     {
     }
 
     T* operator->()
     {
-        return &m_val;
+        return &val_;
     }
 
 private:
-    T m_val;
+    T val_;
 };
 
 } // Common
