@@ -215,7 +215,7 @@ struct Ptr : PtrBase<TType, sizeof(TType), THandle>
 
 /// Fancy pointer specialization for pointer types (int*, float**)
 template<typename TType, typename THandle>
-struct Ptr<be_ptr_t<TType>, THandle> : PtrBase<TType, sizeof(typename THandle::addr_t), THandle>
+struct Ptr<N64Ptr<TType>, THandle> : PtrBase<TType, sizeof(typename THandle::addr_t), THandle>
 {
     using Base = PtrBase<TType, sizeof(typename THandle::addr_t), THandle>;
     using HandleType = THandle;

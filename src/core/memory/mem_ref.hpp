@@ -15,15 +15,15 @@
 namespace Core::Memory
 {
 
-/// Indicates pointer in n64 memory
+/// Indicates big endian pointer in n64 memory
 template<typename T>
-struct be_ptr_t
+struct N64Ptr
 {
     using Type = T;
     n64_addr_t padding;
 };
 // Has to be 4 bytes large
-static_assert(sizeof(be_ptr_t<void>) == sizeof(n64_addr_t));
+static_assert(sizeof(N64Ptr<void>) == sizeof(n64_addr_t));
 
 // Forward declarations
 template<typename, typename>
@@ -127,7 +127,7 @@ private:
     template<typename T>
     const auto make_return_type(HandleType hdl, AddrType addr) const
     {
-        if constexpr(Common::is_instantiation_of_v<be_ptr_t, T>)
+        if constexpr(Common::is_instantiation_of_v<N64Ptr, T>)
         {
 
             return Ptr<typename T::Type, HandleType>{hdl, mem_hdl_.template read<AddrType>(addr)};
