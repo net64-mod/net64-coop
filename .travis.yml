@@ -1,11 +1,11 @@
 language: cpp
 matrix:
   include:
-    - os: linux
-      env: NAME="linux gcc"
+    - env: NAME="linux gcc"
+      os: linux
       dist: xenial
       compiler: gcc
-      sudo required
+      sudo: required
       addons:
         apt:
           sources:
