@@ -13,5 +13,5 @@ install:
 before_script:
 - mkdir build
 - cd build
-- cmake .. -DBUILD_QT_FRONTEND=OFF
+- cmake .. -DBUILD_QT_FRONTEND=OFF -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7
 script: make
