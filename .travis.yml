@@ -12,5 +12,5 @@ install:
 before_script:
 - mkdir build
 - cd build
-- cmake ..
+- cmake .. -DBUILD_FRONTEND OFF
 script: make
