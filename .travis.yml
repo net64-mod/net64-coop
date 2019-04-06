@@ -8,8 +8,7 @@ os:
 install:
 - sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1397BC53640DB551
 - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
-- sudo add-apt-repository --yes ppa:beineri/opt-qt57-trusty
-- sudo apt-get install -qq g++-7 qt57-meta-full
+- sudo apt-get install -qq g++-7
 before_script:
 - mkdir build
 - cd build
