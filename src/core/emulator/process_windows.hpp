@@ -13,6 +13,7 @@
 #include <optional>
 #include <string_view>
 #include <vector>
+#include <Windows.h>
 #include <Memoryapi.h>
 #include "core/logging.hpp"
 #include "core/emulator/process_handle_base.hpp"
