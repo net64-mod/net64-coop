@@ -1,5 +1,8 @@
 # Net64
 
+
+[![Travis](https://travis-ci.org/net64-mod/net64-coop.svg?branch=master)](https://travis-ci.org/net64-mod/net64-coop)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/h05a12lw1tbab6q8/branch/master?svg=true)](https://ci.appveyor.com/project/Henrik0x7F/net64-coop-qyobq/branch/master)
 [![Discord](https://img.shields.io/discord/559982917049253898.svg?colorB=697ec4&logo=discord&logoColor=white&style=flat)](https://discord.gg/GgGUKH8)
 
 Net64 is a work in progress Super Mario 64 modification providing fully featured cooperative multiplayer over the internet. It is written in C++ / MIPS assembly targeting Windows and Linux operating systems with a wide range of emulator compatibility.
