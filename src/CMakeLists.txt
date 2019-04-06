@@ -3,6 +3,13 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/build_info.cpp.in" "${GIT_REVISION_F
 
 include_directories(. ../externals)
 
-add_subdirectory(core)
+option(BUILD_CORE "Build core library" ON)
+option(BUILD_QT_FRONTEND "Build the Qt5 userinterface" ON)
 
-add_subdirectory(qt_gui)
+if(BUILD_CORE)
+    add_subdirectory(core)
+endif()
+
+if(BUILD_QT_FRONTEND)
+    add_subdirectory(qt_gui)
+endif()

@@ -1,0 +1,24 @@
+language: cpp
+matrix:
+  include:
+    - env: NAME="linux gcc"
+      os: linux
+      dist: xenial
+      compiler: gcc
+      sudo: required
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - cmake
+            - qtbase5-dev
+            - qtbase5-dev-tools
+      before_script:
+        - mkdir build
+        - cd build
+        - export CC=gcc-7
+        - export CXX=g++-7
+        - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7
+      script: make
