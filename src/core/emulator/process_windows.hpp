@@ -13,7 +13,11 @@
 #include <optional>
 #include <string_view>
 #include <vector>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #include <Memoryapi.h>
+#undef max // #*@!
+#undef WIN32_LEAN_AND_MEAN
 #include "core/logging.hpp"
 #include "core/emulator/process_handle_base.hpp"
 #include "types.hpp"
@@ -23,7 +27,7 @@ namespace Core
 {
 
 /// Provides functionality to access a process on Linux
-struct ProcessWindows
+struct ProcessWindows : ProcessBase
 {
     ~ProcessWindows();
 

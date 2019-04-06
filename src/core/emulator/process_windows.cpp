@@ -12,6 +12,7 @@
 #include <fstream>
 #include <string>
 #include <thread>
+#include <Windows.h>
 
 
 namespace Core
@@ -36,7 +37,7 @@ void ProcessWindows::start(std::string_view executable)
                       0, nullptr, nullptr, &start_info, &proc_info_)
        == 0)
     {
-        std::error_code errc{GetLastError(), std::generic_category()};
+        std::error_code errc{(int)GetLastError(), std::generic_category()};
         logger_->error("Failed to start process \"{}\". Error code: ", executable, errc);
         throw std::system_error(errc);
     }
@@ -98,7 +99,7 @@ void ProcessWindows::write_memory(std::uintptr_t addr, const u8* data, std::size
 {
     if(WriteProcessMemory(proc_info_.hProcess, reinterpret_cast<void*>(addr), data, n, nullptr) == 0)
     {
-        std::error_code errc{GetLastError(), std::generic_category()};
+        std::error_code errc{(int)GetLastError(), std::generic_category()};
         logger_->error("Failed memory access at {:#x}-{:#x}. Error code: {}", addr, addr + n, errc);
         throw std::system_error(errc);
     }
@@ -108,7 +109,7 @@ void ProcessWindows::read_memory(std::uintptr_t addr, u8* data, std::size_t n)
 {
     if(ReadProcessMemory(proc_info_.hProcess, reinterpret_cast<void*>(addr), data, n, nullptr) == 0)
     {
-        std::error_code errc{GetLastError(), std::generic_category()};
+        std::error_code errc{(int)GetLastError(), std::generic_category()};
         logger_->error("Failed memory access at {:#x}-{:#x}. Error code: {}", addr, addr + n, errc);
         throw std::system_error(errc);
     }
