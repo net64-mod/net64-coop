@@ -5,6 +5,7 @@ compiler:
 - gcc
 os:
 - linux
+env: CXX=g++-7 CC=gcc-7
 install:
 - sudo add-apt-repository --yes ppa:jonathonf/gcc-7.1
 - sudo apt-get update
@@ -12,5 +13,5 @@ install:
 before_script:
 - mkdir build
 - cd build
-- cmake .. -DBUILD_QT_FRONTEND OFF
+- cmake .. -DBUILD_QT_FRONTEND=OFF
 script: make
