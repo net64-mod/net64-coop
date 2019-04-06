@@ -14,6 +14,6 @@
     namespace Core{using Process = ProcessLinux;}
 #elif defined USE_PROCESS_HANDLE_WINDOWS_
     #include "core/emulator/process_windows.hpp"
-    namespace Core{using Process = ProcessWindows};
+    namespace Core{using Process = ProcessWindows;};
     using Process = ProcessWindows;
 #endif
