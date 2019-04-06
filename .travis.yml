@@ -6,9 +6,9 @@ compiler:
 os:
 - linux
 install:
-- sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1397BC53640DB551
-- sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
-- sudo apt-get install -qq g++-6
+- sudo add-apt-repository --yes ppa:jonathonf/gcc-7.1
+- sudo apt-get update
+- sudo apt-get install -y g++-7
 before_script:
 - mkdir build
 - cd build
