@@ -7,8 +7,7 @@ configuration:
   - Release
 
 before_build:
-    - cmake -G "Visual Studio 15 2017 Win64" . -DQt5_DIR="C:\Qt\5.12.1\msvc2017_64\lib\cmake\Qt5"
-    - dir
+    - cmake -G "Visual Studio 15 2017 Win64" . -DCMAKE_GENERATOR_PLATFORM=x64 -DQt5_DIR="C:\Qt\5.12.1\msvc2017_64\lib\cmake\Qt5"
 
 build:
   project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
