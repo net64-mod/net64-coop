@@ -24,7 +24,7 @@ namespace Core
 {
 
 /// Provides functionality to access a process on Linux
-struct ProcessWindows
+struct ProcessWindows : ProcessBase
 {
     ~ProcessWindows();
 
