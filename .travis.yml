@@ -1,17 +1,22 @@
 language: cpp
-dist: xenial
-sudo: required
-compiler:
-- gcc
-os:
-- linux
-env: CXX=g++-7 CC=gcc-7
-install:
-- sudo add-apt-repository --yes ppa:jonathonf/gcc-7.1
-- sudo apt-get update
-- sudo apt-get install -y g++-7
-before_script:
-- mkdir build
-- cd build
-- cmake .. -DBUILD_QT_FRONTEND=OFF -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7
-script: make
+matrix:
+  include:
+    - env: NAME="linux gcc"
+      os: linux
+      dist: xenial
+      compiler: gcc
+      sudo required
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - cmake
+      before_script:
+        - mkdir build
+        - cd build
+        - export CC=gcc-7
+        - export CXX=g++-7
+        - cmake .. -DBUILD_QT_FRONTEND=OFF -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7
+      script: make
