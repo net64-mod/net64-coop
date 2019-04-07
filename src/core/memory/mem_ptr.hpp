@@ -290,7 +290,7 @@ struct Ptr<N64Ptr<const TType>, THandle> : PtrBase<TType, sizeof(typename THandl
 };
 
 /// Pointer to const typedef
-template<typename T, typename U>
+template<typename T, typename U = Handle>
 using CPtr = Ptr<const T, U>;
 
 } // Core::Memory
