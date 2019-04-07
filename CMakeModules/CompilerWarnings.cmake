@@ -4,6 +4,7 @@ set(MSVC_WERROR "/Wx")
 set(GCC_WARNINGS
         -Wall
         -Wextra
+        -Wno-attributes
         #-Wshadow
         -Wnon-virtual-dtor
         -Wdouble-promotion
