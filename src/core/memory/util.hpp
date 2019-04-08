@@ -17,15 +17,10 @@ namespace Core::Memory
 
 /// Return offset of member-pointer
 template<typename T, typename U, typename V>
-T offset(U V::*const ptr)
+T offset_of(V U::*const ptr)
 {
-    return static_cast<T>(reinterpret_cast<const std::size_t&>(ptr));
-}
-
-template<typename U, typename V>
-n64_addr_t offset_u32(U V::* const ptr)
-{
-    return offset<n64_addr_t>(ptr);
+    static U val{};
+    return static_cast<T>(reinterpret_cast<std::uintptr_t>(&(val.*ptr)) - reinterpret_cast<std::uintptr_t>(&val));
 }
 
 

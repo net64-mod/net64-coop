@@ -52,6 +52,7 @@ template<typename TType, typename THandle>
 struct AggregateRef
 {
     using AddrType = typename THandle::addr_t;
+    using USizeType = typename THandle::usize_t;
     using RawType = std::remove_cv_t<TType>;
     using QualifiedType = std::remove_volatile_t<TType>;
     using HandleType = THandle;
@@ -75,7 +76,7 @@ struct AggregateRef
              typename = std::enable_if_t<enable_member_v<T>>>
     const auto field(TMember (T::*const member)) const
     {
-        return make_return_type<TMember>(mem_hdl_, addr_ + offset_u32(member));
+        return make_return_type<TMember>(mem_hdl_, addr_ + offset_of<USizeType>(member));
     }
 
     /// Return pointer to struct field
@@ -83,7 +84,7 @@ struct AggregateRef
              typename = std::enable_if_t<enable_member_v<T>>>
     const auto field_ptr(TMember (T::*const member)) const
     {
-        return Ptr<Qualified<TMember>, HandleType>{mem_hdl_, addr_ + offset_u32(member)};
+        return Ptr<Qualified<TMember>, HandleType>{mem_hdl_, addr_ + offset_of<USizeType>(member)};
     }
 
     /// Return reference to struct field with array subscription
@@ -95,7 +96,7 @@ struct AggregateRef
         assert(index * sizeof(std::remove_extent_t<TMember>) < sizeof(TMember));
 
         return make_return_type<Qualified<std::remove_extent_t<TMember>>>(
-            mem_hdl_, addr_ + offset_u32(member) + index * (AddrType)sizeof(std::remove_extent_t<TMember>)
+            mem_hdl_, addr_ + offset_of<USizeType>(member) + index * (AddrType)sizeof(std::remove_extent_t<TMember>)
         );
     }
 
@@ -108,7 +109,7 @@ struct AggregateRef
         assert(index * sizeof(std::remove_extent_t<TMember>) < sizeof(TMember));
 
         return AggregateRef<Qualified<std::remove_extent_t<TMember>>, HandleType>{
-            mem_hdl_, addr_ + offset_u32(member) + index * (AddrType)sizeof(std::remove_extent_t<TMember>)
+            mem_hdl_, addr_ + offset_of<USizeType>(member) + index * (AddrType)sizeof(std::remove_extent_t<TMember>)
         };
     }
 
