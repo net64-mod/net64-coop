@@ -11,7 +11,7 @@
 namespace Core::Memory
 {
 
-Handle::Handle(Emulator& hdl)
+Handle::Handle(Emulator::EmulatorBase& hdl)
 {
     set_emulator(hdl);
 }
@@ -26,14 +26,14 @@ bool Handle::operator!=(const Handle& other) const
     return !(*this == other);
 }
 
-void Handle::set_emulator(Emulator& hdl)
+void Handle::set_emulator(Emulator::EmulatorBase& hdl)
 {
     if(!hdl.valid())
         throw std::logic_error("MemoryHandle initialized with invalid emulator handle");
     emu_ = &hdl;
 }
 
-const Emulator& Handle::emulator() const
+const Emulator::EmulatorBase& Handle::emulator() const
 {
     return *emu_;
 }

@@ -8,7 +8,7 @@
 #pragma once
 
 #include <limits>
-#include "core/emulator/emulator_handle.hpp"
+#include "core/emulator/emulator.hpp"
 #include "core/memory/conversion.hpp"
 
 
@@ -29,7 +29,7 @@ struct Handle
 
     static constexpr addr_t INVALID_OFFSET{std::numeric_limits<addr_t>::max()};
 
-    explicit Handle(Emulator& hdl);
+    explicit Handle(Emulator::EmulatorBase& hdl);
 
     Handle(const Handle&) = default;
 
@@ -37,10 +37,10 @@ struct Handle
     bool operator!=(const Handle& other) const;
 
     /// Set the referenced emulator
-    void set_emulator(Emulator& hdl);
+    void set_emulator(Emulator::EmulatorBase& hdl);
 
     /// Return referenced emulator (const)
-    const Emulator& emulator() const;
+    const Emulator::EmulatorBase& emulator() const;
 
     /// Check if referenced emulator is valid
     bool valid() const;
@@ -87,7 +87,7 @@ struct Handle
     static bool valid_offset(addr_t offset);
 
 protected:
-    Emulator* emu_;
+    Emulator::EmulatorBase* emu_;
 };
 
 
