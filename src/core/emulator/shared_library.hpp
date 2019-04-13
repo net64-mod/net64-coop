@@ -21,7 +21,7 @@ namespace Core::Emulator
 
 dynlib_t load_library(const char* lib_path);
 
-dynlib_t get_current_library();
+dynlib_t get_current_process();
 
 bool free_library(dynlib_t lib);
 

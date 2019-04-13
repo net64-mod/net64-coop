@@ -13,12 +13,12 @@
 
 dynlib_t Core::Emulator::load_library(const char* lib_path)
 {
-    return dlopen(lib_path, RTLD_NOW);
+    return dlopen(lib_path, RTLD_LAZY);
 }
 
-dynlib_t Core::Emulator::get_current_library()
+dynlib_t Core::Emulator::get_current_process()
 {
-    return dlopen(nullptr, RTLD_NOW);
+    return dlopen(nullptr, RTLD_LAZY);
 }
 
 bool Core::Emulator::free_library(dynlib_t lib)
@@ -38,7 +38,7 @@ dynlib_t Core::Emulator::load_library(const char* lib_path)
     return LoadLibraryA(lib_path);
 }
 
-dynlib_t Core::Emulator::get_current_library()
+dynlib_t Core::Emulator::get_current_process()
 {
     dynlib_t module;
     GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModule(), &module);

@@ -35,7 +35,7 @@ struct EmulatorBase
     virtual void write_memory(std::size_t addr, const void* data, std::size_t n) = 0;
 
     /// Check if emulator is running
-    virtual bool running()const = 0;
+    virtual bool running() const = 0;
 
     /// Return name of emulator
     std::string_view name() const;

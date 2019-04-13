@@ -14,4 +14,14 @@ add_library(64coop_core STATIC
         memory/mem_ptr.hpp
         memory/mem_ref.hpp
         game/msg_queue.cpp
-        game/msg_queue.hpp emulator/emulator.cpp emulator/emulator.hpp emulator/m64plus.cpp emulator/m64plus.hpp emulator/shared_library.cpp emulator/shared_library.hpp)
+        game/msg_queue.hpp
+        emulator/emulator.cpp
+        emulator/emulator.hpp
+        emulator/m64plus.cpp
+        emulator/m64plus.hpp
+        emulator/shared_library.cpp
+        emulator/shared_library.hpp)
+
+if(UNIX)
+    target_link_libraries(64coop_core -ldl)
+endif()

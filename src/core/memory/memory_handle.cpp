@@ -28,19 +28,12 @@ bool Handle::operator!=(const Handle& other) const
 
 void Handle::set_emulator(Emulator::EmulatorBase& hdl)
 {
-    if(!hdl.valid())
-        throw std::logic_error("MemoryHandle initialized with invalid emulator handle");
     emu_ = &hdl;
 }
 
 const Emulator::EmulatorBase& Handle::emulator() const
 {
     return *emu_;
-}
-
-bool Handle::valid() const
-{
-    return emu_->valid();
 }
 
 void Handle::read_raw(addr_t offset, u8* data, usize_t n)
@@ -55,7 +48,7 @@ void Handle::write_raw(addr_t offset, const u8* data, usize_t n)
 
 bool Handle::valid_offset(addr_t offset)
 {
-    return offset < Emulator::RAM_SIZE;
+    return offset < Emulator::EmulatorBase::RAM_SIZE;
 }
 
 } // Core::Memory

@@ -42,9 +42,6 @@ struct Handle
     /// Return referenced emulator (const)
     const Emulator::EmulatorBase& emulator() const;
 
-    /// Check if referenced emulator is valid
-    bool valid() const;
-
     /// Read n bytes from offset
     void read_raw(addr_t offset, u8 data[], usize_t n);
 
