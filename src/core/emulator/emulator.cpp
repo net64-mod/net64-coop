@@ -20,4 +20,40 @@ std::string_view EmulatorBase::name() const
     return name_;
 }
 
+namespace
+{
+
+const struct EmulatorErrorCondCategory : std::error_category
+{
+    const char* name() const noexcept override
+    {
+        return "emulator_error_condition";
+    }
+    std::string message(int ev) const override
+    {
+        switch(static_cast<EmulatorErrorCond>(ev))
+        {
+        case EmulatorErrorCond::MEM_ACCESS_VIOLATION:
+            return "";
+        case EmulatorErrorCond::NOT_RUNNING:
+            return "";
+        case EmulatorErrorCond::ROM_EXEC_FAIL:
+            return "";
+        case EmulatorErrorCond::ROM_LOAD_FAIL:
+            return "";
+        default:
+            return "[Unknown Condition]";
+        }
+    }
+    bool equivalent(const std::error_code& code, int cond) const noexcept override
+    {
+        switch(static_cast<EmulatorErrorCond>(cond))
+        {
+
+        }
+    }
+};
+
+} // anonymous
+
 } // Core::Emulator

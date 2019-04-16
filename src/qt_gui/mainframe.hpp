@@ -1,9 +1,12 @@
 #ifndef MAINFRAME_HPP
 #define MAINFRAME_HPP
 
+#include <future>
+#include <optional>
+#include <thread>
 #include <QWidget>
 #include <spdlog/spdlog.h>
-#include "core/emulator/emulator_handle.hpp"
+#include "core/emulator/m64plus.hpp"
 
 
 namespace Ui {
@@ -26,12 +29,12 @@ public:
 private slots:
     void on_tbx_emu_path_returnPressed();
     void on_btn_start_emu_clicked();
-    void on_btn_base_addr_clicked();
 
 private:
     Ui::MainFrame* ui;
-    Core::Emulator emu_;
-    mutable LoggerPtr logger_{spdlog::get("Frontend")};
+    std::optional<Core::Emulator::M64Plus> emu_;
+    std::future<void> execution_thread_;
+    mutable LoggerPtr logger_{spdlog::get("frontend")};
 };
 
 } // Frontend

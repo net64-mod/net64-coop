@@ -8,12 +8,22 @@
 #pragma once
 
 #include <string>
+#include <system_error>
 #include "core/logging.hpp"
 #include "types.hpp"
 
 
 namespace Core::Emulator
 {
+
+/// Generic emulator errors
+enum struct EmulatorErrorCond
+{
+    ROM_LOAD_FAIL = 1,
+    ROM_EXEC_FAIL,
+    MEM_ACCESS_VIOLATION,
+    NOT_RUNNING
+};
 
 struct EmulatorBase
 {
@@ -27,6 +37,9 @@ struct EmulatorBase
 
     /// Execute rom, blocking
     virtual void execute() = 0;
+
+    /// Stop execution
+    virtual void stop() = 0;
 
     /// Read n bytes from addr
     virtual void read_memory(std::size_t addr, void* data, std::size_t n) = 0;
@@ -51,3 +64,12 @@ protected:
 };
 
 } // Core::Emulator
+
+
+namespace std
+{
+
+template<>
+struct is_error_condition_enum<::Core::Emulator::EmulatorErrorCond> : std::true_type{};
+
+} // std

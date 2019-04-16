@@ -45,7 +45,7 @@ void setup_logging()
     auto stdout_sink{std::make_shared<spdlog::sinks::stderr_color_sink_mt>()};
     stdout_sink->set_pattern("[%^%l%$] [%n] %v");
     stdout_sink->set_level(spdlog::level::info);
-    LoggerPtr frontend_logger{new spdlog::logger("Frontend", {global_log_file, stdout_sink})};
+    LoggerPtr frontend_logger{new spdlog::logger("frontend", {global_log_file, stdout_sink})};
     spdlog::register_logger(frontend_logger);
 
     // Setup logging of Core
@@ -54,7 +54,7 @@ void setup_logging()
             std::make_shared<spdlog::sinks::stderr_color_sink_mt>(), global_log_file
         };
 
-        sinks[0]->set_pattern("[%^%l%$] [Core::%n] %v");
+        sinks[0]->set_pattern("[%^%l%$] [core::%n] %v");
         sinks[0]->set_level(spdlog::level::info);
 
         return sinks;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     QApplication app{argc, argv};
 
     // Log system information
-    auto logger{spdlog::get("Frontend")};
+    auto logger{spdlog::get("frontend")};
     logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
                  QCoreApplication::applicationVersion().toStdString());
     logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
@@ -95,3 +95,5 @@ int main(int argc, char* argv[])
 
     return QApplication::exec();
 }
+
+

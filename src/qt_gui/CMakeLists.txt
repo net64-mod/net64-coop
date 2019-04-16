@@ -14,3 +14,7 @@ target_link_libraries(net64_qt_gui 64coop_core)
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 target_link_libraries(net64_qt_gui Qt5::Widgets)
 include_directories(${Qt5_Widgtes_INCLUDES})
+
+if(UNIX)
+    target_link_libraries(net64_qt_gui -lpthread -lstdc++fs )
+endif()

@@ -8,7 +8,10 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <string>
+#include <string_view>
+#include <system_error>
 #include <optional>
 #include <mupen64plus/m64p_types.h>
 #include "core/emulator/emulator.hpp"
@@ -20,9 +23,22 @@ namespace Core::Emulator
 
 struct M64PPlugin;
 
+struct M64PPluginInfo
+{
+    m64p_plugin_type type{M64PLUGIN_NULL};
+    int plugin_version{},
+        api_version{},
+        capabilities{};
+    std::string name;
+};
+
+/**
+ * Dynamically loaded Mupen64Plus core
+ */
 struct M64PCore
 {
     // Function pointer types
+    using plugin_get_version_t = m64p_error(*)(m64p_plugin_type*, int*, int*, const char**, int*);
     using core_startup_t = m64p_error(*)(int, const char*, const char*, void*, void(*)(void*, int, const char*),
                                          void*, void(*)(void*, m64p_core_param, int));
     using core_shutdown_t = m64p_error(*)();
@@ -32,13 +48,13 @@ struct M64PCore
     using debug_get_mem_ptr_t = void*(*)(m64p_dbg_memptr_type);
 
     /// Create core from current process
-    M64PCore();
+    M64PCore(std::string_view config_path, std::string_view data_path);
 
     /// Create core from dynamic library handle
-    M64PCore(dynlib_t lib);
+    M64PCore(dynlib_t lib, std::string_view config_path, std::string_view data_path);
 
     /// Create plugin from library path
-    M64PCore(std::string_view lib_path);
+    M64PCore(std::string_view lib_path, std::string_view config_path, std::string_view data_path);
 
     /// Non-copyable
     M64PCore(const M64PCore&) = delete;
@@ -59,24 +75,27 @@ struct M64PCore
 
     void* get_mem_ptr();
 
-    void do_cmd(m64p_command cmd, int p1, void* p2);
+    m64p_error do_cmd(m64p_command cmd, int p1, void* p2);
 
     dynlib_t handle();
 
+    const M64PPluginInfo& info() const;
+
 private:
     void init_symbols();
-    void init_core();
+    void init_core(std::string_view config_path, std::string_view data_path);
     void destroy_core();
 
     template<typename T>
-    T resolve_symbol(const char* name)
+    void resolve_symbol(T& fn_ptr, const char* name)
     {
-        return reinterpret_cast<T>(get_symbol(handle_, name));
+        fn_ptr = reinterpret_cast<T>(get_symbol(handle_, name));
     }
 
     dynlib_t handle_{};
     struct
     {
+        plugin_get_version_t plugin_get_version;
         core_startup_t core_startup;
         core_shutdown_t core_shutdown;
         core_attach_plugin_t core_attach_plugin;
@@ -84,10 +103,11 @@ private:
         core_do_cmd_t core_do_cmd;
         debug_get_mem_ptr_t debug_get_mem_ptr;
     }fn_{};
+    M64PPluginInfo info_;
 };
 
 /**
- * Dynamically loaded mupen64plus plugin
+ * Dynamically loaded Mupen64Plus plugin
  */
 struct M64PPlugin
 {
@@ -115,18 +135,12 @@ struct M64PPlugin
 
     friend void swap(M64PPlugin& first, M64PPlugin& second) noexcept;
 
-    /// Return plugin type
-    m64p_plugin_type type() const;
-
-    std::string_view name() const;
-
-    int plugin_version() const;
-
-    int api_version() const;
-
-    int capabilities() const;
+    const M64PPluginInfo& info() const;
 
     dynlib_t handle();
+
+    static M64PPluginInfo get_plugin_info(std::string_view lib_path);
+    static M64PPluginInfo get_plugin_info(dynlib_t lib);
 
 private:
     void init_symbols();
@@ -134,25 +148,25 @@ private:
     void destroy_plugin();
 
     template<typename T>
-    T resolve_symbol(const char* name)
+    void resolve_symbol(T& fn_ptr, const char* name)
     {
-        return reinterpret_cast<T>(get_symbol(handle_, name));
+        fn_ptr = reinterpret_cast<T>(get_symbol(handle_, name));
     }
 
+
     dynlib_t handle_{};
-    m64p_plugin_type type_{};
-    std::string name_;
-    int plugin_version_{},
-        api_version_{},
-        capabilities_{};
     struct
     {
         plugin_startup_t startup;
         plugin_shutdown_t shutdown;
         plugin_get_version_t get_version;
     }fn_{};
+    M64PPluginInfo info_;
 };
 
+/**
+ * Mupen64Plus instance
+ */
 struct M64Plus final : EmulatorBase
 {
     explicit M64Plus(M64PCore&& core);
@@ -180,6 +194,8 @@ struct M64Plus final : EmulatorBase
 
     void execute() override;
 
+    void stop() override;
+
     void read_memory(std::size_t addr, void* data, std::size_t n) override;
 
     void write_memory(std::size_t addr, const void* data, std::size_t n) override;
@@ -198,8 +214,36 @@ private:
 
     M64PCore core_;
     std::array<std::optional<M64PPlugin>, 6> plugins_{};
-    std::uintptr_t rdram_addr_{};
-    bool running_{};
+    std::atomic_bool running_{};
+    bool rom_loaded_{};
+};
+
+/// Mupen64Plus interface error codes
+enum struct M64PError
+{
+    LIB_NOT_FOUND = 1,
+    SYM_NOT_FOUND,
+    BASE_ADDR_NOT_FOUND
 };
 
 } // Core::Emulator
+
+
+/// Overload for Mupen64Plus interface error codes
+std::error_code make_error_code(Core::Emulator::M64PError e);
+
+/// Overload for Mupen64Plus internal error codes
+std::error_code make_error_code(m64p_error e);
+
+namespace std
+{
+
+/// Specialization for Mupen64Plus interface error codes
+template<>
+struct is_error_code_enum<::Core::Emulator::M64PError> : std::true_type{};
+
+/// Specialization for Mupen64Plus internal error codes
+template<>
+struct is_error_code_enum<m64p_error> : std::true_type{};
+
+} // std
