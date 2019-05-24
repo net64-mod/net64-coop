@@ -8,22 +8,12 @@
 #pragma once
 
 #include <string>
-#include <system_error>
 #include "core/logging.hpp"
 #include "types.hpp"
 
 
 namespace Core::Emulator
 {
-
-/// Generic emulator errors
-enum struct EmulatorErrorCond
-{
-    ROM_LOAD_FAIL = 1,
-    ROM_EXEC_FAIL,
-    MEM_ACCESS_VIOLATION,
-    NOT_RUNNING
-};
 
 struct EmulatorBase
 {
@@ -60,16 +50,8 @@ protected:
     explicit EmulatorBase(std::string emu_name);
 
     std::string name_;
-    mutable LoggerPtr logger_{get_logger("emulator")};
+
+    CLASS_LOGGER_("emulator");
 };
 
 } // Core::Emulator
-
-
-namespace std
-{
-
-template<>
-struct is_error_condition_enum<::Core::Emulator::EmulatorErrorCond> : std::true_type{};
-
-} // std

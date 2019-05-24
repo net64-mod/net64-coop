@@ -7,52 +7,103 @@
 
 #include "shared_library.hpp"
 
-
+#include <utility>
 #ifdef __linux__
 #include <dlfcn.h>
+#endif
 
-dynlib_t Core::Emulator::load_library(const char* lib_path)
+
+namespace Core::Emulator
+{
+
+UniqueLib::UniqueLib(dynlib_t hdl)
+:lib{hdl}
+{}
+
+UniqueLib::UniqueLib(UniqueLib&& other) noexcept
+:lib(other.lib)
+{
+    other.lib = nullptr;
+}
+
+UniqueLib& UniqueLib::operator=(UniqueLib&& other) noexcept
+{
+    std::swap(lib, other.lib);
+
+    return *this;
+}
+
+UniqueLib::~UniqueLib()
+{
+    if(lib)
+        free_library(lib);
+}
+
+void UniqueLib::reset(dynlib_t hdl)
+{
+    if(lib)
+        free_library(lib);
+    lib = hdl;
+}
+
+#ifdef __linux__
+
+dynlib_t load_library(const char* lib_path)
 {
     return dlopen(lib_path, RTLD_LAZY);
 }
 
-dynlib_t Core::Emulator::get_current_process()
+dynlib_t get_current_process()
 {
     return dlopen(nullptr, RTLD_LAZY);
 }
 
-bool Core::Emulator::free_library(dynlib_t lib)
+bool free_library(dynlib_t lib)
 {
     return dlclose(lib) == 0;
 }
 
-void* Core::Emulator::get_symbol(dynlib_t lib, const char* symbol_name)
+void* get_symbol(dynlib_t lib, const char* symbol_name)
 {
     return dlsym(lib, symbol_name);
 }
 
+std::string get_lib_error_msg()
+{
+    auto msg{dlerror()};
+    return {msg ? msg : ""};
+}
+
+
 #elif defined _WIN32
 
-dynlib_t Core::Emulator::load_library(const char* lib_path)
+dynlib_t load_library(const char* lib_path)
 {
     return LoadLibraryA(lib_path);
 }
 
-dynlib_t Core::Emulator::get_current_process()
+dynlib_t get_current_process()
 {
     dynlib_t module;
-    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModule(), &module);
+    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)get_current_process, &module);
     return module;
 }
 
-bool Core::Emulator::free_library(dynlib_t lib)
+bool free_library(dynlib_t lib)
 {
     return FreeLibrary(lib) != 0;
 }
 
-bool Core::Emulator::get_symbol(dynlib_t lib, const char* symbol_name)
+void* get_symbol(dynlib_t lib, const char* symbol_name)
 {
     return GetProcAddress(lib, symbol_name);
 }
 
+std::string get_lib_error_msg()
+{
+    return std::to_string(GetLastError());
+}
+
 #endif
+
+} // Core::Emulator

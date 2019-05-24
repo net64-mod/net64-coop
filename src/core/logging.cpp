@@ -22,9 +22,9 @@ private:
 
 SinkFactory& LoggingSinks::get_sink_fn()
 {
-    static SinkFactory s_sink_fn{};
+    static SinkFactory sink_fn_s{};
 
-    return s_sink_fn;
+    return sink_fn_s;
 }
 
 void init_logging_sinks(const SinkFactory& fn)
@@ -43,7 +43,7 @@ std::vector<spdlog::sink_ptr> get_logging_sinks()
 std::shared_ptr<spdlog::logger> get_logger(std::string_view name)
 {
     [[maybe_unused]]
-    static bool s_initialized = []{
+    static bool initialized_s = []{
         auto sinks{get_logging_sinks()};
 
         auto emu_logger{std::make_shared<spdlog::logger>("emulator", sinks.begin(), sinks.end())};

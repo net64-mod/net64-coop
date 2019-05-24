@@ -5,8 +5,8 @@
 #include <optional>
 #include <thread>
 #include <QWidget>
-#include <spdlog/spdlog.h>
 #include "core/emulator/m64plus.hpp"
+#include "core/logging.hpp"
 
 
 namespace Ui {
@@ -34,7 +34,8 @@ private:
     Ui::MainFrame* ui;
     std::optional<Core::Emulator::M64Plus> emu_;
     std::future<void> execution_thread_;
-    mutable LoggerPtr logger_{spdlog::get("frontend")};
+
+    CLASS_LOGGER_("frontend");
 };
 
 } // Frontend

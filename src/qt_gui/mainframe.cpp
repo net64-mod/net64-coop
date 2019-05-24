@@ -9,13 +9,18 @@ namespace Frontend
 {
 
 namespace fs = std::experimental::filesystem;
+using namespace std::string_literals;
 
 MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
 {
+    using namespace Core::Emulator::M64PTypes;
+
     ui->setupUi(this);
 
+    ui->tbx_emu_path->setText("");
 
+    const char* plugin_dir{""};
 
     for(const auto& entry : fs::directory_iterator(plugin_dir))
     {
@@ -42,6 +47,11 @@ MainFrame::MainFrame(QWidget* parent)
 
 MainFrame::~MainFrame()
 {
+    if(emu_.has_value())
+    {
+        emu_ = {};
+        execution_thread_.get();
+    }
     delete ui;
 }
 
@@ -54,44 +64,59 @@ void MainFrame::on_btn_start_emu_clicked()
 {
     if(emu_.has_value())
     {
-        emu_->stop();
-        execution_thread_.get();
         emu_ = {};
+        execution_thread_.get();
 
         ui->btn_start_emu->setText("Start");
 
         return;
     }
 
-    emu_ = Core::Emulator::M64Plus{{
-{
-    }};
-
-    std::ifstream rom_file{ui->tbx_emu_path->text().toStdString(), std::ios::binary | std::ios::ate};
-    if(!rom_file.is_open())
+    try
     {
-        logger_->error("Failed to open rom\n");
-        emu_ = {};
-        return;
+        emu_ =
+            Core::Emulator::M64Plus{{"",
+                                        "",
+                                        ""
+        }};
+
+        std::ifstream rom_file{ui->tbx_emu_path->text().toStdString(), std::ios::binary | std::ios::ate};
+        if(!rom_file.is_open())
+        {
+            logger()->error("Failed to open rom\n");
+            emu_ = {};
+            return;
+        }
+        std::vector<char> rom_image(rom_file.tellg());
+        rom_file.seekg(0);
+        rom_file.read(rom_image.data(), rom_image.size());
+        rom_file.close();
+
+        emu_->load_rom(rom_image.data(), rom_image.size());
+
+        const char* plugin_dir{""};
+        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_gfx_plugin->currentText().toStdString()});
+        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_audio_plugin->currentText().toStdString()});
+        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_rsp_plugin->currentText().toStdString()});
+        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_input_plugin->currentText().toStdString()});
+
+        execution_thread_ = std::async(std::launch::async, [this]()
+        {
+            emu_->execute();
+        });
+
+        ui->btn_start_emu->setText("Stop");
     }
-    std::vector<char> rom_image(rom_file.tellg());
-    rom_file.seekg(0);
-    rom_file.read(rom_image.data(), rom_image.size());
-    rom_file.close();
-
-    emu_->load_rom(rom_image.data(), rom_image.size());
-
-    emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_gfx_plugin->currentText().toStdString()});
-    emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_audio_plugin->currentText().toStdString()});
-    emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_rsp_plugin->currentText().toStdString()});
-    emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_input_plugin->currentText().toStdString()});
-
-    execution_thread_ = std::async(std::launch::async, [this]()
+    catch(const std::system_error& e)
     {
-        emu_->execute();
-    });
+        emu_ = {};
 
-    ui->btn_start_emu->setText("Stop");
+        QMessageBox box;
+        box.setWindowTitle("Error in " + QString::fromStdString(e.code().category().name()));
+        box.setText(QString::fromStdString("An error has occurred: "s + e.what() + "\nError code: " +
+                    e.code().category().name() + ":"s + std::to_string(e.code().value())));
+        box.exec();
+    }
 }
 
 } // Frontend

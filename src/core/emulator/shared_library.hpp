@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string>
+
 #ifdef __linux__
     using dynlib_t = void*;
 #elif defined _WIN32
@@ -19,6 +21,26 @@
 namespace Core::Emulator
 {
 
+struct UniqueLib
+{
+    UniqueLib() = default;
+
+    explicit UniqueLib(dynlib_t hdl);
+
+    UniqueLib(const UniqueLib&) = delete;
+
+    UniqueLib(UniqueLib&& other) noexcept;
+
+    UniqueLib& operator=(UniqueLib&& other) noexcept;
+
+    ~UniqueLib();
+
+    void reset(dynlib_t hdl = nullptr);
+
+
+    dynlib_t lib{nullptr};
+};
+
 dynlib_t load_library(const char* lib_path);
 
 dynlib_t get_current_process();
@@ -26,5 +48,7 @@ dynlib_t get_current_process();
 bool free_library(dynlib_t lib);
 
 void* get_symbol(dynlib_t lib, const char* symbol_name);
+
+std::string get_lib_error_msg();
 
 } // Core::Emulator
