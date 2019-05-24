@@ -140,8 +140,7 @@ void M64PCore::init_core(std::string_view config_path, std::string_view data_pat
 
     info_.name = name_ptr;
 
-    // @todo: Correct params
-    ret = fn_.core_startup(/*131841*/M64P_CORE_API_VERSION, std::string{config_path}.c_str(), std::string{data_path}.c_str(),
+    ret = fn_.core_startup(M64P_CORE_API_VERSION, std::string{config_path}.c_str(), std::string{data_path}.c_str(),
                            nullptr, nullptr, nullptr, nullptr);
     if(failed(ret))
     {

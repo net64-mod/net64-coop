@@ -20,5 +20,5 @@ matrix:
         - cd build
         - export CC=gcc-7
         - export CXX=g++-7
-        - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7 -DBUILD_QT_FRONTEND=false
+        - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7
       script: make
