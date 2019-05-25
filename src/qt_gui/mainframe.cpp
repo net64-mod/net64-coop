@@ -14,18 +14,18 @@ using namespace std::string_literals;
 MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
 {
-    using namespace Core::Emulator::M64PTypes;
+    using namespace Core::Emulator::M64Plus::M64PTypes;
 
     ui->setupUi(this);
 
     ui->tbx_emu_path->setText("");
 
-    const char* plugin_dir{"/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/lib"};
+    const char* plugin_dir{""};
 
     for(const auto& entry : fs::directory_iterator(plugin_dir))
     {
         const auto& path{entry.path()};
-        switch(Core::Emulator::M64PPlugin::get_plugin_info(path.string()).type)
+        switch(Core::Emulator::M64Plus::Plugin::get_plugin_info(path.string()).type)
         {
         case M64PLUGIN_RSP:
             ui->cbx_rsp_plugin->addItem(QString::fromStdString(path.filename().string()));
@@ -50,7 +50,8 @@ MainFrame::~MainFrame()
     if(emu_.has_value())
     {
         emu_ = {};
-        execution_thread_.get();
+        try{emulation_thread_.get();}
+        catch(...){}
     }
     delete ui;
 }
@@ -65,7 +66,18 @@ void MainFrame::on_btn_start_emu_clicked()
     if(emu_.has_value())
     {
         emu_ = {};
-        execution_thread_.get();
+        try
+        {
+            emulation_thread_.get();
+        }
+        catch(const std::system_error& e)
+        {
+            QMessageBox box;
+            box.setWindowTitle("Error in " + QString::fromStdString(e.code().category().name()));
+            box.setText(QString::fromStdString("An error has occurred: "s + e.what() + "\nError code: " +
+                                               e.code().category().name() + ":"s + std::to_string(e.code().value())));
+            box.exec();
+        }
 
         ui->btn_start_emu->setText("Start");
 
@@ -74,10 +86,10 @@ void MainFrame::on_btn_start_emu_clicked()
 
     try
     {
-        emu_ =
-            Core::Emulator::M64Plus{{"/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/lib/libmupen64plus.so.2",
-                                        "/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/config",
-                                        "/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/data"
+        emu_ = Core::Emulator::M64Plus::Instance{{
+                "",
+                "",
+                ""
         }};
 
         std::ifstream rom_file{ui->tbx_emu_path->text().toStdString(), std::ios::binary | std::ios::ate};
@@ -94,13 +106,13 @@ void MainFrame::on_btn_start_emu_clicked()
 
         emu_->load_rom(rom_image.data(), rom_image.size());
 
-        const char* plugin_dir{"/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/lib/"};
+        const char* plugin_dir{""};
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_gfx_plugin->currentText().toStdString()});
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_audio_plugin->currentText().toStdString()});
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_rsp_plugin->currentText().toStdString()});
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_input_plugin->currentText().toStdString()});
 
-        execution_thread_ = std::async(std::launch::async, [this]()
+        emulation_thread_ = std::async(std::launch::async, [this]()
         {
             emu_->execute();
         });

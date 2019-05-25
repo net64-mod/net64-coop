@@ -19,6 +19,8 @@
 namespace Frontend
 {
 
+using Core::LoggerPtr;
+
 bool create_app_dirs()
 {
     if(!QDir{}.mkpath(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)))

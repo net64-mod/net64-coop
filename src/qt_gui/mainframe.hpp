@@ -18,8 +18,6 @@ class MainFrame;
 namespace Frontend
 {
 
-using LoggerPtr = std::shared_ptr<spdlog::logger>;
-
 class MainFrame : public QWidget
 {
 Q_OBJECT
@@ -34,8 +32,8 @@ private slots:
 
 private:
     Ui::MainFrame* ui;
-    std::optional<Core::Emulator::M64Plus> emu_;
-    std::future<void> execution_thread_;
+    std::optional<Core::Emulator::M64Plus::Instance> emu_;
+    std::future<void> emulation_thread_;
 
     CLASS_LOGGER_("frontend");
 };
