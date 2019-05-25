@@ -20,7 +20,7 @@ MainFrame::MainFrame(QWidget* parent)
 
     ui->tbx_emu_path->setText("");
 
-    const char* plugin_dir{""};
+    const char* plugin_dir{"/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/lib"};
 
     for(const auto& entry : fs::directory_iterator(plugin_dir))
     {
@@ -28,16 +28,16 @@ MainFrame::MainFrame(QWidget* parent)
         switch(Core::Emulator::M64PPlugin::get_plugin_info(path.string()).type)
         {
         case M64PLUGIN_RSP:
-            ui->cbx_rsp_plugin->addItem(QString::fromStdString(path.filename()));
+            ui->cbx_rsp_plugin->addItem(QString::fromStdString(path.filename().string()));
             break;
         case M64PLUGIN_GFX:
-            ui->cbx_gfx_plugin->addItem(QString::fromStdString(path.filename()));
+            ui->cbx_gfx_plugin->addItem(QString::fromStdString(path.filename().string()));
             break;
         case M64PLUGIN_AUDIO:
-            ui->cbx_audio_plugin->addItem(QString::fromStdString(path.filename()));
+            ui->cbx_audio_plugin->addItem(QString::fromStdString(path.filename().string()));
             break;
         case M64PLUGIN_INPUT:
-            ui->cbx_input_plugin->addItem(QString::fromStdString(path.filename()));
+            ui->cbx_input_plugin->addItem(QString::fromStdString(path.filename().string()));
         default: break;
         }
     }
@@ -75,15 +75,15 @@ void MainFrame::on_btn_start_emu_clicked()
     try
     {
         emu_ =
-            Core::Emulator::M64Plus{{"",
-                                        "",
-                                        ""
+            Core::Emulator::M64Plus{{"/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/lib/libmupen64plus.so.2",
+                                        "/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/config",
+                                        "/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/data"
         }};
 
         std::ifstream rom_file{ui->tbx_emu_path->text().toStdString(), std::ios::binary | std::ios::ate};
         if(!rom_file.is_open())
         {
-            logger()->error("Failed to open rom\n");
+            logger()->error("Failed to open rom");
             emu_ = {};
             return;
         }
@@ -94,7 +94,7 @@ void MainFrame::on_btn_start_emu_clicked()
 
         emu_->load_rom(rom_image.data(), rom_image.size());
 
-        const char* plugin_dir{""};
+        const char* plugin_dir{"/home/henrik/Dokumente/C++Projekte/net64-coop/local/m64p/lib/"};
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_gfx_plugin->currentText().toStdString()});
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_audio_plugin->currentText().toStdString()});
         emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_rsp_plugin->currentText().toStdString()});
