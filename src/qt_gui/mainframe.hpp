@@ -5,8 +5,10 @@
 #include <optional>
 #include <thread>
 #include <QWidget>
+#ifndef Q_MOC_RUN
 #include "core/emulator/m64plus.hpp"
 #include "core/logging.hpp"
+#endif
 
 
 namespace Ui {

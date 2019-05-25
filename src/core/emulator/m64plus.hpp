@@ -221,6 +221,8 @@ struct M64Plus final : EmulatorBase
 
     bool has_plugin(M64PTypes::m64p_plugin_type type) const;
 
+    static const char* plugin_type_str(M64PTypes::m64p_plugin_type type_id);
+
 private:
     void attach_plugins();
     void detach_plugins();

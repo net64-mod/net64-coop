@@ -147,12 +147,12 @@ void M64PCore::init_core(std::string_view config_path, std::string_view data_pat
         // Failed to startup core
         info_ = {};
         auto errc{make_error_code(ret)};
-        logger()->error("Failed to start core \"{}\" v{}, api: {} (capabilities: {}): {}",
+        logger()->error("Failed to start {} v{}, api: {} (capabilities: {:#x}): {}",
                         name_ptr, info_.plugin_version, info_.api_version, info_.capabilities, errc.message());
         throw std::system_error(errc);
     }
 
-    logger()->info("Initialized core \"{}\" v{}, api: {:#x} (capabilities: {})",
+    logger()->info("Initialized {} v{}, api: {:#x} (capabilities: {:#x})",
                   name_ptr, info_.plugin_version, info_.api_version, info_.capabilities);
 }
 
@@ -165,6 +165,7 @@ void M64PCore::destroy_core()
         auto errc{make_error_code(ret)};
         logger()->warn("Failed to correctly shutdown core: ", errc.message());
     }
+    logger()->info("Shutdown mupen64plus {}", M64Plus::plugin_type_str(M64PTypes::M64PLUGIN_CORE));
 }
 
 dynlib_t M64PCore::handle()
@@ -295,16 +296,18 @@ void M64PPlugin::init_plugin(dynlib_t core_lib)
     {
         // Plugin failed to initialize
         auto errc{make_error_code(ret)};
-        logger()->error("Failed to startup plugin \"{}\" v{}, api: {} (type: {}, capabilities: {}): {}",
-                    name_ptr, info_.plugin_version, info_.api_version, info_.type, info_.capabilities, errc.message());
+        logger()->error("Failed to start mupen64plus {} plugin {} v{}, api: {} (capabilities: {:#x}): {}",
+                        M64Plus::plugin_type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version,
+                        info_.capabilities, errc.message());
         info_ = {};
         throw std::system_error(errc);
     }
 
     info_.name = name_ptr;
 
-    logger()->info("Initialized plugin \"{}\" v{}, api: {:#x} (type: {}, capabilities: {})",
-                  name_ptr, info_.plugin_version, info_.api_version, info_.type, info_.capabilities);
+    logger()->info("Initialized mupen64plus {} plugin {} v{}, api: {:#x} (capabilities: {:#x})",
+                   M64Plus::plugin_type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version,
+                   info_.capabilities);
 }
 
 void M64PPlugin::destroy_plugin()
@@ -316,6 +319,8 @@ void M64PPlugin::destroy_plugin()
         auto errc{make_error_code(ret)};
         logger()->warn("Failed to correctly shutdown plugin {}: {}", info_.name, errc.message());
     }
+
+    logger()->info("Shutdown mupen64plus {} plugin", M64Plus::plugin_type_str(info_.type));
 }
 
 
@@ -400,6 +405,7 @@ void M64Plus::execute()
 {
     running_ = true;
     attach_plugins();
+    logger()->info("Started n64 emulation");
     auto ret{core_.do_cmd(M64PTypes::M64CMD_EXECUTE, 0, nullptr)};
     detach_plugins();
     running_ = false;
@@ -410,6 +416,8 @@ void M64Plus::execute()
         logger()->error("Error executing ROM image: {}", errc.message());
         throw std::system_error(errc);
     }
+
+    logger()->info("Stopped n64 emulation");
 }
 
 void M64Plus::stop()
@@ -512,6 +520,29 @@ void M64Plus::detach_plugins()
 bool M64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 {
     return plugins_[type].has_value();
+}
+
+const char* M64Plus::plugin_type_str(M64PTypes::m64p_plugin_type type_id)
+{
+    using namespace M64PTypes;
+
+    switch(type_id)
+    {
+    case M64PLUGIN_RSP:
+        return "RSP";
+    case M64PLUGIN_GFX:
+        return "VIDEO";
+    case M64PLUGIN_AUDIO:
+        return "AUDIO";
+    case M64PLUGIN_INPUT:
+        return "INPUT";
+    case M64PLUGIN_CORE:
+        return "CORE";
+    case M64PLUGIN_NULL:
+        return "NULL";
+    default:
+        return "Invalid plugin type";
+    }
 }
 
 } // Core::Emulator
