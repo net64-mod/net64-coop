@@ -1,9 +1,14 @@
 #ifndef MAINFRAME_HPP
 #define MAINFRAME_HPP
 
+#include <future>
+#include <optional>
+#include <thread>
 #include <QWidget>
-#include <spdlog/spdlog.h>
-#include "core/emulator/emulator_handle.hpp"
+#ifndef Q_MOC_RUN
+#include "core/emulator/m64plus.hpp"
+#include "core/logging.hpp"
+#endif
 
 
 namespace Ui {
@@ -12,8 +17,6 @@ class MainFrame;
 
 namespace Frontend
 {
-
-using LoggerPtr = std::shared_ptr<spdlog::logger>;
 
 class MainFrame : public QWidget
 {
@@ -26,12 +29,13 @@ public:
 private slots:
     void on_tbx_emu_path_returnPressed();
     void on_btn_start_emu_clicked();
-    void on_btn_base_addr_clicked();
 
 private:
     Ui::MainFrame* ui;
-    Core::Emulator emu_;
-    mutable LoggerPtr logger_{spdlog::get("Frontend")};
+    std::optional<Core::Emulator::Mupen64Plus> emu_;
+    std::future<void> emulation_thread_;
+
+    CLASS_LOGGER_("frontend");
 };
 
 } // Frontend

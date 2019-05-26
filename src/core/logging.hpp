@@ -24,4 +24,12 @@ void init_logging_sinks(const SinkFactory& fn);
 std::vector<spdlog::sink_ptr> get_logging_sinks();
 std::shared_ptr<spdlog::logger> get_logger(std::string_view name);
 
+#define CLASS_LOGGER_N_(name, fn_name) static spdlog::logger* fn_name() \
+                                       { \
+                                           static ::Core::LoggerPtr logger_s{::Core::get_logger(name)}; \
+                                           return logger_s.get(); \
+                                       }
+
+#define CLASS_LOGGER_(name) CLASS_LOGGER_N_(name, logger)
+
 } // Core
