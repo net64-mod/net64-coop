@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
     QCoreApplication::setApplicationName("Net64-Coop");
     QCoreApplication::setOrganizationName("Net64 Project");
-    QCoreApplication::setApplicationVersion({build_info::GIT_DESC});
+    QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
 
     if(!create_app_dirs())
         return 1;

@@ -8,7 +8,7 @@
 #pragma once
 
 
-namespace build_info
+namespace BuildInfo
 {
 
 extern const char GIT_REV[],
