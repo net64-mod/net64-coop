@@ -20,4 +20,16 @@ std::string_view EmulatorBase::name() const
     return name_;
 }
 
+spdlog::logger* EmulatorBase::logger()
+{
+    static LoggerPtr logger_s{[this]()
+    {
+        auto logger{get_logger("emulator")->clone(name_)};
+        spdlog::register_logger(logger);
+        return logger;
+    }()};
+
+    return logger_s.get();
+}
+
 } // Core::Emulator

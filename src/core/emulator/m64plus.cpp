@@ -11,7 +11,7 @@
 #include <string>
 
 
-namespace Core::Emulator::M64Plus
+namespace Core::Emulator
 {
 
 template<typename... TArgs>
@@ -19,6 +19,19 @@ bool all_true(const TArgs& ... args)
 {
     return (args && ...);
 }
+
+namespace
+{
+
+bool failed(Mupen64Plus::Error err)
+{
+    return err != Mupen64Plus::Error::SUCCESS;
+}
+
+}
+
+namespace M64PlusHelper
+{
 
 Core::Core(std::string_view config_path, std::string_view data_path)
 :Core(get_current_process(), config_path, data_path)
@@ -128,8 +141,8 @@ void Core::init_symbols()
 void Core::init_core(std::string_view config_path, std::string_view data_path)
 {
     const char* name_ptr{};
-    auto ret{fn_.plugin_get_version(&info_.type, &info_.plugin_version,
-             &info_.api_version, &name_ptr, &info_.capabilities)};
+    auto ret{
+    fn_.plugin_get_version(&info_.type, &info_.plugin_version, &info_.api_version, &name_ptr, &info_.capabilities)};
     if(failed(ret))
     {
         // Failed to get core info
@@ -140,20 +153,20 @@ void Core::init_core(std::string_view config_path, std::string_view data_path)
 
     info_.name = name_ptr;
 
-    ret = fn_.core_startup(CORE_API_VERSION, std::string{config_path}.c_str(), std::string{data_path}.c_str(),
-                           nullptr, nullptr, nullptr, nullptr);
+    ret = fn_.core_startup(CORE_API_VERSION, std::string{config_path}.c_str(), std::string{data_path}.c_str(), nullptr,
+                           nullptr, nullptr, nullptr);
     if(failed(ret))
     {
         // Failed to startup core
         info_ = {};
         auto errc{make_error_code(ret)};
-        logger()->error("Failed to start {} v{}, api: {} (capabilities: {:#x}): {}",
-                        name_ptr, info_.plugin_version, info_.api_version, info_.capabilities, errc.message());
+        logger()->error("Failed to start {} v{}, api: {} (capabilities: {:#x}): {}", name_ptr, info_.plugin_version,
+                        info_.api_version, info_.capabilities, errc.message());
         throw std::system_error(errc);
     }
 
-    logger()->info("Initialized {} v{}, api: {:#x} (capabilities: {:#x})",
-                  name_ptr, info_.plugin_version, info_.api_version, info_.capabilities);
+    logger()->info("Initialized {} v{}, api: {:#x} (capabilities: {:#x})", name_ptr, info_.plugin_version,
+                   info_.api_version, info_.capabilities);
 }
 
 void Core::destroy_core()
@@ -201,7 +214,8 @@ Plugin::Plugin(Core& core, std::string_view lib_path)
 
 Plugin::Plugin(Plugin&& other) noexcept
 :handle_{std::move(other.handle_)}, fn_{other.fn_}, info_{other.info_}
-{}
+{
+}
 
 Plugin& Plugin::operator=(Plugin&& other) noexcept
 {
@@ -251,7 +265,7 @@ PluginInfo Plugin::get_plugin_info(std::string_view lib_path)
 
 PluginInfo Plugin::get_plugin_info(dynlib_t lib)
 {
-    PluginInfo info;
+    PluginInfo info{};
     auto get_version{reinterpret_cast<plugin_get_version_t>(get_symbol(lib, "PluginGetVersion"))};
     if(!get_version)
         return {};
@@ -304,7 +318,7 @@ void Plugin::init_symbols()
 void Plugin::init_plugin(dynlib_t core_lib)
 {
     const char* name_ptr{};
-    auto ret {fn_.get_version(&info_.type, &info_.plugin_version, &info_.api_version, &name_ptr, &info_.capabilities)};
+    auto ret{fn_.get_version(&info_.type, &info_.plugin_version, &info_.api_version, &name_ptr, &info_.capabilities)};
     if(failed(ret))
     {
         // Failed to retrieve version info
@@ -329,8 +343,7 @@ void Plugin::init_plugin(dynlib_t core_lib)
     info_.name = name_ptr;
 
     logger()->info("Initialized mupen64plus {} plugin {} v{}, api: {:#x} (capabilities: {:#x})",
-                   Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version,
-                   info_.capabilities);
+                   Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version, info_.capabilities);
 }
 
 void Plugin::destroy_plugin()
@@ -346,27 +359,28 @@ void Plugin::destroy_plugin()
     logger()->info("Shutdown mupen64plus {} plugin", Plugin::type_str(info_.type));
 }
 
+} // M64PlusHelper
 
-Instance::Instance(Core&& core)
-:EmulatorBase("Mupen64Plus"), core_{std::move(core)}
+Mupen64Plus::Mupen64Plus(Core&& core)
+:EmulatorBase("mupen64plus"), core_{std::move(core)}
 {
 }
 
-Instance::Instance(Instance&& other) noexcept
-:EmulatorBase("Mupen64Plus"), core_{std::move(other.core_)},
+Mupen64Plus::Mupen64Plus(Mupen64Plus&& other) noexcept
+:EmulatorBase("mupen64plus"), core_{std::move(other.core_)},
 plugins_{std::move(other.plugins_)},
 running_{other.running_.load()}
 {
 }
 
-Instance& Instance::operator=(Instance&& other) noexcept
+Mupen64Plus& Mupen64Plus::operator=(Mupen64Plus&& other) noexcept
 {
     swap(*this, other);
 
     return *this;
 }
 
-Instance::~Instance()
+Mupen64Plus::~Mupen64Plus()
 {
     if(core_.handle() != nullptr && rom_loaded())
     {
@@ -376,7 +390,7 @@ Instance::~Instance()
     }
 }
 
-void swap(Instance& first, Instance& second) noexcept
+void swap(Mupen64Plus& first, Mupen64Plus& second) noexcept
 {
     using std::swap;
 
@@ -386,21 +400,21 @@ void swap(Instance& first, Instance& second) noexcept
     first.running_.exchange(second.running_);
 }
 
-void Instance::add_plugin(Plugin&& plugin)
+void Mupen64Plus::add_plugin(Plugin&& plugin)
 {
     assert(!running_);
 
     plugins_[plugin.info().type] = std::move(plugin);
 }
 
-void Instance::remove_plugin(M64PTypes::m64p_plugin_type type)
+void Mupen64Plus::remove_plugin(M64PTypes::m64p_plugin_type type)
 {
     assert(!running_);
 
     plugins_[type] = {};
 }
 
-void Instance::load_rom(void* rom_data, std::size_t n)
+void Mupen64Plus::load_rom(void* rom_data, std::size_t n)
 {
     auto ret {core_.do_cmd(M64PTypes::M64CMD_ROM_OPEN, static_cast<int>(n), rom_data)};
     if(failed(ret))
@@ -412,7 +426,7 @@ void Instance::load_rom(void* rom_data, std::size_t n)
     rom_loaded_ = true;
 }
 
-void Instance::unload_rom()
+void Mupen64Plus::unload_rom()
 {
     rom_loaded_ = false;
 
@@ -424,7 +438,7 @@ void Instance::unload_rom()
     }
 }
 
-void Instance::execute()
+void Mupen64Plus::execute()
 {
     running_ = true;
     attach_plugins();
@@ -443,7 +457,7 @@ void Instance::execute()
     logger()->info("Stopped n64 emulation");
 }
 
-void Instance::stop()
+void Mupen64Plus::stop()
 {
     using namespace M64PTypes;
 
@@ -465,7 +479,7 @@ void Instance::stop()
     }while(state != M64EMU_STOPPED);
 }
 
-void Instance::read_memory(std::size_t addr, void* data, std::size_t n)
+void Mupen64Plus::read_memory(std::size_t addr, void* data, std::size_t n)
 {
     auto base{reinterpret_cast<std::uintptr_t>(core_.get_mem_ptr())};
     if(addr + n > RAM_SIZE)
@@ -485,7 +499,7 @@ void Instance::read_memory(std::size_t addr, void* data, std::size_t n)
     std::copy_n(reinterpret_cast<u8*>(base + addr), n, reinterpret_cast<u8*>(data));
 }
 
-void Instance::write_memory(std::size_t addr, const void* data, std::size_t n)
+void Mupen64Plus::write_memory(std::size_t addr, const void* data, std::size_t n)
 {
     auto base{reinterpret_cast<std::uintptr_t>(core_.get_mem_ptr())};
     if(addr + n > RAM_SIZE)
@@ -505,22 +519,22 @@ void Instance::write_memory(std::size_t addr, const void* data, std::size_t n)
     std::copy_n(reinterpret_cast<const u8*>(data), n, reinterpret_cast<u8*>(base + addr));
 }
 
-Core& Instance::core()
+Mupen64Plus::Core& Mupen64Plus::core()
 {
     return core_;
 }
 
-bool Instance::running() const
+bool Mupen64Plus::running() const
 {
     return running_;
 }
 
-bool Instance::rom_loaded() const
+bool Mupen64Plus::rom_loaded() const
 {
     return rom_loaded_;
 }
 
-void Instance::attach_plugins()
+void Mupen64Plus::attach_plugins()
 {
     using namespace M64PTypes;
 
@@ -530,7 +544,7 @@ void Instance::attach_plugins()
     core_.attach_plugin(plugins_[M64PLUGIN_RSP].value());
 }
 
-void Instance::detach_plugins()
+void Mupen64Plus::detach_plugins()
 {
     using namespace M64PTypes;
 
@@ -540,18 +554,18 @@ void Instance::detach_plugins()
     core_.detach_plugin(plugins_[M64PLUGIN_RSP]->info().type);
 }
 
-bool Instance::has_plugin(M64PTypes::m64p_plugin_type type) const
+bool Mupen64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 {
     return plugins_[type].has_value();
 }
 
-} // Core::Emulator::M64Plus
+} // Core::Emulator
 
 
 namespace
 {
 
-static const struct ErrorCategory : std::error_category
+const struct M64PlusErrorCategory : std::error_category
 {
     const char* name() const noexcept override
     {
@@ -559,7 +573,7 @@ static const struct ErrorCategory : std::error_category
     }
     std::string message(int ev) const override
     {
-        using Core::Emulator::M64Plus::Error;
+        using Core::Emulator::M64PlusHelper::Error;
         
         switch(static_cast<Error>(ev))
         {
@@ -602,11 +616,11 @@ static const struct ErrorCategory : std::error_category
             return "[Unknown Error]";
         }
     }
-}error_category_g;
+}m64p_error_category_g;
 
 } // anonymous
 
-std::error_code make_error_code(Core::Emulator::M64Plus::Error e)
+std::error_code make_error_code(Core::Emulator::Mupen64Plus::Error e)
 {
-    return {static_cast<int>(e), error_category_g};
+    return {static_cast<int>(e), m64p_error_category_g};
 }

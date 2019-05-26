@@ -14,7 +14,7 @@ using namespace std::string_literals;
 MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
 {
-    using namespace Core::Emulator::M64Plus::M64PTypes;
+    using namespace Core::Emulator::M64PTypes;
 
     ui->setupUi(this);
 
@@ -25,7 +25,7 @@ MainFrame::MainFrame(QWidget* parent)
     for(const auto& entry : fs::directory_iterator(plugin_dir))
     {
         const auto& path{entry.path()};
-        switch(Core::Emulator::M64Plus::Plugin::get_plugin_info(path.string()).type)
+        switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(path.string()).type)
         {
         case M64PLUGIN_RSP:
             ui->cbx_rsp_plugin->addItem(QString::fromStdString(path.filename().string()));
@@ -86,7 +86,7 @@ void MainFrame::on_btn_start_emu_clicked()
 
     try
     {
-        emu_ = Core::Emulator::M64Plus::Instance{{
+        emu_ = Core::Emulator::Mupen64Plus{{
                 "",
                 "",
                 ""

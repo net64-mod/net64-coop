@@ -15,6 +15,7 @@
 namespace Core::Emulator
 {
 
+/// Interface for n64 emulators
 struct EmulatorBase
 {
     virtual ~EmulatorBase() = default;
@@ -49,9 +50,11 @@ struct EmulatorBase
 protected:
     explicit EmulatorBase(std::string emu_name);
 
+    spdlog::logger* logger();
+
     std::string name_;
 
-    CLASS_LOGGER_("emulator");
+    CLASS_LOGGER_N_("emulator", base_logger)
 };
 
 } // Core::Emulator

@@ -32,7 +32,7 @@ private slots:
 
 private:
     Ui::MainFrame* ui;
-    std::optional<Core::Emulator::M64Plus::Instance> emu_;
+    std::optional<Core::Emulator::Mupen64Plus> emu_;
     std::future<void> emulation_thread_;
 
     CLASS_LOGGER_("frontend");
