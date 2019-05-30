@@ -15,7 +15,7 @@ MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
 {
     using namespace Core::Emulator::M64PTypes;
-	using json = nlohmann::json;
+    using json = nlohmann::json;
 
     ui->setupUi(this);
 
