@@ -87,7 +87,7 @@ void MainFrame::on_btn_start_emu_clicked()
     try
     {
         emu_ = Core::Emulator::Mupen64Plus{{
-                "",
+                {},
                 "",
                 ""
         }};
