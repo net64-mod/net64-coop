@@ -48,9 +48,9 @@ void UniqueLib::reset(dynlib_t hdl)
 
 #ifdef __linux__
 
-dynlib_t load_library(const char* lib_path)
+dynlib_t load_library(const fs::directory_entry& lib_file)
 {
-    return dlopen(lib_path, RTLD_LAZY);
+    return dlopen(lib_file.path().string().c_str(), RTLD_LAZY);
 }
 
 dynlib_t get_current_process()
@@ -77,14 +77,22 @@ std::string get_lib_error_msg()
 
 #elif defined _WIN32
 
-dynlib_t load_library(const char* lib_path)
+dynlib_t load_library(const fs::directory_entry& lib_file)
 {
 	// Disable the warning popup
-	auto old_error_mode{GetThreadErrorMode()};
+	auto old_error_mode{ GetThreadErrorMode() };
 	SetThreadErrorMode(SEM_FAILCRITICALERRORS, nullptr);
 
-	auto lib{LoadLibraryA(lib_path)};
+	// Add the file directory to the search path
+	// so that dependencies of the lib get loaded correctly
+	SetDllDirectoryA(lib_file.path().parent_path().string().c_str());
 
+	auto lib{ LoadLibraryA(lib_file.path().string().c_str()) };
+
+	// Remove dir again
+	SetDllDirectory(nullptr);
+
+	// Restore old warning behaviour
 	SetThreadErrorMode(old_error_mode, nullptr);
 
 	return lib;
