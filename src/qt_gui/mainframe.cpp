@@ -46,19 +46,20 @@ MainFrame::MainFrame(QWidget* parent)
 
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 	
-	std::fstream configFile;
+    std::fstream configFile;
+    //Don't bother opening the file if it's size is zero
+    if (fs::file_size(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH) != 0)
+    {
+        configFile.open(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH);
 
-	configFile.open(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH);
-
-	if (configFile.good())
-	{
-		json lastSave;
-		if (!configFile.eof())
+        if (configFile.good())
         {
+            json lastSave;
+
             configFile >> lastSave;
             //messy conversion
             ui->tbx_emu_path->setText(QString::fromStdString((std::string)lastSave["rom"]));
-			
+
             //find index of last GFX
             QString toFind = QString::fromStdString((std::string)lastSave["gfx"]);
             int index = ui->cbx_gfx_plugin->findText(toFind);
@@ -68,43 +69,41 @@ MainFrame::MainFrame(QWidget* parent)
             {
                 //set it as the current index
                 ui->cbx_gfx_plugin->setCurrentIndex(index);
-			}
+            }
 
+            toFind = QString::fromStdString((std::string)lastSave["audio"]);
+            index = ui->cbx_audio_plugin->findText(toFind);
 
-			QString toFind = QString::fromStdString((std::string)lastSave["audio"]);
-			int index = ui->cbx_audio_plugin->findText(toFind);
+            if (index != -1)
+            {
+                ui->cbx_audio_plugin->setCurrentIndex(index);
+            }
 
+            toFind = QString::fromStdString((std::string)lastSave["input"]);
+            index = ui->cbx_input_plugin->findText(toFind);
 
-			if (index != -1)
-			{
-				ui->cbx_audio_plugin->setCurrentIndex(index);
-			}
+            if (index != -1)
+            {
+                ui->cbx_input_plugin->setCurrentIndex(index);
+            }
 
-			QString toFind = QString::fromStdString((std::string)lastSave["input"]);
-			int index = ui->cbx_input_plugin->findText(toFind);
+            toFind = QString::fromStdString((std::string)lastSave["core"]);
+            index = ui->cbx_core_plugin->findText(toFind);
 
-			if (index != -1)
-			{
-				ui->cbx_input_plugin->setCurrentIndex(index);
-			}
+            if (index != -1)
+            {
+                ui->cbx_core_plugin->setCurrentIndex(index);
+            }
 
-			QString toFind = QString::fromStdString((std::string)lastSave["core"]);
-			int index = ui->cbx_core_plugin->findText(toFind);
+            toFind = QString::fromStdString((std::string)lastSave["rsp"]);
+            index = ui->cbx_rsp_plugin->findText(toFind);
 
-			if (index != -1)
-			{
-				ui->cbx_core_plugin->setCurrentIndex(index);
-			}
-
-			QString toFind = QString::fromStdString((std::string)lastSave["rsp"]);
-			int index = ui->cbx_rsp_plugin->findText(toFind);
-
-			if (index != -1)
-			{
-				ui->cbx_rsp_plugin->setCurrentIndex(index);
-			}
+            if (index != -1)
+            {
+                ui->cbx_rsp_plugin->setCurrentIndex(index);
+            }
         }
-	}
+    }
 }
 
 MainFrame::~MainFrame()
