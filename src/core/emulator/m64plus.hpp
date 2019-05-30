@@ -9,6 +9,7 @@
 
 #include <array>
 #include <atomic>
+#include <experimental/filesystem>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -20,6 +21,8 @@
 
 namespace Core::Emulator
 {
+
+namespace fs = std::experimental::filesystem;
 
 /// Mupen64Plus API this frontend is compatible with
 constexpr int CORE_API_VERSION{0x020001};
@@ -90,7 +93,7 @@ struct Core
     Core(dynlib_t lib, std::string_view config_path, std::string_view data_path);
 
     /// Create core from library path
-    Core(std::string_view lib_path, std::string_view config_path, std::string_view data_path);
+    Core(const fs::directory_entry& lib_file, std::string_view config_path, std::string_view data_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
@@ -158,7 +161,7 @@ struct Plugin
     Plugin(Core& core, dynlib_t lib);
 
     /// Create plugin from library path
-    Plugin(Core& core, std::string_view lib_path);
+    Plugin(Core& core, const fs::directory_entry& lib_file);
 
     /// Non-copyable
     Plugin(const Plugin&) = delete;
@@ -177,7 +180,7 @@ struct Plugin
 
     dynlib_t handle();
 
-    static PluginInfo get_plugin_info(std::string_view lib_path);
+    static PluginInfo get_plugin_info(const fs::directory_entry& file);
     static PluginInfo get_plugin_info(dynlib_t lib);
 
     static const char* type_str(M64PTypes::m64p_plugin_type type_id);

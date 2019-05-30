@@ -45,8 +45,8 @@ Core::Core(dynlib_t lib, std::string_view config_path, std::string_view data_pat
     init_core(config_path, data_path);
 }
 
-Core::Core(std::string_view lib_path, std::string_view config_path, std::string_view data_path)
-:handle_{load_library(std::string(lib_path).c_str())}
+Core::Core(const fs::directory_entry& lib_file, std::string_view config_path, std::string_view data_path)
+:handle_{load_library(lib_file)}
 {
     if(!handle_.lib)
     {
@@ -199,8 +199,8 @@ Plugin::Plugin(Core& core, dynlib_t lib)
     init_plugin(core.handle());
 }
 
-Plugin::Plugin(Core& core, std::string_view lib_path)
-:handle_{load_library(std::string(lib_path).c_str())}
+Plugin::Plugin(Core& core, const fs::directory_entry& lib_file)
+:handle_{load_library(lib_file)}
 {
     if(!handle_.lib)
     {
@@ -251,12 +251,15 @@ dynlib_t Plugin::handle()
     return handle_.lib;
 }
 
-PluginInfo Plugin::get_plugin_info(std::string_view lib_path)
+PluginInfo Plugin::get_plugin_info(const fs::directory_entry& file)
 {
-    auto lib{load_library(std::string(lib_path).c_str())};
+    auto lib{load_library(file)};
 
-    if(!lib)
-        return {};
+	if(!lib)
+	{
+		logger()->debug("Failed to load file {} as library: {}", file.path().filename(), get_lib_error_msg());
+		return {};
+	}
 
     auto ret{get_plugin_info(lib)};
     free_library(lib);
