@@ -79,7 +79,15 @@ std::string get_lib_error_msg()
 
 dynlib_t load_library(const char* lib_path)
 {
-    return LoadLibraryA(lib_path);
+	// Disable the warning popup
+	auto old_error_mode{GetThreadErrorMode()};
+	SetThreadErrorMode(SEM_FAILCRITICALERRORS, nullptr);
+
+	auto lib{LoadLibraryA(lib_path)};
+
+	SetThreadErrorMode(old_error_mode, nullptr);
+
+	return lib;
 }
 
 dynlib_t get_current_process()
