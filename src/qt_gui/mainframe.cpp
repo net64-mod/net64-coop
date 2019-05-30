@@ -24,20 +24,20 @@ MainFrame::MainFrame(QWidget* parent)
 
     for(const auto& entry : fs::directory_iterator(plugin_dir))
     {
-        const auto& path{entry.path()};
-        switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(path.string()).type)
+		auto path{ entry.path().string() };
+        switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry).type)
         {
         case M64PLUGIN_RSP:
-            ui->cbx_rsp_plugin->addItem(QString::fromStdString(path.filename().string()));
+            ui->cbx_rsp_plugin->addItem(QString::fromStdString(path));
             break;
         case M64PLUGIN_GFX:
-            ui->cbx_gfx_plugin->addItem(QString::fromStdString(path.filename().string()));
+            ui->cbx_gfx_plugin->addItem(QString::fromStdString(path));
             break;
         case M64PLUGIN_AUDIO:
-            ui->cbx_audio_plugin->addItem(QString::fromStdString(path.filename().string()));
+            ui->cbx_audio_plugin->addItem(QString::fromStdString(path));
             break;
         case M64PLUGIN_INPUT:
-            ui->cbx_input_plugin->addItem(QString::fromStdString(path.filename().string()));
+            ui->cbx_input_plugin->addItem(QString::fromStdString(path));
         default: break;
         }
     }
@@ -106,11 +106,10 @@ void MainFrame::on_btn_start_emu_clicked()
 
         emu_->load_rom(rom_image.data(), rom_image.size());
 
-        const char* plugin_dir{""};
-        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_gfx_plugin->currentText().toStdString()});
-        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_audio_plugin->currentText().toStdString()});
-        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_rsp_plugin->currentText().toStdString()});
-        emu_->add_plugin({emu_->core(), plugin_dir + ui->cbx_input_plugin->currentText().toStdString()});
+		emu_->add_plugin({ emu_->core(), fs::directory_entry{ui->cbx_gfx_plugin->currentText().toStdString()}});
+		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_audio_plugin->currentText().toStdString()}});
+		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_rsp_plugin->currentText().toStdString()}});
+		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_input_plugin->currentText().toStdString()}});
 
         emulation_thread_ = std::async(std::launch::async, [this]()
         {

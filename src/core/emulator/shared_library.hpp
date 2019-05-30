@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <experimental/filesystem>
 #include <string>
 
 #ifdef __linux__
@@ -20,6 +21,8 @@
 
 namespace Core::Emulator
 {
+
+namespace fs = std::experimental::filesystem;
 
 struct UniqueLib
 {
@@ -41,7 +44,7 @@ struct UniqueLib
     dynlib_t lib{nullptr};
 };
 
-dynlib_t load_library(const char* lib_path);
+dynlib_t load_library(const fs::directory_entry& lib_file);
 
 dynlib_t get_current_process();
 
