@@ -15,6 +15,9 @@ find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 target_link_libraries(net64_qt_gui Qt5::Widgets)
 include_directories(${Qt5_Widgtes_INCLUDES})
 
+# json library
+target_link_libraries(net64_qt_gui nlohmann_json::nlohmann_json)
+
 if(UNIX)
     target_link_libraries(net64_qt_gui -lpthread -lstdc++fs )
 endif()

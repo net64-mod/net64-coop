@@ -1,0 +1,4 @@
+[submodule "externals/json"]
+    path = externals/json
+    url = https://github.com/nlohmann/json.git
+    branch = master 
