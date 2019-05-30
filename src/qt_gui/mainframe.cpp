@@ -27,6 +27,9 @@ MainFrame::MainFrame(QWidget* parent)
 		auto path{ entry.path().string() };
         switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry).type)
         {
+        case M64PLUGIN_CORE:
+            ui->cbx_core_plugin->addItem(QString::fromStdString(path));
+        break;
         case M64PLUGIN_RSP:
             ui->cbx_rsp_plugin->addItem(QString::fromStdString(path));
             break;
@@ -87,7 +90,7 @@ void MainFrame::on_btn_start_emu_clicked()
     try
     {
         emu_ = Core::Emulator::Mupen64Plus{{
-                {},
+                fs::directory_entry{ui->cbx_core_plugin->currentText().toStdString()},
                 "",
                 ""
         }};
