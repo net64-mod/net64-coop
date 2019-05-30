@@ -3,7 +3,7 @@
 
 #include <QMessageBox>
 #include <fstream>
-
+#include <nlohmann/json.hpp>
 
 namespace Frontend
 {
@@ -15,6 +15,7 @@ MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
 {
     using namespace Core::Emulator::M64PTypes;
+	using json = nlohmann::json;
 
     ui->setupUi(this);
 
@@ -44,6 +45,66 @@ MainFrame::MainFrame(QWidget* parent)
     }
 
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
+	
+	std::fstream configFile;
+
+	configFile.open(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH);
+
+	if (configFile.good())
+	{
+		json lastSave;
+		if (!configFile.eof())
+        {
+            configFile >> lastSave;
+            //messy conversion
+            ui->tbx_emu_path->setText(QString::fromStdString((std::string)lastSave["rom"]));
+			
+            //find index of last GFX
+            QString toFind = QString::fromStdString((std::string)lastSave["gfx"]);
+            int index = ui->cbx_gfx_plugin->findText(toFind);
+
+            //if that index was valid
+            if (index != -1)
+            {
+                //set it as the current index
+                ui->cbx_gfx_plugin->setCurrentIndex(index);
+			}
+
+
+			QString toFind = QString::fromStdString((std::string)lastSave["audio"]);
+			int index = ui->cbx_audio_plugin->findText(toFind);
+
+
+			if (index != -1)
+			{
+				ui->cbx_audio_plugin->setCurrentIndex(index);
+			}
+
+			QString toFind = QString::fromStdString((std::string)lastSave["input"]);
+			int index = ui->cbx_input_plugin->findText(toFind);
+
+			if (index != -1)
+			{
+				ui->cbx_input_plugin->setCurrentIndex(index);
+			}
+
+			QString toFind = QString::fromStdString((std::string)lastSave["core"]);
+			int index = ui->cbx_core_plugin->findText(toFind);
+
+			if (index != -1)
+			{
+				ui->cbx_core_plugin->setCurrentIndex(index);
+			}
+
+			QString toFind = QString::fromStdString((std::string)lastSave["rsp"]);
+			int index = ui->cbx_rsp_plugin->findText(toFind);
+
+			if (index != -1)
+			{
+				ui->cbx_rsp_plugin->setCurrentIndex(index);
+			}
+        }
+	}
 }
 
 MainFrame::~MainFrame()
@@ -64,6 +125,26 @@ void MainFrame::on_tbx_emu_path_returnPressed()
 
 void MainFrame::on_btn_start_emu_clicked()
 {
+    using json = nlohmann::json;
+
+    //write values to config file
+    json configSaveData;
+    configSaveData["audio"] = ui->cbx_audio_plugin->currentText().toStdString();
+	configSaveData["gfx"] = ui->cbx_gfx_plugin->currentText().toStdString();
+	configSaveData["core"] = ui->cbx_core_plugin->currentText().toStdString();
+	configSaveData["input"] = ui->cbx_input_plugin->currentText().toStdString();
+	configSaveData["rsp"] = ui->cbx_rsp_plugin->currentText().toStdString();
+	configSaveData["rom"] = ui->tbx_emu_path->text().toStdString();
+
+    std::fstream configFile;
+
+	configFile.open(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH);
+
+	if (configFile.good())
+    {
+		configFile << configSaveData;
+    }
+	
     if(emu_.has_value())
     {
         emu_ = {};
