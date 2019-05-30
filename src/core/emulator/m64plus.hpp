@@ -87,13 +87,13 @@ struct Core
     using debug_get_mem_ptr_t = void* (*)(M64PTypes::m64p_dbg_memptr_type);
 
     /// Create core from current process
-    Core(std::string_view config_path, std::string_view data_path);
+    Core(std::string config_path, std::string data_path);
 
     /// Create core from dynamic library handle
-    Core(dynlib_t lib, std::string_view config_path, std::string_view data_path);
+    Core(dynlib_t lib, std::string config_path, std::string data_path);
 
     /// Create core from library path
-    Core(const fs::directory_entry& lib_file, std::string_view config_path, std::string_view data_path);
+    Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
@@ -122,7 +122,7 @@ struct Core
 
 private:
     void init_symbols();
-    void init_core(std::string_view config_path, std::string_view data_path);
+    void init_core();
     void destroy_core();
 
     template<typename T>
@@ -143,6 +143,9 @@ private:
         debug_get_mem_ptr_t debug_get_mem_ptr;
     }fn_{};
     PluginInfo info_;
+
+    std::string config_path_,
+                data_path_;
 
     CLASS_LOGGER_("emulator");
 };

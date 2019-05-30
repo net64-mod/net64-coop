@@ -2,14 +2,14 @@
 #include "ui_mainframe.h"
 
 #include <QMessageBox>
-
-#include <experimental/filesystem>
 #include <fstream>
+
+
 namespace Frontend
 {
 
-namespace fs = std::experimental::filesystem;
 using namespace std::string_literals;
+
 
 MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
@@ -20,9 +20,7 @@ MainFrame::MainFrame(QWidget* parent)
 
     ui->tbx_emu_path->setText("");
 
-    const char* plugin_dir{""};
-
-    for(const auto& entry : fs::directory_iterator(plugin_dir))
+    for(const auto& entry : fs::directory_iterator(M64P_PLUGIN_PATH))
     {
 		auto path{ entry.path().string() };
         switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry).type)
@@ -89,11 +87,13 @@ void MainFrame::on_btn_start_emu_clicked()
 
     try
     {
-        emu_ = Core::Emulator::Mupen64Plus{{
+        emu_ = Core::Emulator::Mupen64Plus{
+            Core::Emulator::Mupen64Plus::Core{
                 fs::directory_entry{ui->cbx_core_plugin->currentText().toStdString()},
-                "",
-                ""
-        }};
+                fs::path{user_config_path / M64P_CONFIG_SUB_PATH}.string(),
+                fs::path{user_config_path / M64P_DATA_SUB_PATH}.string()
+            }
+        };
 
         std::ifstream rom_file{ui->tbx_emu_path->text().toStdString(), std::ios::binary | std::ios::ate};
         if(!rom_file.is_open())
@@ -109,7 +109,7 @@ void MainFrame::on_btn_start_emu_clicked()
 
         emu_->load_rom(rom_image.data(), rom_image.size());
 
-		emu_->add_plugin({ emu_->core(), fs::directory_entry{ui->cbx_gfx_plugin->currentText().toStdString()}});
+		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_gfx_plugin->currentText().toStdString()}});
 		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_audio_plugin->currentText().toStdString()}});
 		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_rsp_plugin->currentText().toStdString()}});
 		emu_->add_plugin({emu_->core(), fs::directory_entry{ui->cbx_input_plugin->currentText().toStdString()}});

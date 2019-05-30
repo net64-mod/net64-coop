@@ -90,6 +90,8 @@ int main(int argc, char* argv[])
     logger->info("CPU architecture: buildtime={} runtime={}",
                  QSysInfo::buildCpuArchitecture().toStdString(), QSysInfo::currentCpuArchitecture().toStdString());
     logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
+    logger->info("Configuration folder: {}",
+                 QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString());
 
     MainFrame win;
 

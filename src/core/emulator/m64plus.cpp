@@ -33,20 +33,20 @@ bool failed(Mupen64Plus::Error err)
 namespace M64PlusHelper
 {
 
-Core::Core(std::string_view config_path, std::string_view data_path)
-:Core(get_current_process(), config_path, data_path)
+Core::Core(std::string config_path, std::string data_path)
+:Core(get_current_process(), std::move(config_path), std::move(data_path))
 {
 }
 
-Core::Core(dynlib_t lib, std::string_view config_path, std::string_view data_path)
-:handle_{lib}
+Core::Core(dynlib_t lib, std::string config_path, std::string data_path)
+:handle_{lib}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
 {
     init_symbols();
-    init_core(config_path, data_path);
+    init_core();
 }
 
-Core::Core(const fs::directory_entry& lib_file, std::string_view config_path, std::string_view data_path)
-:handle_{load_library(lib_file)}
+Core::Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path)
+:handle_{load_library(lib_file)}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
 {
     if(!handle_.lib)
     {
@@ -55,11 +55,12 @@ Core::Core(const fs::directory_entry& lib_file, std::string_view config_path, st
         throw std::system_error(make_error_code(Error::LIB_LOAD_FAILED));
     }
     init_symbols();
-    init_core(config_path, data_path);
+    init_core();
 }
 
 Core::Core(Core&& other) noexcept
-:handle_{std::move(other.handle_)}, fn_{other.fn_}
+:handle_{std::move(other.handle_)}, fn_{other.fn_},
+config_path_{other.config_path_}, data_path_{other.data_path_}
 {
 }
 
@@ -84,6 +85,8 @@ void swap(Core& first, Core& second) noexcept
 
     swap(first.handle_, second.handle_);
     swap(first.fn_, second.fn_);
+    swap(first.config_path_, second.config_path_);
+    swap(first.data_path_, second.data_path_);
 }
 
 void Core::attach_plugin(Plugin& plugin)
@@ -138,7 +141,7 @@ void Core::init_symbols()
     }
 }
 
-void Core::init_core(std::string_view config_path, std::string_view data_path)
+void Core::init_core()
 {
     const char* name_ptr{};
     auto ret{
@@ -152,8 +155,7 @@ void Core::init_core(std::string_view config_path, std::string_view data_path)
     }
 
     info_.name = name_ptr;
-
-    ret = fn_.core_startup(CORE_API_VERSION, std::string{config_path}.c_str(), std::string{data_path}.c_str(), nullptr,
+    ret = fn_.core_startup(CORE_API_VERSION, config_path_.c_str(), data_path_.c_str(), nullptr,
                            nullptr, nullptr, nullptr);
     if(failed(ret))
     {
