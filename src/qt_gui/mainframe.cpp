@@ -46,59 +46,59 @@ MainFrame::MainFrame(QWidget* parent)
 
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 	
-    std::fstream configFile;
-    //Don't bother opening the file if it's size is zero
-    if (fs::file_size(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH) != 0)
+    std::ifstream config_file;
+    // Don't bother opening the file if it's size is zero or it doesn't exist
+    if(fs::file_size(user_config_path / MAIN_CONFIG_FILE_SUB_PATH) != 0 || !fs::exists(user_config_path / MAIN_CONFIG_FILE_SUB_PATH))
     {
-        configFile.open(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH);
+        config_file.open(user_config_path / MAIN_CONFIG_FILE_SUB_PATH);
 
-        if (configFile.good())
+        if(config_file.good())
         {
             json lastSave;
 
-            configFile >> lastSave;
-            //messy conversion
+            config_file >> lastSave;
+            // messy conversion
             ui->tbx_emu_path->setText(QString::fromStdString((std::string)lastSave["rom"]));
 
-            //find index of last GFX
-            QString toFind = QString::fromStdString((std::string)lastSave["gfx"]);
-            int index = ui->cbx_gfx_plugin->findText(toFind);
+            // find index of last GFX
+			QString to_find{QString::fromStdString((std::string)lastSave["gfx"])};
+			int index{ui->cbx_gfx_plugin->findText(to_find)};
 
-            //if that index was valid
-            if (index != -1)
+            // if that index was valid
+            if(index != -1)
             {
-                //set it as the current index
+                // set it as the current index
                 ui->cbx_gfx_plugin->setCurrentIndex(index);
             }
 
-            toFind = QString::fromStdString((std::string)lastSave["audio"]);
-            index = ui->cbx_audio_plugin->findText(toFind);
+            to_find = QString::fromStdString((std::string)lastSave["audio"]);
+			index = ui->cbx_audio_plugin->findText(to_find);
 
-            if (index != -1)
+            if(index != -1)
             {
                 ui->cbx_audio_plugin->setCurrentIndex(index);
             }
 
-            toFind = QString::fromStdString((std::string)lastSave["input"]);
-            index = ui->cbx_input_plugin->findText(toFind);
+            to_find = QString::fromStdString((std::string)lastSave["input"]);
+            index = ui->cbx_input_plugin->findText(to_find);
 
-            if (index != -1)
+            if(index != -1)
             {
                 ui->cbx_input_plugin->setCurrentIndex(index);
             }
 
-            toFind = QString::fromStdString((std::string)lastSave["core"]);
-            index = ui->cbx_core_plugin->findText(toFind);
+            to_find = QString::fromStdString((std::string)lastSave["core"]);
+            index = ui->cbx_core_plugin->findText(to_find);
 
-            if (index != -1)
+            if(index != -1)
             {
                 ui->cbx_core_plugin->setCurrentIndex(index);
             }
 
-            toFind = QString::fromStdString((std::string)lastSave["rsp"]);
-            index = ui->cbx_rsp_plugin->findText(toFind);
+            to_find = QString::fromStdString((std::string)lastSave["rsp"]);
+            index = ui->cbx_rsp_plugin->findText(to_find);
 
-            if (index != -1)
+            if(index != -1)
             {
                 ui->cbx_rsp_plugin->setCurrentIndex(index);
             }
@@ -129,19 +129,19 @@ void MainFrame::on_btn_start_emu_clicked()
     //write values to config file
     json configSaveData;
     configSaveData["audio"] = ui->cbx_audio_plugin->currentText().toStdString();
-	configSaveData["gfx"] = ui->cbx_gfx_plugin->currentText().toStdString();
-	configSaveData["core"] = ui->cbx_core_plugin->currentText().toStdString();
-	configSaveData["input"] = ui->cbx_input_plugin->currentText().toStdString();
-	configSaveData["rsp"] = ui->cbx_rsp_plugin->currentText().toStdString();
-	configSaveData["rom"] = ui->tbx_emu_path->text().toStdString();
+    configSaveData["gfx"] = ui->cbx_gfx_plugin->currentText().toStdString();
+    configSaveData["core"] = ui->cbx_core_plugin->currentText().toStdString();
+    configSaveData["input"] = ui->cbx_input_plugin->currentText().toStdString();
+    configSaveData["rsp"] = ui->cbx_rsp_plugin->currentText().toStdString();
+    configSaveData["rom"] = ui->tbx_emu_path->text().toStdString();
 
-    std::fstream configFile;
+    std::ofstream config_file;
 
-	configFile.open(user_config_path.string() + "/" + M64P_USER_CONFIG_SUB_PATH);
+    config_file.open(user_config_path / MAIN_CONFIG_FILE_SUB_PATH);
 
-	if (configFile.good())
+    if (config_file.good())
     {
-		configFile << configSaveData;
+        config_file << configSaveData.dump(4);
     }
 	
     if(emu_.has_value())

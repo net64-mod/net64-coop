@@ -33,7 +33,7 @@ public:
     inline static const char* M64P_PLUGIN_PATH{"../emulator/mupen64plus/"},
                             * M64P_CONFIG_SUB_PATH{"config/mupen64plus/config/"},
                             * M64P_DATA_SUB_PATH{"config/mupen64plus/data/"},
-                            * M64P_USER_CONFIG_SUB_PATH{ "config/mupen64plus/config.json" };
+                            * MAIN_CONFIG_FILE_SUB_PATH{"config/config.json"};
 
 
 private slots:
