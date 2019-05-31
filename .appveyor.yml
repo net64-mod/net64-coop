@@ -6,6 +6,13 @@ platform:
 configuration:
   - Release
 
+clone_script:
+- cmd: >-
+    git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+    cd %APPVEYOR_BUILD_FOLDER%
+    git checkout -qf %APPVEYOR_REPO_COMMIT%
+    git submodule update --init --recursive
+
 before_build:
     - cmake -G "Visual Studio 15 2017" . -A x64 -DQt5_DIR="C:\Qt\5.12\msvc2017_64\lib\cmake\Qt5"
 
