@@ -158,8 +158,8 @@ void MainFrame::load_config()
                 ui->tbx_emu_path->setText(QString::fromStdString((std::string)last_save["rom"]));
 
                 // find index of last GFX
-                QString to_find{ QString::fromStdString((std::string)last_save["gfx"]) };
-                int index{ ui->cbx_gfx_plugin->findText(to_find) };
+                QString to_find{QString::fromStdString((std::string)last_save["gfx"])};
+                int index{ui->cbx_gfx_plugin->findText(to_find)};
 
                 // if that index was valid
                 if(index != -1)
@@ -213,13 +213,13 @@ void MainFrame::save_config()
     using json = nlohmann::json;
 
     // write values to config file
-    json configSaveData;
-    configSaveData["audio"] = ui->cbx_audio_plugin->currentText().toStdString();
-    configSaveData["gfx"] = ui->cbx_gfx_plugin->currentText().toStdString();
-    configSaveData["core"] = ui->cbx_core_plugin->currentText().toStdString();
-    configSaveData["input"] = ui->cbx_input_plugin->currentText().toStdString();
-    configSaveData["rsp"] = ui->cbx_rsp_plugin->currentText().toStdString();
-    configSaveData["rom"] = ui->tbx_emu_path->text().toStdString();
+    json config_save_data;
+    config_save_data["audio"] = ui->cbx_audio_plugin->currentText().toStdString();
+    config_save_data["gfx"] = ui->cbx_gfx_plugin->currentText().toStdString();
+    config_save_data["core"] = ui->cbx_core_plugin->currentText().toStdString();
+    config_save_data["input"] = ui->cbx_input_plugin->currentText().toStdString();
+    config_save_data["rsp"] = ui->cbx_rsp_plugin->currentText().toStdString();
+    config_save_data["rom"] = ui->tbx_emu_path->text().toStdString();
 
     std::ofstream config_file;
 
@@ -227,7 +227,7 @@ void MainFrame::save_config()
 
     if(config_file.good())
     {
-        config_file << configSaveData.dump(4);
+        config_file << config_save_data.dump(4);
     }
 }
 
