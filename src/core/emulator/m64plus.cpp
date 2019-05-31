@@ -138,7 +138,7 @@ void Core::init_symbols()
                  fn_.core_shutdown, fn_.core_do_cmd, fn_.debug_get_mem_ptr))
     {
         auto errc{make_error_code(Error::SYM_NOT_FOUND)};
-        logger()->error("Failed to resolve symbols of mupen64plus core");
+        logger()->error("Failed to resolve symbols of core");
         throw std::system_error(errc);
     }
 }
@@ -182,7 +182,7 @@ void Core::destroy_core()
         auto errc{make_error_code(ret)};
         logger()->warn("Failed to correctly shutdown core: ", errc.message());
     }
-    logger()->info("Shutdown mupen64plus {}", Plugin::type_str(M64PTypes::M64PLUGIN_CORE));
+    logger()->info("Shutdown {}", Plugin::type_str(M64PTypes::M64PLUGIN_CORE));
 }
 
 dynlib_t Core::handle()
@@ -340,7 +340,7 @@ void Plugin::init_plugin(dynlib_t core_lib)
     {
         // Plugin failed to initialize
         auto errc{make_error_code(ret)};
-        logger()->error("Failed to start mupen64plus {} plugin {} v{}, api: {} (capabilities: {:#x}): {}",
+        logger()->error("Failed to start {} plugin {} v{}, api: {} (capabilities: {:#x}): {}",
                         Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version,
                         info_.capabilities, errc.message());
         info_ = {};
@@ -349,7 +349,7 @@ void Plugin::init_plugin(dynlib_t core_lib)
 
     info_.name = name_ptr;
 
-    logger()->info("Initialized mupen64plus {} plugin {} v{}, api: {:#x} (capabilities: {:#x})",
+    logger()->info("Initialized {} plugin {} v{}, api: {:#x} (capabilities: {:#x})",
                    Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version, info_.capabilities);
 }
 
@@ -363,7 +363,7 @@ void Plugin::destroy_plugin()
         logger()->warn("Failed to correctly shutdown plugin {}: {}", info_.name, errc.message());
     }
 
-    logger()->info("Shutdown mupen64plus {} plugin", Plugin::type_str(info_.type));
+    logger()->info("Shutdown {} plugin", Plugin::type_str(info_.type));
 }
 
 } // M64PlusHelper

@@ -40,21 +40,28 @@ std::vector<spdlog::sink_ptr> get_logging_sinks()
         return LoggingSinks::get_sink_fn()();
 }
 
-std::shared_ptr<spdlog::logger> get_logger(std::string_view name)
+std::shared_ptr<spdlog::logger> get_logger(const std::string& name)
 {
     [[maybe_unused]]
-    static bool initialized_s = []{
+    static LoggerPtr root_logger_s = []{
         auto sinks{get_logging_sinks()};
 
-        auto emu_logger{std::make_shared<spdlog::logger>("emulator", sinks.begin(), sinks.end())};
-        spdlog::register_logger(emu_logger);
-        spdlog::register_logger(emu_logger->clone("process"));
-        spdlog::register_logger(emu_logger->clone("memory"));
+        auto root_logger{std::make_shared<spdlog::logger>("root", sinks.begin(), sinks.end())};
 
-        return true;
+        spdlog::register_logger(root_logger);
+
+        return root_logger;
     }();
 
-    return spdlog::get(std::string(name));
+    auto logger{spdlog::get(name)};
+
+    if(logger)
+        return logger;
+
+    logger = root_logger_s->clone(name);
+    spdlog::register_logger(logger);
+
+    return logger;
 }
 
 } // Core

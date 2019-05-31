@@ -50,11 +50,9 @@ struct EmulatorBase
 protected:
     explicit EmulatorBase(std::string emu_name);
 
-    spdlog::logger* logger();
-
     std::string name_;
 
-    CLASS_LOGGER_N_("emulator", base_logger)
+    CLASS_LOGGER_("emulator")
 };
 
 } // Core::Emulator
