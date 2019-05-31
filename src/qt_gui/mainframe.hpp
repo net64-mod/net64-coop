@@ -32,7 +32,9 @@ public:
 
     inline static const char* M64P_PLUGIN_PATH{"../emulator/mupen64plus/"},
                             * M64P_CONFIG_SUB_PATH{"config/mupen64plus/config/"},
-                            * M64P_DATA_SUB_PATH{"config/mupen64plus/data/"};
+                            * M64P_DATA_SUB_PATH{"config/mupen64plus/data/"},
+                            * MAIN_CONFIG_FILE_SUB_PATH{"config/config.json"};
+
 
 private slots:
     void on_tbx_emu_path_returnPressed();
@@ -42,6 +44,9 @@ private:
     Ui::MainFrame* ui;
     std::optional<Core::Emulator::Mupen64Plus> emu_;
     std::future<void> emulation_thread_;
+
+	void load_config();
+	void save_config();
 
     fs::path user_config_path{QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString()};
 

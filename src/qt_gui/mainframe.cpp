@@ -3,7 +3,7 @@
 
 #include <QMessageBox>
 #include <fstream>
-
+#include <nlohmann/json.hpp>
 
 namespace Frontend
 {
@@ -15,6 +15,7 @@ MainFrame::MainFrame(QWidget* parent)
 :QWidget(parent), ui(new Ui::MainFrame)
 {
     using namespace Core::Emulator::M64PTypes;
+    
 
     ui->setupUi(this);
 
@@ -43,6 +44,7 @@ MainFrame::MainFrame(QWidget* parent)
         }
     }
 
+    load_config();
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 }
 
@@ -63,7 +65,9 @@ void MainFrame::on_tbx_emu_path_returnPressed()
 }
 
 void MainFrame::on_btn_start_emu_clicked()
-{
+{	
+	save_config();
+
     if(emu_.has_value())
     {
         emu_ = {};
@@ -130,6 +134,100 @@ void MainFrame::on_btn_start_emu_clicked()
         box.setText(QString::fromStdString("An error has occurred: "s + e.what() + "\nError code: " +
                     e.code().category().name() + ":"s + std::to_string(e.code().value())));
         box.exec();
+    }
+}
+
+void MainFrame::load_config()
+{
+    using json = nlohmann::json;
+
+    std::ifstream config_file;
+    // Don't bother opening the file if it's size is zero or it doesn't exist
+    if(fs::exists(user_config_path / MAIN_CONFIG_FILE_SUB_PATH) && fs::file_size(user_config_path / MAIN_CONFIG_FILE_SUB_PATH) != 0)
+    {
+        config_file.open(user_config_path / MAIN_CONFIG_FILE_SUB_PATH);
+
+        if(config_file.good())
+        {
+            try
+            {
+                json last_save;
+
+                config_file >> last_save;
+                // messy conversion
+                ui->tbx_emu_path->setText(QString::fromStdString((std::string)last_save["rom"]));
+
+                // find index of last GFX
+                QString to_find{QString::fromStdString((std::string)last_save["gfx"])};
+                int index{ui->cbx_gfx_plugin->findText(to_find)};
+
+                // if that index was valid
+                if(index != -1)
+                {
+                    // set it as the current index
+                    ui->cbx_gfx_plugin->setCurrentIndex(index);
+                }
+
+                to_find = QString::fromStdString((std::string)last_save["audio"]);
+                index = ui->cbx_audio_plugin->findText(to_find);
+
+                if(index != -1)
+                {
+                    ui->cbx_audio_plugin->setCurrentIndex(index);
+                }
+
+                to_find = QString::fromStdString((std::string)last_save["input"]);
+                index = ui->cbx_input_plugin->findText(to_find);
+
+                if(index != -1)
+                {
+                    ui->cbx_input_plugin->setCurrentIndex(index);
+                }
+
+                to_find = QString::fromStdString((std::string)last_save["core"]);
+                index = ui->cbx_core_plugin->findText(to_find);
+
+                if(index != -1)
+                {
+                    ui->cbx_core_plugin->setCurrentIndex(index);
+                }
+
+                to_find = QString::fromStdString((std::string)last_save["rsp"]);
+                index = ui->cbx_rsp_plugin->findText(to_find);
+
+                if(index != -1)
+                {
+                    ui->cbx_rsp_plugin->setCurrentIndex(index);
+                }
+            }
+            catch(const std::exception& e)
+            {
+                logger()->warn("Exception while reading config.json");
+            }
+        }	
+    }
+}
+
+void MainFrame::save_config()
+{
+    using json = nlohmann::json;
+
+    // write values to config file
+    json config_save_data;
+    config_save_data["audio"] = ui->cbx_audio_plugin->currentText().toStdString();
+    config_save_data["gfx"] = ui->cbx_gfx_plugin->currentText().toStdString();
+    config_save_data["core"] = ui->cbx_core_plugin->currentText().toStdString();
+    config_save_data["input"] = ui->cbx_input_plugin->currentText().toStdString();
+    config_save_data["rsp"] = ui->cbx_rsp_plugin->currentText().toStdString();
+    config_save_data["rom"] = ui->tbx_emu_path->text().toStdString();
+
+    std::ofstream config_file;
+
+    config_file.open(user_config_path / MAIN_CONFIG_FILE_SUB_PATH);
+
+    if(config_file.good())
+    {
+        config_file << config_save_data.dump(4);
     }
 }
 
