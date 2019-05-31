@@ -45,6 +45,9 @@ private:
     std::optional<Core::Emulator::Mupen64Plus> emu_;
     std::future<void> emulation_thread_;
 
+	void load_config();
+	void save_config();
+
     fs::path user_config_path{QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString()};
 
     CLASS_LOGGER_("frontend");
