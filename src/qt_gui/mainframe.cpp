@@ -48,7 +48,7 @@ MainFrame::MainFrame(QWidget* parent)
 	
     std::ifstream config_file;
     // Don't bother opening the file if it's size is zero or it doesn't exist
-    if(fs::file_size(user_config_path / MAIN_CONFIG_FILE_SUB_PATH) != 0 || !fs::exists(user_config_path / MAIN_CONFIG_FILE_SUB_PATH))
+    if(fs::exists(user_config_path / MAIN_CONFIG_FILE_SUB_PATH) && fs::file_size(user_config_path / MAIN_CONFIG_FILE_SUB_PATH) != 0)
     {
         config_file.open(user_config_path / MAIN_CONFIG_FILE_SUB_PATH);
 
