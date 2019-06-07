@@ -45,8 +45,8 @@ Core::Core(dynlib_t lib, std::string config_path, std::string data_path)
     init_core();
 }
 
-Core::Core(const fs::path& lib_file, std::string config_path, std::string data_path)
-:handle_{load_library(lib_file)}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
+Core::Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path)
+:handle_{load_library(lib_file.path())}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
 {
     if(!handle_.lib)
     {
