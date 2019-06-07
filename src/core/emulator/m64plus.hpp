@@ -92,8 +92,8 @@ struct Core
     /// Create core from dynamic library handle
     Core(dynlib_t lib, std::string config_path, std::string data_path);
 
-    /// Create core from library path
-    Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path);
+    /// Create core from library file
+    Core(const fs::path& lib_file, std::string config_path, std::string data_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
@@ -164,7 +164,7 @@ struct Plugin
     Plugin(Core& core, dynlib_t lib);
 
     /// Create plugin from library path
-    Plugin(Core& core, const fs::directory_entry& lib_file);
+    Plugin(Core& core, const fs::path& lib_file);
 
     /// Non-copyable
     Plugin(const Plugin&) = delete;

@@ -1,16 +1,10 @@
-#ifndef MAINFRAME_HPP
-#define MAINFRAME_HPP
+#pragma once
 
-#ifndef Q_MOC_RUN
-#include <experimental/filesystem>
 #include <future>
-#include <optional>
-#include <thread>
-#include <QStandardPaths>
-#include <QWidget>
+#include <QMainWindow>
 #include "core/emulator/m64plus.hpp"
-#include "core/logging.hpp"
-#endif
+#include "qt_gui/app_settings.hpp"
+#include "qt_gui/m64p_settings_window.hpp"
 
 
 namespace Ui {
@@ -20,39 +14,37 @@ class MainFrame;
 namespace Frontend
 {
 
-namespace fs = std::experimental::filesystem;
-
-class MainFrame : public QWidget
+struct MainFrame : QMainWindow
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
-    explicit MainFrame(QWidget* parent = nullptr);
-    ~MainFrame() override;
-
-    inline static const char* M64P_PLUGIN_PATH{"../emulator/mupen64plus/"},
-                            * M64P_CONFIG_SUB_PATH{"config/mupen64plus/config/"},
-                            * M64P_DATA_SUB_PATH{"config/mupen64plus/data/"},
-                            * MAIN_CONFIG_FILE_SUB_PATH{"config/config.json"};
-
+    explicit MainFrame(QWidget* parent, AppSettings& settings);
+    ~MainFrame();
 
 private slots:
-    void on_tbx_emu_path_returnPressed();
-    void on_btn_start_emu_clicked();
+    void on_action_emulator_settings_triggered();
+    void on_start_emulator();
 
 private:
+    template<typename T, typename... TArgs>
+    void show_window(T*& win_ptr, TArgs&&... args)
+    {
+        if(!win_ptr)
+        {
+            win_ptr = new T(this, std::forward<TArgs>(args)...);
+        }
+
+        win_ptr->show();
+        win_ptr->raise();
+        win_ptr->activateWindow();
+    }
+
     Ui::MainFrame* ui;
-    std::optional<Core::Emulator::Mupen64Plus> emu_;
+    M64PSettings* m64p_settings_win_{};
+    AppSettings* settings_;
+    std::optional<Core::Emulator::Mupen64Plus> emulator_;
     std::future<void> emulation_thread_;
-
-	void load_config();
-	void save_config();
-
-    fs::path user_config_path{QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString()};
-
-    CLASS_LOGGER_("frontend");
 };
 
 } // Frontend
-
-#endif // MAINFRAME_HPP

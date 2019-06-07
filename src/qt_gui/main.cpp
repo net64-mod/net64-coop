@@ -13,6 +13,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "build_info.hpp"
 #include "core/logging.hpp"
+#include "qt_gui/app_settings.hpp"
 #include "qt_gui/mainframe.hpp"
 
 
@@ -69,35 +70,47 @@ int main(int argc, char* argv[])
 {
     using namespace Frontend;
 
-    QCoreApplication::setApplicationName("Net64-Coop");
-    QCoreApplication::setOrganizationName("Net64 Project");
-    QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
+    AppSettings settings;
+    int ret{};
+    {
+        QCoreApplication::setApplicationName("Net64-Coop");
+        QCoreApplication::setOrganizationName("Net64 Project");
+        QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
 
-    if(!create_app_dirs())
-        return 1;
-    setup_logging();
+        if(!create_app_dirs())
+            return 1;
+        setup_logging();
 
-    QApplication app{argc, argv};
+        // Load config file
+        settings.appdata_path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString();
+        settings.load(settings.main_config_file_path());
 
-    // Log system information
-    auto logger{spdlog::get("frontend")};
-    logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
-                 QCoreApplication::applicationVersion().toStdString());
-    logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
-                 QSysInfo::productVersion().toStdString());
-    logger->info("Kernel: {} {}",
-                 QSysInfo::kernelType().toStdString(), QSysInfo::kernelVersion().toStdString());
-    logger->info("CPU architecture: buildtime={} runtime={}",
-                 QSysInfo::buildCpuArchitecture().toStdString(), QSysInfo::currentCpuArchitecture().toStdString());
-    logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
-    logger->info("Configuration folder: {}",
-                 QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString());
 
-    MainFrame win;
+        QApplication app{argc, argv};
 
-    win.show();
+        // Log system information
+        auto logger{spdlog::get("frontend")};
+        logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
+                     QCoreApplication::applicationVersion().toStdString());
+        logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
+                     QSysInfo::productVersion().toStdString());
+        logger->info("Kernel: {} {}", QSysInfo::kernelType().toStdString(), QSysInfo::kernelVersion().toStdString());
+        logger->info("CPU architecture: buildtime={} runtime={}", QSysInfo::buildCpuArchitecture().toStdString(),
+                     QSysInfo::currentCpuArchitecture().toStdString());
+        logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
+        logger->info("Configuration folder: {}", settings.appdata_path);
 
-    return QApplication::exec();
+        MainFrame win(nullptr, settings);
+
+        win.show();
+
+        ret = QApplication::exec();
+    }
+
+    // Store settings
+    settings.save(settings.main_config_file_path());
+
+    return ret;
 }
 
 

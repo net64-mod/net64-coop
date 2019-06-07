@@ -45,7 +45,7 @@ Core::Core(dynlib_t lib, std::string config_path, std::string data_path)
     init_core();
 }
 
-Core::Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path)
+Core::Core(const fs::path& lib_file, std::string config_path, std::string data_path)
 :handle_{load_library(lib_file)}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
 {
     if(!handle_.lib)
@@ -201,7 +201,7 @@ Plugin::Plugin(Core& core, dynlib_t lib)
     init_plugin(core.handle());
 }
 
-Plugin::Plugin(Core& core, const fs::directory_entry& lib_file)
+Plugin::Plugin(Core& core, const fs::path& lib_file)
 :handle_{load_library(lib_file)}
 {
     if(!handle_.lib)
