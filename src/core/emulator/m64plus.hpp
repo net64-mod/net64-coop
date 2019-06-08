@@ -63,6 +63,10 @@ enum struct Error
     SYM_NOT_FOUND    ///< A symbol required by the API could not be located in the specified module
 };
 
+/// Overload for Mupen64Plus error codes
+std::error_code make_error_code(Error e);
+
+
 /// Contains information retrieved via PluginGetVersion
 struct PluginInfo
 {
@@ -290,9 +294,6 @@ private:
 
 } // Core::Emulator
 
-
-/// Overload for Mupen64Plus error codes
-std::error_code make_error_code(Core::Emulator::Mupen64Plus::Error e);
 
 /// Specialization for Mupen64Plus error codes
 template<>

@@ -627,7 +627,12 @@ const struct M64PlusErrorCategory : std::error_category
 
 } // anonymous
 
-std::error_code make_error_code(Core::Emulator::Mupen64Plus::Error e)
+namespace Core::Emulator::M64PlusHelper
+{
+
+std::error_code make_error_code(Error e)
 {
     return {static_cast<int>(e), m64p_error_category_g};
 }
+
+} // Core::Emulator::M64PlusHelper
