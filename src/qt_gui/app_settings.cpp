@@ -43,7 +43,7 @@ bool AppSettings::load(const fs::path& file)
         // Helper function
         auto load_string = [](auto& value, const auto& json_obj)
         {
-            value = json_obj.get<std::string>();
+            value = json_obj.template get<std::string>();
         };
 
         // Load last selected rom file

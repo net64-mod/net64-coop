@@ -86,7 +86,7 @@ void M64PSettings::refresh_plugins()
         for(const auto& entry : fs::directory_iterator(ui->folder_path_field->text().toStdString()))
         {
             auto file{QString::fromStdString(entry.path().filename().string())};
-            switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry).type)
+            switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry.path()).type)
             {
             case M64PLUGIN_CORE:
                 ui->core_plugin_box->addItem(file);
@@ -108,7 +108,7 @@ void M64PSettings::refresh_plugins()
     }
     catch(const std::exception& e)
     {
-        logger()->warn("Failed to load plugin folder {}: {}", ui->folder_path_field->text().toStdString(), e.what());
+        logger()->warn("Failed to inspect plugin folder {}: {}", ui->folder_path_field->text().toStdString(), e.what());
     }
 
     auto set_index_if_found = [](QComboBox& widget, const std::string& text)

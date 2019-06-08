@@ -93,7 +93,7 @@ struct Core
     Core(dynlib_t lib, std::string config_path, std::string data_path);
 
     /// Create core from library file
-    Core(const fs::path& lib_file, std::string config_path, std::string data_path);
+    Core(const std::string& lib_path, std::string config_path, std::string data_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
@@ -164,7 +164,7 @@ struct Plugin
     Plugin(Core& core, dynlib_t lib);
 
     /// Create plugin from library path
-    Plugin(Core& core, const fs::path& lib_file);
+    Plugin(Core& core, const std::string& lib_path);
 
     /// Non-copyable
     Plugin(const Plugin&) = delete;
@@ -183,7 +183,7 @@ struct Plugin
 
     dynlib_t handle();
 
-    static PluginInfo get_plugin_info(const fs::directory_entry& file);
+    static PluginInfo get_plugin_info(const std::string& file);
     static PluginInfo get_plugin_info(dynlib_t lib);
 
     static const char* type_str(M64PTypes::m64p_plugin_type type_id);

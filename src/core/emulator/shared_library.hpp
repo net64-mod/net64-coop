@@ -44,7 +44,7 @@ struct UniqueLib
     dynlib_t lib{nullptr};
 };
 
-dynlib_t load_library(const fs::path& lib_file);
+dynlib_t load_library(const char* lib_file);
 
 dynlib_t get_current_process();
 
