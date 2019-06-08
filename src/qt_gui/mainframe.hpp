@@ -2,9 +2,11 @@
 
 #include <future>
 #include <QMainWindow>
+#ifndef Q_MOC_RUN
 #include "core/emulator/m64plus.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
+#endif
 
 
 namespace Ui {

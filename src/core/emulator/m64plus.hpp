@@ -93,7 +93,7 @@ struct Core
     Core(dynlib_t lib, std::string config_path, std::string data_path);
 
     /// Create core from library file
-    Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path);
+    Core(const fs::path& lib_file, std::string config_path, std::string data_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
