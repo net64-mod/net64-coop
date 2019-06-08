@@ -112,12 +112,15 @@ struct Core
 
     void detach_plugin(M64PTypes::m64p_plugin_type type);
 
+    /// Return pointer to n64 DRAM
     void* get_mem_ptr();
 
     Error do_cmd(M64PTypes::m64p_command cmd, int p1, void* p2);
 
+    /// Return native library handle
     dynlib_t handle();
 
+    /// Return general information about the core
     const PluginInfo& info() const;
 
 private:
@@ -179,13 +182,20 @@ struct Plugin
 
     friend void swap(Plugin& first, Plugin& second) noexcept;
 
+    /// Return general information about the plugin
     const PluginInfo& info() const;
 
+    /// Return native library handle
     dynlib_t handle();
 
+    /**
+     * Load file as plugin and return information about it.
+     * Returns type = M64PLUGIN_NULL if not a plugin
+     */
     static PluginInfo get_plugin_info(const std::string& file);
     static PluginInfo get_plugin_info(dynlib_t lib);
 
+    /// Get string representation of plugin type id
     static const char* type_str(M64PTypes::m64p_plugin_type type_id);
 
 
@@ -240,10 +250,13 @@ struct Mupen64Plus final : EmulatorBase
 
     friend void swap(Mupen64Plus& first, Mupen64Plus& second) noexcept;
 
+    /// Register a plugin
     void add_plugin(Plugin&& plugin);
 
+    /// Remove a plugin
     void remove_plugin(M64PTypes::m64p_plugin_type type);
 
+    /// Load ROM image
     void load_rom(void* rom_data, std::size_t n) override;
 
     void unload_rom() override;
@@ -262,6 +275,7 @@ struct Mupen64Plus final : EmulatorBase
 
     bool rom_loaded() const;
 
+    /// Check if plugin of a type is already registered
     bool has_plugin(M64PTypes::m64p_plugin_type type) const;
 
 private:
