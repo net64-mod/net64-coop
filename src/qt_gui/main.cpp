@@ -5,6 +5,7 @@
 // Refer to the LICENSE file included.
 //
 
+#include <experimental/filesystem>
 #include <iostream>
 #include <QApplication>
 #include <QStandardPaths>
@@ -22,19 +23,23 @@ namespace Frontend
 
 using Core::LoggerPtr;
 
-bool create_app_dirs()
-{
-    if(!QDir{}.mkpath(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)))
-    {
-        std::clog << "Failed to create AppLocalDataLocation: ";
-        std::clog << QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString() << '\n';
-        return false;
-    }
+namespace fs = std::experimental::filesystem;
 
-    return true;
+static void create_app_dirs(const AppSettings& settings)
+{
+    try
+    {
+        fs::create_directories(settings.main_config_dir());
+        fs::create_directories(settings.m64p_data_dir());
+        fs::create_directories(settings.m64p_config_dir());
+    }
+    catch(const std::exception& e)
+    {
+        std::cout << "Failed to create application directories: " << e.what() << '\n';
+    }
 }
 
-void setup_logging()
+static void setup_logging()
 {
     auto global_log_file{
         std::make_shared<spdlog::sinks::basic_file_sink_mt>(
@@ -70,22 +75,21 @@ int main(int argc, char* argv[])
 {
     using namespace Frontend;
 
+    QCoreApplication::setApplicationName("Net64-Coop");
+    QCoreApplication::setOrganizationName("Net64 Project");
+    QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
+
     AppSettings settings;
+    settings.appdata_path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString();
+    create_app_dirs(settings);
+
+    setup_logging();
+
+    // Load config file
+    settings.load(settings.main_config_file_path());
+
     int ret{};
     {
-        QCoreApplication::setApplicationName("Net64-Coop");
-        QCoreApplication::setOrganizationName("Net64 Project");
-        QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
-
-        if(!create_app_dirs())
-            return 1;
-        setup_logging();
-
-        // Load config file
-        settings.appdata_path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString();
-        settings.load(settings.main_config_file_path());
-
-
         QApplication app{argc, argv};
 
         // Log system information
