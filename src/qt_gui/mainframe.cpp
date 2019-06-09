@@ -40,7 +40,7 @@ void MainFrame::on_start_emulator()
         return;
     }
     try
-    {// @todo
+    {
         emulator_ = Core::Emulator::Mupen64Plus{
             Core::Emulator::Mupen64Plus::Core{
                 (settings_->m64p_plugin_dir / settings_->m64p_core_plugin).string(),
