@@ -46,24 +46,18 @@ static void setup_logging()
             QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString() +
             "/log.txt", true)
     };
-
     global_log_file->set_level(spdlog::level::debug);
 
-    // Console logging for Frontend
+    // Terminal logging
     auto stdout_sink{std::make_shared<spdlog::sinks::stderr_color_sink_mt>()};
     stdout_sink->set_pattern("[%^%l%$] [%n] %v");
     stdout_sink->set_level(spdlog::level::info);
-    LoggerPtr frontend_logger{new spdlog::logger("frontend", {global_log_file, stdout_sink})};
-    spdlog::register_logger(frontend_logger);
 
-    // Setup logging of Core
-    Core::init_logging_sinks([global_log_file]{
+    // Pass logging configuration to core
+    Core::init_logging_sinks([global_log_file, stdout_sink]{
         std::vector<spdlog::sink_ptr> sinks{
-            std::make_shared<spdlog::sinks::stderr_color_sink_mt>(), global_log_file
+            stdout_sink, global_log_file
         };
-
-        sinks[0]->set_pattern("[%^%l%$] [core::%n] %v");
-        sinks[0]->set_level(spdlog::level::info);
 
         return sinks;
     });
@@ -93,7 +87,7 @@ int main(int argc, char* argv[])
         QApplication app{argc, argv};
 
         // Log system information
-        auto logger{spdlog::get("frontend")};
+        auto logger{Core::get_logger("frontend")};
         logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
                      QCoreApplication::applicationVersion().toStdString());
         logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),

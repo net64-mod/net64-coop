@@ -154,7 +154,7 @@ private:
     std::string config_path_,
                 data_path_;
 
-    CLASS_LOGGER_("emulator");
+    CLASS_LOGGER_("mupen64plus");
 };
 
 /**
@@ -224,7 +224,7 @@ private:
     }fn_{};
     PluginInfo info_;
 
-    CLASS_LOGGER_("emulator");
+    CLASS_LOGGER_("mupen64plus");
 };
 
 } // M64PlusHelper
@@ -290,6 +290,8 @@ private:
     std::array<std::optional<Plugin>, 6> plugins_{};
     std::atomic_bool running_{};
     bool rom_loaded_{};
+
+    CLASS_LOGGER_("mupen64plus")
 };
 
 } // Core::Emulator

@@ -22,7 +22,7 @@ using SinkFactory = std::function<std::vector<spdlog::sink_ptr>()>;
 
 void init_logging_sinks(const SinkFactory& fn);
 std::vector<spdlog::sink_ptr> get_logging_sinks();
-std::shared_ptr<spdlog::logger> get_logger(std::string_view name);
+std::shared_ptr<spdlog::logger> get_logger(const std::string& name);
 
 #define CLASS_LOGGER_N_(name, fn_name) static spdlog::logger* fn_name() \
                                        { \
