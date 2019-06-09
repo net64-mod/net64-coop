@@ -4,11 +4,14 @@ SET(CMAKE_AUTORCC ON)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(net64_qt_gui
+                resources.qrc
                 main.cpp
                 mainframe.cpp
                 mainframe.hpp
                 m64p_settings_window.cpp
-                m64p_settings_window.hpp app_settings.hpp app_settings.cpp)
+                m64p_settings_window.hpp
+                app_settings.hpp
+                app_settings.cpp)
 
 target_link_libraries(net64_qt_gui 64coop_core)
 

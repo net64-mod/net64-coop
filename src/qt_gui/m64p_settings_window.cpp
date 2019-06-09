@@ -32,7 +32,8 @@ void Frontend::M64PSettings::on_close_pressed()
 
 void M64PSettings::on_open_plugin_folder()
 {
-    QDesktopServices::openUrl(QUrl(ui->folder_path_field->text()));
+	// Because openUrl doesn't like backslashes we have make this awful conversion
+    QDesktopServices::openUrl(QUrl(QString::fromStdString(fs::path(ui->folder_path_field->text().toStdString()).generic_string())));
 }
 
 void M64PSettings::on_set_plugin_folder()

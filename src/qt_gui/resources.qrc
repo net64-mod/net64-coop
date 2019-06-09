@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/net64-icon128.png</file>
+    </qresource>
+</RCC>

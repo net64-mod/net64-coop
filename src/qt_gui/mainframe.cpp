@@ -14,6 +14,7 @@ MainFrame::MainFrame(QWidget* parent, AppSettings& settings)
 {
     ui->setupUi(this);
 
+    setWindowIcon(QIcon{":/icons/net64-icon128.png"});
 
     ui->lineEdit->setText(QString::fromStdString(settings_->rom_file_path.string()));
 }
