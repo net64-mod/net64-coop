@@ -36,6 +36,8 @@ namespace M64PlusHelper
 Core::Core(std::string config_path, std::string data_path)
 :Core(get_current_process(), std::move(config_path), std::move(data_path))
 {
+    init_symbols();
+    init_core();
 }
 
 Core::Core(dynlib_t lib, std::string config_path, std::string data_path)
@@ -45,8 +47,8 @@ Core::Core(dynlib_t lib, std::string config_path, std::string data_path)
     init_core();
 }
 
-Core::Core(const fs::directory_entry& lib_file, std::string config_path, std::string data_path)
-:handle_{load_library(lib_file)}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
+Core::Core(const std::string& lib_path, std::string config_path, std::string data_path)
+:handle_{load_library(lib_path.c_str())}, config_path_{std::move(config_path)}, data_path_{std::move(data_path)}
 {
     if(!handle_.lib)
     {
@@ -201,8 +203,8 @@ Plugin::Plugin(Core& core, dynlib_t lib)
     init_plugin(core.handle());
 }
 
-Plugin::Plugin(Core& core, const fs::directory_entry& lib_file)
-:handle_{load_library(lib_file)}
+Plugin::Plugin(Core& core, const std::string& lib_path)
+:handle_{load_library(lib_path.c_str())}
 {
     if(!handle_.lib)
     {
@@ -253,13 +255,13 @@ dynlib_t Plugin::handle()
     return handle_.lib;
 }
 
-PluginInfo Plugin::get_plugin_info(const fs::directory_entry& file)
+PluginInfo Plugin::get_plugin_info(const std::string& file)
 {
-    auto lib{load_library(file)};
+    auto lib{load_library(file.c_str())};
 
 	if(!lib)
 	{
-		logger()->debug("Failed to load file {} as library: {}", file.path().filename(), get_lib_error_msg());
+		logger()->debug("Failed to load file {} as library: {}", file, get_lib_error_msg());
 		return {};
 	}
 
@@ -625,7 +627,12 @@ const struct M64PlusErrorCategory : std::error_category
 
 } // anonymous
 
-std::error_code make_error_code(Core::Emulator::Mupen64Plus::Error e)
+namespace Core::Emulator::M64PlusHelper
+{
+
+std::error_code make_error_code(Error e)
 {
     return {static_cast<int>(e), m64p_error_category_g};
 }
+
+} // Core::Emulator::M64PlusHelper

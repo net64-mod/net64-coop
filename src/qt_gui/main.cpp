@@ -5,6 +5,7 @@
 // Refer to the LICENSE file included.
 //
 
+#include <experimental/filesystem>
 #include <iostream>
 #include <QApplication>
 #include <QStandardPaths>
@@ -13,6 +14,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "build_info.hpp"
 #include "core/logging.hpp"
+#include "qt_gui/app_settings.hpp"
 #include "qt_gui/mainframe.hpp"
 
 
@@ -21,19 +23,23 @@ namespace Frontend
 
 using Core::LoggerPtr;
 
-bool create_app_dirs()
-{
-    if(!QDir{}.mkpath(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)))
-    {
-        std::clog << "Failed to create AppLocalDataLocation: ";
-        std::clog << QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString() << '\n';
-        return false;
-    }
+namespace fs = std::experimental::filesystem;
 
-    return true;
+static void create_app_dirs(const AppSettings& settings)
+{
+    try
+    {
+        fs::create_directories(settings.main_config_dir());
+        fs::create_directories(settings.m64p_data_dir());
+        fs::create_directories(settings.m64p_config_dir());
+    }
+    catch(const std::exception& e)
+    {
+        std::cout << "Failed to create application directories: " << e.what() << '\n';
+    }
 }
 
-void setup_logging()
+static void setup_logging()
 {
     auto global_log_file{
         std::make_shared<spdlog::sinks::basic_file_sink_mt>(
@@ -73,31 +79,42 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationName("Net64 Project");
     QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
 
-    if(!create_app_dirs())
-        return 1;
+    AppSettings settings;
+    settings.appdata_path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString();
+    create_app_dirs(settings);
+
     setup_logging();
 
-    QApplication app{argc, argv};
+    // Load config file
+    settings.load(settings.main_config_file_path());
 
-    // Log system information
-    auto logger{spdlog::get("frontend")};
-    logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
-                 QCoreApplication::applicationVersion().toStdString());
-    logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
-                 QSysInfo::productVersion().toStdString());
-    logger->info("Kernel: {} {}",
-                 QSysInfo::kernelType().toStdString(), QSysInfo::kernelVersion().toStdString());
-    logger->info("CPU architecture: buildtime={} runtime={}",
-                 QSysInfo::buildCpuArchitecture().toStdString(), QSysInfo::currentCpuArchitecture().toStdString());
-    logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
-    logger->info("Configuration folder: {}",
-                 QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString());
+    int ret{};
+    {
+        QApplication app{argc, argv};
 
-    MainFrame win;
+        // Log system information
+        auto logger{spdlog::get("frontend")};
+        logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
+                     QCoreApplication::applicationVersion().toStdString());
+        logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
+                     QSysInfo::productVersion().toStdString());
+        logger->info("Kernel: {} {}", QSysInfo::kernelType().toStdString(), QSysInfo::kernelVersion().toStdString());
+        logger->info("CPU architecture: buildtime={} runtime={}", QSysInfo::buildCpuArchitecture().toStdString(),
+                     QSysInfo::currentCpuArchitecture().toStdString());
+        logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
+        logger->info("Configuration folder: {}", settings.appdata_path);
 
-    win.show();
+        MainFrame win(nullptr, settings);
 
-    return QApplication::exec();
+        win.show();
+
+        ret = QApplication::exec();
+    }
+
+    // Store settings
+    settings.save(settings.main_config_file_path());
+
+    return ret;
 }
 
 
