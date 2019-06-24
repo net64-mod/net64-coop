@@ -9,7 +9,6 @@
 
 #include <array>
 #include <atomic>
-#include <experimental/filesystem>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -22,10 +21,10 @@
 namespace Core::Emulator
 {
 
-namespace fs = std::experimental::filesystem;
-
 /// Mupen64Plus API this frontend is compatible with
 constexpr int CORE_API_VERSION{0x020001};
+
+struct Mupen64Plus;
 
 // Don't pollute global namespace
 namespace M64PTypes
@@ -71,7 +70,9 @@ std::error_code make_error_code(Error e);
 struct PluginInfo
 {
     M64PTypes::m64p_plugin_type type{M64PTypes::M64PLUGIN_NULL};
-    int plugin_version{}, api_version{}, capabilities{};
+    int plugin_version{},
+        api_version{},
+        capabilities{};
     std::string name;
 };
 
@@ -89,6 +90,7 @@ struct Core
     using core_detach_plugin_t = Error(*)(M64PTypes::m64p_plugin_type);
     using core_do_cmd_t = Error(*)(M64PTypes::m64p_command, int, void*);
     using debug_get_mem_ptr_t = void* (*)(M64PTypes::m64p_dbg_memptr_type);
+
 
     /// Create core from current process
     Core(std::string config_path, std::string data_path);
@@ -232,12 +234,15 @@ private:
 /**
  * Mupen64Plus instance
  */
-struct Mupen64Plus final : EmulatorBase
+struct Mupen64Plus final : IEmulator
 {
     using Core = M64PlusHelper::Core;
     using Plugin = M64PlusHelper::Plugin;
     using PluginInfo = M64PlusHelper::PluginInfo;
     using Error = M64PlusHelper::Error;
+
+    static constexpr usize_t BSWAP_SIZE{4};
+
 
     explicit Mupen64Plus(Core&& core);
 
@@ -269,13 +274,32 @@ struct Mupen64Plus final : EmulatorBase
 
     void stop() override;
 
-    void read_memory(std::size_t addr, void* data, std::size_t n) override;
+    // Read & Write implementations
+    void read_memory(addr_t addr, void* data, usize_t n) override;
+    void write_memory(addr_t addr, const void* data, usize_t n) override;
 
-    void write_memory(std::size_t addr, const void* data, std::size_t n) override;
+    void read(addr_t addr, u8& val) final;
+    void read(addr_t addr, u16& val) final;
+    void read(addr_t addr, u32& val) final;
+    void read(addr_t addr, u64& val) final;
+    void read(addr_t addr, f32& val) final;
+    void read(addr_t addr, f64& val) final;
+
+    void write(addr_t addr, u8 val) final;
+    void write(addr_t addr, u16 val) final;
+    void write(addr_t addr, u32 val) final;
+    void write(addr_t addr, u64 val) final;
+    void write(addr_t addr, f32 val) final;
+    void write(addr_t addr, f64 val) final;
 
     Core& core();
 
     bool running() const override;
+
+    const char* name() const override
+    {
+        return "mupen64plus";
+    }
 
     bool rom_loaded() const;
 
@@ -285,6 +309,23 @@ struct Mupen64Plus final : EmulatorBase
 private:
     void attach_plugins();
     void detach_plugins();
+    inline static void check_bounds(addr_t addr, usize_t size);
+
+    template<typename T>
+    T* get_mem_ptr()
+    {
+        auto ptr{core_.get_mem_ptr()};
+
+        if(!ptr)
+        {
+            // Memory not initalized
+            auto errc{make_error_code(Error::INVALID_STATE)};
+            logger()->error("Tried to read from uninitialized emulator memory");
+            throw std::system_error(errc);
+        }
+
+        return reinterpret_cast<T*>(ptr);
+    }
 
     Core core_;
     std::array<std::optional<Plugin>, 6> plugins_{};

@@ -9,6 +9,7 @@
 
 #include "types.hpp"
 #include "common/is_instantiation.hpp"
+#include "core/memory/util.hpp"
 #include "core/memory/memory_handle.hpp"
 
 

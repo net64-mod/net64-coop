@@ -8,7 +8,8 @@
 #include "m64plus.hpp"
 
 #include <algorithm>
-#include <string>
+#include <cmath>
+#include "core/memory/util.hpp"
 
 
 namespace Core::Emulator
@@ -369,12 +370,12 @@ void Plugin::destroy_plugin()
 } // M64PlusHelper
 
 Mupen64Plus::Mupen64Plus(Core&& core)
-:EmulatorBase("mupen64plus"), core_{std::move(core)}
+:core_{std::move(core)}
 {
 }
 
 Mupen64Plus::Mupen64Plus(Mupen64Plus&& other) noexcept
-:EmulatorBase("mupen64plus"), core_{std::move(other.core_)},
+:core_{std::move(other.core_)},
 plugins_{std::move(other.plugins_)},
 running_{other.running_.load()}
 {
@@ -486,46 +487,6 @@ void Mupen64Plus::stop()
     }while(state != M64EMU_STOPPED);
 }
 
-void Mupen64Plus::read_memory(std::size_t addr, void* data, std::size_t n)
-{
-    auto base{reinterpret_cast<std::uintptr_t>(core_.get_mem_ptr())};
-    if(addr + n > RAM_SIZE)
-    {
-        // Out of bounds
-        auto errc{make_error_code(Error::INVALID_ADDR)};
-        logger()->error("Out of bounds memory read at address {:#x} (size: {:#x})", addr, n);
-        throw std::system_error(errc);
-    }
-    if(base == 0)
-    {
-        // Memory not initalized
-        auto errc{make_error_code(Error::INVALID_STATE)};
-        logger()->error("Tried to read from uninitialized emulator memory (addr: {:#x}, size: {:#x})", addr, n);
-        throw std::system_error(errc);
-    }
-    std::copy_n(reinterpret_cast<u8*>(base + addr), n, reinterpret_cast<u8*>(data));
-}
-
-void Mupen64Plus::write_memory(std::size_t addr, const void* data, std::size_t n)
-{
-    auto base{reinterpret_cast<std::uintptr_t>(core_.get_mem_ptr())};
-    if(addr + n > RAM_SIZE)
-    {
-        // Out of bounds
-        auto errc{make_error_code(Error::INVALID_ADDR)};
-        logger()->error("Out of bounds memory write at address {:#x} (size: {:#x})", addr, n);
-        throw std::system_error(errc);
-    }
-    if(base == 0)
-    {
-        // Memory not initalized
-        auto errc{make_error_code(Error::INVALID_STATE)};
-        logger()->error("Tried to write to uninitialized emulator memory (addr: {:#x}, size: {:#x})", addr, n);
-        throw std::system_error(errc);
-    }
-    std::copy_n(reinterpret_cast<const u8*>(data), n, reinterpret_cast<u8*>(base + addr));
-}
-
 Mupen64Plus::Core& Mupen64Plus::core()
 {
     return core_;
@@ -561,9 +522,234 @@ void Mupen64Plus::detach_plugins()
     core_.detach_plugin(plugins_[M64PLUGIN_RSP]->info().type);
 }
 
+void Mupen64Plus::check_bounds(addr_t addr, usize_t size)
+{
+    if(addr + size > RAM_SIZE)
+    {
+        // Out of bounds
+        auto errc{make_error_code(Error::INVALID_ADDR)};
+        logger()->error("Out of bounds memory access at address {:#x} (size: {:#x})", addr, size);
+        throw std::system_error(errc);
+    }
+}
+
 bool Mupen64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 {
     return plugins_[type].has_value();
+}
+
+void Mupen64Plus::read_memory(addr_t addr, void* data, usize_t n)
+{
+    check_bounds(addr, n);
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    // First copy the aligned chunk
+
+    // Calc unaligned leftovers
+    usize_t begin_left{BSWAP_SIZE - (addr % BSWAP_SIZE)},
+            end_left{(addr + n) % BSWAP_SIZE};
+
+    // Address and length of aligned part
+    addr_t aligned_addr{addr + begin_left},
+           aligned_len{n - end_left - (aligned_addr - addr)};
+
+
+    // Copy & bswap the aligned chunk
+    std::copy_n(ptr + aligned_addr, aligned_len, reinterpret_cast<u8*>(data) + (aligned_addr - addr));
+    Memory::bswap32(reinterpret_cast<u8*>(data) + (aligned_addr - addr), aligned_len);
+
+
+    // Take care of the unaligned beginning
+    auto begin_addr{aligned_addr - BSWAP_SIZE};
+    u32 begin_word{};
+    read(begin_addr, begin_word);
+    Memory::bswap32(&begin_word, sizeof(begin_word));
+    std::copy_n(reinterpret_cast<u8*>(&begin_word) + (BSWAP_SIZE - begin_left),
+                begin_left, reinterpret_cast<u8*>(data));
+
+    // Unaligned ending
+    auto end_addr{aligned_addr + aligned_len};
+    u32 end_word{};
+    read(end_addr, end_word);
+    Memory::bswap32(&end_word, sizeof(end_word));
+    std::copy_n(reinterpret_cast<u8*>(&end_word), end_left, reinterpret_cast<u8*>(data) + begin_left + aligned_len);
+}
+
+void Mupen64Plus::write_memory(addr_t addr, const void* data, usize_t n)
+{
+    auto ptr{get_mem_ptr<u8>()};
+
+    // Calc unaligned padding
+    usize_t begin_padding{addr % BSWAP_SIZE},
+            end_padding{BSWAP_SIZE - ((addr + n) % BSWAP_SIZE)};
+
+    // Aligned chunk
+    addr_t aligned_addr{addr - begin_padding},
+           aligned_len{n + begin_padding + end_padding};
+
+
+    check_bounds(aligned_addr, aligned_len);
+
+
+    std::vector<u8> buf(aligned_len);
+
+    // Read leftovers from ram
+    u32 leftovers[2];
+    read(aligned_addr, leftovers[0]);
+    read(aligned_addr + aligned_len - BSWAP_SIZE, leftovers[1]);
+
+    Memory::bswap32(leftovers, sizeof(leftovers));
+
+    // Write leftovers into buffer
+    std::copy_n(reinterpret_cast<u8*>(&leftovers), sizeof(leftovers[0]), buf.begin());
+    std::copy_n(reinterpret_cast<u8*>(&leftovers[1]), sizeof(leftovers[1]), buf.end() - BSWAP_SIZE);
+
+    // Write actual data into the buffer
+    std::copy_n(reinterpret_cast<const u8*>(data), n, buf.begin() + begin_padding);
+    Memory::bswap32(buf.data(), buf.size());
+
+    std::copy_n(buf.begin(), buf.size(), ptr + aligned_addr);
+}
+
+void Mupen64Plus::read(addr_t addr, u8& val)
+{
+    check_bounds(addr, sizeof(val));
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    addr_t real_addr{addr - (2 * (addr % BSWAP_SIZE)) + (BSWAP_SIZE - 1)};
+
+    val = ptr[real_addr];
+}
+
+void Mupen64Plus::read(addr_t addr, u16& val)
+{
+    check_bounds(addr, sizeof(val));
+
+    u8 tmp[2];
+    read(addr, tmp[0]);
+    read(addr + 1, tmp[1]);
+
+    val = static_cast<u16>((static_cast<u16>(tmp[0]) & 0xffu) << 8u | static_cast<u16>(tmp[1]));
+}
+
+void Mupen64Plus::read(addr_t addr, u32& val)
+{
+    check_bounds(addr, sizeof(val));
+
+    u8 tmp[4];
+    read(addr, tmp[0]);
+    read(addr + 1, tmp[1]);
+    read(addr + 2, tmp[2]);
+    read(addr + 3, tmp[3]);
+
+    val = static_cast<u32>(static_cast<u32>(tmp[0]) << 24u | static_cast<u32>(tmp[1]) << 16u |
+                           static_cast<u32>(tmp[2]) << 8u | static_cast<u32>(tmp[3]));
+}
+
+void Mupen64Plus::read(addr_t addr, u64& val)
+{
+    check_bounds(addr, sizeof(val));
+
+    u32 tmp[2];
+    read(addr, tmp[0]);
+    read(addr + 4, tmp[1]);
+
+    val = static_cast<u64>(static_cast<u64>(tmp[0]) << 32u | static_cast<u64>(tmp[1]));
+}
+
+void Mupen64Plus::read(addr_t addr, f32& val)
+{
+    // @todo: make this work unaligned
+    assert(addr % BSWAP_SIZE == 0);
+
+    check_bounds(addr, sizeof(val));
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    std::copy_n(ptr + addr, sizeof(val), reinterpret_cast<u8*>(&val));
+
+    Memory::bswap32(&val, sizeof(val));
+}
+
+void Mupen64Plus::read(addr_t addr, f64& val)
+{
+    // @todo: make this work unaligned
+    assert(addr % BSWAP_SIZE == 0);
+
+    check_bounds(addr, sizeof(val));
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    std::copy_n(ptr + addr, sizeof(val), reinterpret_cast<u8*>(&val));
+
+    Memory::bswap32(&val, sizeof(val));
+}
+
+void Mupen64Plus::write(addr_t addr, u8 val)
+{
+    check_bounds(addr, sizeof(val));
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    addr_t real_addr{addr - (2 * (addr % BSWAP_SIZE)) + (BSWAP_SIZE - 1)};
+
+    ptr[real_addr] = val;
+}
+
+void Mupen64Plus::write(addr_t addr, u16 val)
+{
+    check_bounds(addr, sizeof(val));
+
+    write(addr, static_cast<u8>(val & 0xffu));
+    write(addr + 1, static_cast<u8>((val & 0xff00u) >> 8u));
+}
+
+void Mupen64Plus::write(addr_t addr, u32 val)
+{
+    check_bounds(addr, sizeof(val));
+
+    write(addr, static_cast<u8>(val & 0xffu));
+    write(addr + 1, static_cast<u8>((val & 0xff00u) >> 8u));
+    write(addr + 2, static_cast<u8>((val & 0xff0000u) >> 16u));
+    write(addr + 1, static_cast<u8>((val & 0xff000000u) >> 24u));
+}
+
+void Mupen64Plus::write(addr_t addr, u64 val)
+{
+    check_bounds(addr, sizeof(val));
+
+    write(addr, static_cast<u32>(val & 0xffffffffu));
+    write(addr, static_cast<u32>((val & 0xffffffff00000000u) >> 32u));
+}
+
+void Mupen64Plus::write(addr_t addr, f32 val)
+{
+    // @todo: make this work unaligned
+    assert(addr % BSWAP_SIZE == 0);
+
+    check_bounds(addr, sizeof(val));
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    Memory::bswap32(&val, sizeof(val));
+
+    std::copy_n(reinterpret_cast<u8*>(&val), sizeof(val), ptr + addr);
+}
+
+void Mupen64Plus::write(addr_t addr, f64 val)
+{
+    // @todo: make this work unaligned
+    assert(addr % BSWAP_SIZE == 0);
+
+    check_bounds(addr, sizeof(val));
+
+    auto ptr{get_mem_ptr<u8>()};
+
+    Memory::bswap32(&val, sizeof(val));
+
+    std::copy_n(reinterpret_cast<u8*>(&val), sizeof(val), ptr + addr);
 }
 
 } // Core::Emulator
