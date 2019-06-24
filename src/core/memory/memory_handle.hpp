@@ -7,9 +7,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <limits>
+#include "common/integer.hpp"
 #include "core/emulator/emulator.hpp"
-#include "core/memory/conversion.hpp"
 
 
 namespace Core::Memory
@@ -29,7 +30,7 @@ struct Handle
 
     static constexpr addr_t INVALID_OFFSET{std::numeric_limits<addr_t>::max()};
 
-    explicit Handle(Emulator::EmulatorBase& hdl);
+    explicit Handle(Emulator::IEmulator& hdl);
 
     Handle(const Handle&) = default;
 
@@ -37,10 +38,10 @@ struct Handle
     bool operator!=(const Handle& other) const;
 
     /// Set the referenced emulator
-    void set_emulator(Emulator::EmulatorBase& hdl);
+    void set_emulator(Emulator::IEmulator& hdl);
 
     /// Return referenced emulator (const)
-    const Emulator::EmulatorBase& emulator() const;
+    const Emulator::IEmulator& emulator() const;
 
     /// Read n bytes from offset
     void read_raw(addr_t offset, u8 data[], usize_t n);
@@ -83,17 +84,30 @@ struct Handle
     /// Check if offset is a valid offset into n64 memory
     static bool valid_offset(addr_t offset);
 
-protected:
-    Emulator::EmulatorBase* emu_;
+private:
+
+    /**
+     * Helper alias to find the readable / writeable version of a type.
+     * Casts signed integers to their unsigned counterpart
+     * Casts enums to their underlying (unsigned) type
+     */
+    template<typename T>
+    using Casted = std::conditional_t<std::is_signed_v<T>,
+                       Common::unsigned_t<T>,
+                   std::conditional_t<std::is_enum_v<T>,
+                       Common::Uint<sizeof(T) * 8>,
+                   T>>;
+
+    Emulator::IEmulator* emu_;
 };
 
 
 template<typename T>
 T Handle::read(addr_t offset)
 {
-    T val{};
-    read_raw(offset, reinterpret_cast<u8*>(&val), sizeof(val));
-    return to_native(val);
+    Casted<T> val{};
+    emu_->read(offset, val);
+    return static_cast<T>(val);
 }
 
 template<typename T>
@@ -122,8 +136,7 @@ T Handle::readc_aligned(addr_t& offset)
 template<typename T>
 void Handle::write(addr_t offset, T val)
 {
-    val = to_n64(val);
-    write_raw(offset, reinterpret_cast<u8*>(&val), sizeof(val));
+    emu_->write(offset, static_cast<Casted<T>>(val));
 }
 
 template<typename T>
