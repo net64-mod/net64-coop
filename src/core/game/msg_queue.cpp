@@ -26,8 +26,8 @@ std::optional<n64_message_t> Receiver::receive()
     }
 
     // Read message from slot
-    Memory::CPtr<n64_message_t> msg_ptr{
-        state_->field_ptr(&SharedState::msg_array)[index]
+    auto msg_ptr{
+        static_cast<Memory::CPtr<n64_message_t>>(state_->field_ptr(&SharedState::msg_array)[index])
     };
     n64_message_t msg{
         msg_ptr->field(&n64_message_t::msg_id),
