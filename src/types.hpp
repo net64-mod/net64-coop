@@ -41,6 +41,11 @@ using n64_saddr_t = i32;
                                           __FILE__, __LINE__, __func__);
 #endif
 
+template<bool ASSERT>
+struct Assert
+{
+    static_assert(ASSERT);
+};
 
 struct NonCopyable
 {
