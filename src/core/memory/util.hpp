@@ -23,6 +23,20 @@ T offset_of(V U::*const ptr)
     return static_cast<T>(reinterpret_cast<std::uintptr_t>(&(val.*ptr)) - reinterpret_cast<std::uintptr_t>(&val));
 }
 
+inline void bswap32(void* data, std::size_t n)
+{
+    n -= (n % 4);
+
+    for(auto ptr{reinterpret_cast<u8*>(data)}; ptr < reinterpret_cast<u8*>(data) + n; ptr += 4)
+    {
+        auto tmp{ptr[0]};
+        ptr[0] = ptr[3];
+        ptr[3] = tmp;
+        tmp = ptr[1];
+        ptr[1] = ptr[2];
+        ptr[2] = tmp;
+    }
+}
 
 // Recursive swap helpers
 namespace Impl
