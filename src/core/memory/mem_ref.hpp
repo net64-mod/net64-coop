@@ -113,7 +113,6 @@ struct AggregateRef
         };
     }
 
-private:
     void write(const TType& val) const
     {
         mem_hdl_.template write<RawType>(addr_, val);
@@ -124,6 +123,7 @@ private:
         return mem_hdl_.template read<RawType>(addr_);
     }
 
+private:
     /// Helper function to collapse references to pointers to just pointers
     template<typename T>
     const auto make_return_type(HandleType hdl, AddrType addr) const
@@ -383,7 +383,6 @@ struct FundamentalRef
 
 #undef MUTABLE_ONLY_
 
-private:
     void write(const TType& val) const
     {
         mem_hdl_.template write<RawType>(addr_, val);
@@ -394,6 +393,7 @@ private:
         return mem_hdl_.template read<RawType>(addr_);
     }
 
+private:
     mutable HandleType mem_hdl_;
     AddrType addr_{};
 };
