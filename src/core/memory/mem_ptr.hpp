@@ -91,7 +91,7 @@ struct PtrBase
 
     /// Allow standard pointer conversions
     TEMPLATE_
-    operator TPointer<T, HandleType>() const
+    explicit operator TPointer<T, HandleType>() const
     {
         return {mem_hdl_, addr_};
     }
