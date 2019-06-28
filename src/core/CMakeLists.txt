@@ -19,7 +19,7 @@ add_library(64coop_core STATIC
         emulator/m64plus.cpp
         emulator/m64plus.hpp
         emulator/shared_library.cpp
-        emulator/shared_library.hpp)
+        emulator/shared_library.hpp emulator/m64plus_core.cpp emulator/m64plus_plugin.cpp)
 
 if(UNIX)
     target_link_libraries(64coop_core -ldl)

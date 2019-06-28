@@ -18,8 +18,7 @@ const char* AppSettings::MAIN_CONFIG_SUB_DIR{"config/"};
 const char* AppSettings::MAIN_CONFIG_FILENAME{"config.json"};
 
 const char* AppSettings::M64P_DEFAULT_PLUGIN_DIR{"../emulator/mupen64plus/"};
-const char* AppSettings::M64P_DEFAULT_CONFIG_SUB_DIR{"config/mupen64plus/config/"};
-const char* AppSettings::M64P_DEFAULT_DATA_SUB_DIR{"config/mupen64plus/data/"};
+const char* AppSettings::M64P_DEFAULT_ROOT_DIR{"config/mupen64plus/"};
 
 
 bool AppSettings::load(const fs::path& file)
@@ -117,14 +116,9 @@ fs::path AppSettings::main_config_file_path() const
     return main_config_dir() / MAIN_CONFIG_FILENAME;
 }
 
-fs::path AppSettings::m64p_config_dir() const
+fs::path AppSettings::m64p_dir() const
 {
-    return appdata_path / M64P_DEFAULT_CONFIG_SUB_DIR;
-}
-
-fs::path AppSettings::m64p_data_dir() const
-{
-    return appdata_path / M64P_DEFAULT_DATA_SUB_DIR;
+    return appdata_path / M64P_DEFAULT_ROOT_DIR;
 }
 
 }

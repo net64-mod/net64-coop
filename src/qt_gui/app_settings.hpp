@@ -36,11 +36,9 @@ struct AppSettings
 
     // Mupen64Plus configuration
     static const char* M64P_DEFAULT_PLUGIN_DIR,
-                     * M64P_DEFAULT_CONFIG_SUB_DIR,
-                     * M64P_DEFAULT_DATA_SUB_DIR;
+                     * M64P_DEFAULT_ROOT_DIR;
 
-    fs::path m64p_config_dir() const;
-    fs::path m64p_data_dir() const;
+    fs::path m64p_dir() const;
 
     fs::path m64p_plugin_dir{M64P_DEFAULT_PLUGIN_DIR};
     std::string m64p_video_plugin,

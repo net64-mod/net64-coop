@@ -21,9 +21,6 @@
 namespace Core::Emulator
 {
 
-/// Mupen64Plus API this frontend is compatible with
-constexpr int CORE_API_VERSION{0x020001};
-
 struct Mupen64Plus;
 
 // Don't pollute global namespace
@@ -91,15 +88,22 @@ struct Core
     using core_do_cmd_t = Error(*)(M64PTypes::m64p_command, int, void*);
     using debug_get_mem_ptr_t = void* (*)(M64PTypes::m64p_dbg_memptr_type);
 
+    using list_config_sections_t = Error(*)(void*, void(*)(void*, const char*));
+    using open_config_section_t = Error(*)(const char*, M64PTypes::m64p_handle*);
+    using save_config_file_t = void(*)();
+    using set_config_parameter_t = Error(*)(M64PTypes::m64p_handle, const char*, M64PTypes::m64p_type, const void*);
+
+    /// Mupen64Plus API this frontend is compatible with
+    static constexpr int API_VERSION{0x020001};
 
     /// Create core from current process
-    Core(std::string config_path, std::string data_path);
+    Core(std::string root_path);
 
     /// Create core from dynamic library handle
-    Core(dynlib_t lib, std::string config_path, std::string data_path);
+    Core(dynlib_t lib, std::string root_path);
 
     /// Create core from library file
-    Core(const std::string& lib_path, std::string config_path, std::string data_path);
+    Core(const std::string& lib_path, std::string root_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
@@ -114,6 +118,8 @@ struct Core
 
     friend void swap(Core& first, Core& second) noexcept;
 
+    void prepare_config_file();
+
     void attach_plugin(Plugin& plugin);
 
     void detach_plugin(M64PTypes::m64p_plugin_type type);
@@ -122,6 +128,15 @@ struct Core
     void* get_mem_ptr();
 
     Error do_cmd(M64PTypes::m64p_command cmd, int p1, void* p2);
+
+    void list_config_sections(void* context, void(*callback)(void* context, const char* name));
+
+    M64PTypes::m64p_handle open_config_section(const char* name);
+
+    void save_config_file();
+
+    void set_config_parameter(M64PTypes::m64p_handle handle, const char* param_name,
+                              M64PTypes::m64p_type type, const void* data);
 
     /// Return native library handle
     dynlib_t handle();
@@ -132,6 +147,7 @@ struct Core
 private:
     void init_symbols();
     void init_core();
+    void create_folder_structure();
     void destroy_core();
 
     template<typename T>
@@ -150,11 +166,16 @@ private:
         core_detach_plugin_t core_detach_plugin;
         core_do_cmd_t core_do_cmd;
         debug_get_mem_ptr_t debug_get_mem_ptr;
+        list_config_sections_t list_config_sections;
+        open_config_section_t open_config_section;
+        save_config_file_t save_config_file;
+        set_config_parameter_t set_config_parameter;
     }fn_{};
     PluginInfo info_;
 
-    std::string config_path_,
-                data_path_;
+    std::string root_path_;
+
+    static const std::vector<std::string> FORBIDDEN_HOTKEYS;
 
     CLASS_LOGGER_("mupen64plus");
 };

@@ -45,8 +45,7 @@ void MainFrame::on_start_emulator()
         emulator_ = Core::Emulator::Mupen64Plus{
             Core::Emulator::Mupen64Plus::Core{
                 (settings_->m64p_plugin_dir / settings_->m64p_core_plugin).string(),
-                settings_->m64p_config_dir().string(),
-                settings_->m64p_data_dir().string()
+                settings_->m64p_dir().string()
             }
         };
 
