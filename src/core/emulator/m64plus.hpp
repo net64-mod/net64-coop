@@ -97,13 +97,13 @@ struct Core
     static constexpr int API_VERSION{0x020001};
 
     /// Create core from current process
-    Core(std::string root_path);
+    Core(std::string root_path, std::string data_path);
 
     /// Create core from dynamic library handle
-    Core(dynlib_t lib, std::string root_path);
+    Core(dynlib_t lib, std::string root_path, std::string data_path);
 
     /// Create core from library file
-    Core(const std::string& lib_path, std::string root_path);
+    Core(const std::string& lib_path, std::string root_path, std::string data_path);
 
     /// Non-copyable
     Core(const Core&) = delete;
@@ -173,7 +173,8 @@ private:
     }fn_{};
     PluginInfo info_;
 
-    std::string root_path_;
+    std::string root_path_,
+                data_path_;
 
     static const std::vector<std::string> FORBIDDEN_HOTKEYS;
 

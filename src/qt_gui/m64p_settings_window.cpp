@@ -16,7 +16,7 @@ M64PSettings::M64PSettings(QWidget* parent, AppSettings& settings)
 :QMainWindow(parent), ui(new Ui::M64PSettings), settings_{&settings}
 {
     ui->setupUi(this);
-    ui->folder_path_field->setText(QString::fromStdString(settings_->m64p_plugin_dir.string()));
+    ui->folder_path_field->setText(QString::fromStdString(settings_->m64p_plugin_dir().string()));
     refresh_plugins();
 }
 
@@ -52,7 +52,8 @@ void M64PSettings::on_set_plugin_folder()
 
 void M64PSettings::on_reset_plugin_folder()
 {
-    ui->folder_path_field->setText(QString::fromStdString(AppSettings::M64P_DEFAULT_PLUGIN_DIR));
+    settings_->m64p_custom_pugin_dir.clear();
+    ui->folder_path_field->setText(QString::fromStdString(settings_->m64p_plugin_dir().string()));
     refresh_plugins();
 }
 
@@ -69,7 +70,7 @@ void M64PSettings::closeEvent(QCloseEvent*)
     save(settings_->m64p_rsp_plugin, *ui->rsp_plugin_box);
     save(settings_->m64p_input_plugin, *ui->input_plugin_box);
 
-    settings_->m64p_plugin_dir = ui->folder_path_field->text().toStdString();
+    settings_->m64p_custom_pugin_dir = ui->folder_path_field->text().toStdString();
 }
 
 void M64PSettings::refresh_plugins()

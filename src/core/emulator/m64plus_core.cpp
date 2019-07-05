@@ -34,22 +34,22 @@ const std::vector <std::string> Core::FORBIDDEN_HOTKEYS{
     "Kbd Mapping Gameshark"
 };
 
-Core::Core(std::string root_path)
-:Core(get_current_process(), std::move(root_path))
+Core::Core(std::string root_path, std::string data_path)
+:Core(get_current_process(), std::move(root_path), std::move(data_path))
 {
     init_symbols();
     init_core();
 }
 
-Core::Core(dynlib_t lib, std::string root_path)
-:handle_{lib}, root_path_{std::move(root_path)}
+Core::Core(dynlib_t lib, std::string root_path, std::string data_path)
+:handle_{lib}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
 {
     init_symbols();
     init_core();
 }
 
-Core::Core(const std::string& lib_path, std::string root_path)
-:handle_{load_library(lib_path.c_str())}, root_path_{std::move(root_path)}
+Core::Core(const std::string& lib_path, std::string root_path, std::string data_path)
+:handle_{load_library(lib_path.c_str())}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
 {
     if(!handle_.lib)
     {
@@ -62,7 +62,8 @@ Core::Core(const std::string& lib_path, std::string root_path)
 }
 
 Core::Core(Core&& other) noexcept
-:handle_{std::move(other.handle_)}, fn_{other.fn_}, root_path_{std::move(other.root_path_)}
+:handle_{std::move(other.handle_)}, fn_{other.fn_},
+root_path_{std::move(other.root_path_)}, data_path_{std::move(other.data_path_)}
 {
 }
 
@@ -88,6 +89,7 @@ void swap(Core& first, Core& second) noexcept
     swap(first.handle_, second.handle_);
     swap(first.fn_, second.fn_);
     swap(first.root_path_, second.root_path_);
+    swap(first.data_path_, second.data_path_);
 }
 
 void Core::prepare_config_file()
@@ -244,10 +246,9 @@ void Core::init_core()
 
     info_.name = name_ptr;
 
-    std::string config_path{(fs::path(root_path_) / "config").string()}, data_path{
-    (fs::path(root_path_) / "data").string()};
+    std::string config_path{(fs::path(root_path_) / "config").string()};
 
-    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path.c_str(), nullptr, nullptr, nullptr, nullptr);
+    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path_.c_str(), nullptr, nullptr, nullptr, nullptr);
     if(failed(ret))
     {
         // Failed to startup core
@@ -275,7 +276,6 @@ void Core::create_folder_structure()
     }};
 
     fs::path dir{root_path_};
-    create_dir(dir / "data");
     create_dir(dir / "config");
     create_dir(dir / "screenshot");
     create_dir(dir / "save");
