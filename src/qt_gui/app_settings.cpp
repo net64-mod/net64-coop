@@ -17,8 +17,7 @@ namespace Frontend
 const char* AppSettings::MAIN_CONFIG_SUB_DIR{"config/"};
 const char* AppSettings::MAIN_CONFIG_FILENAME{"config.json"};
 
-const char* AppSettings::M64P_DEFAULT_PLUGIN_DIR{"../emulator/mupen64plus/"};
-const char* AppSettings::M64P_DEFAULT_ROOT_DIR{"config/mupen64plus/"};
+const char* AppSettings::M64P_DEFAULT_ROOT_DIR{"mupen64plus/"};
 
 
 bool AppSettings::load(const fs::path& file)
@@ -49,7 +48,7 @@ bool AppSettings::load(const fs::path& file)
         load_string(rom_file_path, json["rom_file"]);
 
         // Load mupen64plus plugin directory
-        load_string(m64p_plugin_dir, m64p_obj["plugin_dir"]);
+        load_string(m64p_custom_pugin_dir, m64p_obj["plugin_dir"]);
 
         // Load last selected mupen64plus plugins
         load_string(m64p_core_plugin, m64p_obj["core_plugin"]);
@@ -80,7 +79,7 @@ bool AppSettings::save(const fs::path& file)
         auto& m64p_obj{json["mupen64plus"]};
 
         // Store mupen64plus plugin directory
-        m64p_obj["plugin_dir"] = m64p_plugin_dir.string();
+        m64p_obj["plugin_dir"] = m64p_custom_pugin_dir.string();
 
         // Store currently selected mupen64plus plugins
         m64p_obj["video_plugin"] = m64p_video_plugin;
@@ -119,6 +118,14 @@ fs::path AppSettings::main_config_file_path() const
 fs::path AppSettings::m64p_dir() const
 {
     return appdata_path / M64P_DEFAULT_ROOT_DIR;
+}
+
+fs::path AppSettings::m64p_plugin_dir() const
+{
+    if(m64p_custom_pugin_dir.empty())
+        return m64p_dir() / "bin";
+    else
+        return m64p_custom_pugin_dir;
 }
 
 }

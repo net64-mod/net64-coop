@@ -39,8 +39,9 @@ struct AppSettings
                      * M64P_DEFAULT_ROOT_DIR;
 
     fs::path m64p_dir() const;
+    fs::path m64p_plugin_dir() const;
 
-    fs::path m64p_plugin_dir{M64P_DEFAULT_PLUGIN_DIR};
+    fs::path m64p_custom_pugin_dir;
     std::string m64p_video_plugin,
                 m64p_audio_plugin,
                 m64p_core_plugin,
