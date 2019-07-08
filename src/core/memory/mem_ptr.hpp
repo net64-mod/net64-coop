@@ -9,6 +9,7 @@
 
 #include "types.hpp"
 #include "common/operator_proxy.hpp"
+#include "core/memory/conversion.hpp"
 #include "core/memory/mem_ref.hpp"
 
 
@@ -234,13 +235,16 @@ struct Ptr<N64Ptr<TType>, THandle> : PtrBase<TType, sizeof(typename THandle::add
     /// Return pointer to the address stored in the current address
     const Ptr<QualifiedType, HandleType> operator*() const
     {
-        return {this->mem_hdl_, this->mem_hdl_.template read<AddrType>(this->addr_)};
+        return {this->mem_hdl_, addr_logical_to_physical(this->mem_hdl_.template read<AddrType>(this->addr_))};
     }
 
     /// Return pointer to the address stored in the current address + index
     const Ptr<QualifiedType, HandleType> operator[](USizeType i) const
     {
-        return {this->mem_hdl_, this->mem_hdl_.template read<AddrType>(this->addr_ + Base::SIZE * i)};
+        return {
+            this->mem_hdl_,
+            addr_logical_to_physical(this->mem_hdl_.template read<AddrType>(this->addr_ + Base::SIZE * i))
+        };
     }
 
     /// Call nested pointer function
@@ -272,13 +276,16 @@ struct Ptr<N64Ptr<const TType>, THandle> : PtrBase<TType, sizeof(typename THandl
     /// Return pointer to the address stored in the current address
     const Ptr<QualifiedType, HandleType> operator*() const
     {
-        return {this->mem_hdl_, this->mem_hdl_.template read<AddrType>(this->addr_)};
+        return {this->mem_hdl_, addr_logical_to_physical(this->mem_hdl_.template read<AddrType>(this->addr_))};
     }
 
     /// Return pointer to the address stored in the current address + index
     const Ptr<QualifiedType, HandleType> operator[](USizeType i) const
     {
-        return {this->mem_hdl_, this->mem_hdl_.template read<AddrType>(this->addr_ + Base::SIZE * i)};
+        return {
+            this->mem_hdl_,
+            addr_logical_to_physical(this->mem_hdl_.template read<AddrType>(this->addr_ + Base::SIZE * i))
+        };
     }
 
     /// Call nested pointer function

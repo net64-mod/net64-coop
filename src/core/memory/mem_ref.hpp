@@ -9,6 +9,7 @@
 
 #include "types.hpp"
 #include "common/is_instantiation.hpp"
+#include "core/memory/conversion.hpp"
 #include "core/memory/util.hpp"
 #include "core/memory/memory_handle.hpp"
 
@@ -131,8 +132,7 @@ private:
     {
         if constexpr(Common::is_instantiation_of_v<N64Ptr, T>)
         {
-
-            return Ptr<typename T::Type, HandleType>{hdl, mem_hdl_.template read<AddrType>(addr)};
+            return Ptr<typename T::Type, HandleType>{hdl, addr_logical_to_physical(mem_hdl_.template read<AddrType>(addr))};
         }
         else
         {
