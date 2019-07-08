@@ -14,6 +14,21 @@
 namespace Core::Memory
 {
 
+constexpr n64_addr_t LOGICAL_BASE{0x80000000};
+
+
+inline n64_addr_t addr_physical_to_logical(n64_addr_t addr)
+{
+    return addr + LOGICAL_BASE;
+}
+
+inline n64_addr_t addr_logical_to_physical(n64_addr_t addr)
+{
+    assert(0x80000000 <= addr);
+
+    return addr - LOGICAL_BASE;
+}
+
 namespace Impl
 {
 template<typename T>

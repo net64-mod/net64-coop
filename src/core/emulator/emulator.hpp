@@ -65,8 +65,7 @@ struct IEmulator
     /// Return name of emulator
     virtual const char* name() const = 0;
 
-    static constexpr n64_usize_t RAM_SIZE{0x800000},
-                                 MAX_OFFSET{RAM_SIZE - 1};
+    static constexpr usize_t RAM_SIZE{0x800000};
 };
 
 } // Core::Emulator
