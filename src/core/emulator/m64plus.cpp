@@ -359,25 +359,25 @@ void Mupen64Plus::write(addr_t addr, u16 val)
 {
     check_bounds(addr, sizeof(val));
 
-    write(addr, static_cast<u8>(val & 0xffu));
-    write(addr + 1, static_cast<u8>((val & 0xff00u) >> 8u));
+    write(addr + 1, static_cast<u8>(val & 0xffu));
+    write(addr, static_cast<u8>((val & 0xff00u) >> 8u));
 }
 
 void Mupen64Plus::write(addr_t addr, u32 val)
 {
     check_bounds(addr, sizeof(val));
 
-    write(addr, static_cast<u8>(val & 0xffu));
-    write(addr + 1, static_cast<u8>((val & 0xff00u) >> 8u));
-    write(addr + 2, static_cast<u8>((val & 0xff0000u) >> 16u));
-    write(addr + 1, static_cast<u8>((val & 0xff000000u) >> 24u));
+    write(addr + 3, static_cast<u8>(val & 0xffu));
+    write(addr + 2, static_cast<u8>((val & 0xff00u) >> 8u));
+    write(addr + 1, static_cast<u8>((val & 0xff0000u) >> 16u));
+    write(addr, static_cast<u8>((val & 0xff000000u) >> 24u));
 }
 
 void Mupen64Plus::write(addr_t addr, u64 val)
 {
     check_bounds(addr, sizeof(val));
 
-    write(addr, static_cast<u32>(val & 0xffffffffu));
+    write(addr + 4, static_cast<u32>(val & 0xffffffffu));
     write(addr, static_cast<u32>((val & 0xffffffff00000000u) >> 32u));
 }
 
