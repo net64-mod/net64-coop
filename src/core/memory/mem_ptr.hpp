@@ -117,23 +117,23 @@ struct PtrBase
 
     PtrBase operator+(SSizeType n) const
     {
-        return {mem_hdl_, addr_ + n};
+        return {mem_hdl_, addr_ + SIZE * n};
     }
 
     PtrBase operator-(SSizeType n) const
     {
-        return {mem_hdl_, addr_ - n};
+        return {mem_hdl_, addr_ - SIZE * n};
     }
 
     PtrBase operator+=(SSizeType n)
     {
-        addr_ += n;
+        addr_ += SIZE * n;
         return *this;
     }
 
     PtrBase operator-=(SSizeType n)
     {
-        addr_ -= n;
+        addr_ -= SIZE * n;
         return *this;
     }
 
