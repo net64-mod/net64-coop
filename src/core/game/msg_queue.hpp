@@ -20,14 +20,14 @@
 namespace Core::Game::MsgQueue
 {
 
+using message_type_t = u16;
+constexpr n64_usize_t MSG_DATA_LEN{14};
+
 /// Message type
 struct n64_message_t
 {
-    u16 msg_id, //< Reserved for type of message
-        arg0;
-    u32 arg1,
-        arg2,
-        arg3;
+    message_type_t msg_type;    //< Reserved for type of message
+    u8 msg_data[MSG_DATA_LEN];  //< Message contents
 };
 
 /// State of one queue slot
@@ -40,11 +40,11 @@ enum struct SlotState : u8
 /// State of queue
 struct SharedState
 {
-    [[maybe_unused]] u8 game_index;   //< Index of game, unused in client code
-    u8 client_index, //< Current read/write index
-       size;         //< Size of the queue
-    Memory::N64Ptr<SlotState> info_array; //< Pointer to info array
-    Memory::N64Ptr<n64_message_t> msg_array;      //< Pointer to message array
+    [[maybe_unused]] u8 game_index;             //< Index of game, unused in client code
+    u8 client_index,                            //< Current read/write index
+       size;                                    //< Size of the queue
+    Memory::N64Ptr<SlotState> descriptor_array; //< Pointer to descriptor array
+    Memory::N64Ptr<n64_message_t> msg_array;    //< Pointer to message array
 };
 
 /**
@@ -52,13 +52,14 @@ struct SharedState
  */
 struct Receiver
 {
-    Receiver(Memory::Ptr<SharedState> queue);
+    explicit Receiver(Memory::Ptr<SharedState> queue);
 
     /**
      * Receive message from queue
-     * @return Received message, empty if queue empty
+     * @param received message
+     * @return true if message received, false if queue empty
      */
-    std::optional<n64_message_t> receive();
+    bool poll(n64_message_t& msg);
 
 private:
     Memory::Ptr<SharedState> state_;
@@ -69,7 +70,7 @@ private:
  */
 struct Sender
 {
-    Sender(Memory::Ptr<SharedState> queue);
+    explicit Sender(Memory::Ptr<SharedState> queue);
 
     /**
      * Send one message to the queue
