@@ -40,8 +40,10 @@ Plugin::Plugin(Core& core, const std::string& lib_path)
     if(!handle_.lib)
     {
         // Library file does not exist
-        logger()->error("Failed to open library file: \"{}\"", get_lib_error_msg());
-        throw std::system_error(make_error_code(Error::LIB_LOAD_FAILED));
+        std::system_error err(make_error_code(Error::LIB_LOAD_FAILED), "Failed to load plugin library file " +
+                              std::string(get_lib_error_msg()));
+        logger()->error(err.what());
+        throw err;
     }
     init_symbols();
     init_plugin(core.handle());
@@ -147,9 +149,9 @@ void Plugin::init_symbols()
     if(!all_true(fn_.startup, fn_.shutdown, fn_.get_version))
     {
         // Failed to resolve symbol
-        auto errc{make_error_code(Error::SYM_NOT_FOUND)};
-        logger()->error("Failed to resolve symbols of plugin");
-        throw std::system_error(errc);
+        std::system_error err{make_error_code(Error::SYM_NOT_FOUND), "Failed to resolve plugin symbol"};
+        logger()->error(err.what());
+        throw err;
     }
 }
 
@@ -160,10 +162,10 @@ void Plugin::init_plugin(dynlib_t core_lib)
     if(failed(ret))
     {
         // Failed to retrieve version info
-        auto errc{make_error_code(ret)};
-        logger()->error("Failed to retrieve core info: {}", errc.message());
+        std::system_error err{make_error_code(ret), "Failed to retrieve plugin info"};
+        logger()->error(err.what());
         info_ = {};
-        throw std::system_error(errc);
+        throw err;
     }
 
     ret = fn_.startup(core_lib, nullptr, nullptr);
@@ -175,7 +177,7 @@ void Plugin::init_plugin(dynlib_t core_lib)
                         Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version,
                         info_.capabilities, errc.message());
         info_ = {};
-        throw std::system_error(errc);
+        throw std::system_error(errc, "Failed to start " + std::string(Plugin::type_str(info_.type)) + " plugin");
     }
 
     info_.name = name_ptr;

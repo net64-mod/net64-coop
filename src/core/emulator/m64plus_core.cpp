@@ -55,7 +55,7 @@ Core::Core(const std::string& lib_path, std::string root_path, std::string data_
     {
         // Library file does not exist
         logger()->error("Failed to open library file: \"{}\"", get_lib_error_msg());
-        throw std::system_error(make_error_code(Error::LIB_LOAD_FAILED));
+        throw std::system_error(make_error_code(Error::LIB_LOAD_FAILED), "Failed to init Mupen64Plus Core");
     }
     init_symbols();
     init_core();
@@ -139,9 +139,9 @@ void Core::attach_plugin(Plugin& plugin)
     if(failed(ret))
     {
         // Failed to attach plugin
-        auto errc{make_error_code(ret)};
-        logger()->error("Failed to attach plugin {}: {}", plugin.info().name, errc.message());
-        throw std::system_error(errc);
+        std::system_error err{make_error_code(ret), "Failed to attach plugin " + plugin.info().name};
+        logger()->error(err.what());
+        throw err;
     }
 }
 
@@ -172,8 +172,9 @@ void Core::list_config_sections(void* context, void (* callback)(void*, const ch
 
     if(failed(ret))
     {
-        logger()->error("Failed to list config sections");
-        throw std::system_error(make_error_code(ret));
+        std::system_error err{make_error_code(ret), "Failed to list config sections"};
+        logger()->error(err.what());
+        throw err;
     }
 }
 
@@ -184,8 +185,9 @@ M64PTypes::m64p_handle Core::open_config_section(const char* name)
     auto ret{fn_.open_config_section(name, &hdl)};
     if(failed(ret))
     {
-        logger()->error("Failed to open config section '{}'", name);
-        throw std::system_error(make_error_code(ret));
+        std::system_error err{make_error_code(ret), "Failed to open config section " + std::string(name)};
+        logger()->error(err.what());
+        throw err;
     }
 
     return hdl;
@@ -202,8 +204,9 @@ void Core::set_config_parameter(M64PTypes::m64p_handle handle, const char* param
     auto ret{fn_.set_config_parameter(handle, param_name, type, data)};
     if(failed(ret))
     {
-        logger()->error("Failed to set config parameter '{}'", param_name);
-        throw std::system_error(make_error_code(ret));
+        std::system_error err{make_error_code(ret), "Failed to set config parameter " + std::string(param_name)};
+        logger()->error(err.what());
+        throw err;
     }
 }
 
@@ -225,9 +228,9 @@ void Core::init_symbols()
                  fn_.core_shutdown, fn_.core_do_cmd, fn_.debug_get_mem_ptr, fn_.list_config_sections,
                  fn_.open_config_section, fn_.save_config_file, fn_.set_config_parameter))
     {
-        auto errc{make_error_code(Error::SYM_NOT_FOUND)};
-        logger()->error("Failed to resolve symbols of core");
-        throw std::system_error(errc);
+        std::system_error err{make_error_code(Error::SYM_NOT_FOUND), "Failed to resolve core symbole"};
+        logger()->error(err.what());
+        throw err;
     }
 }
 
@@ -239,9 +242,9 @@ void Core::init_core()
     if(failed(ret))
     {
         // Failed to get core info
-        auto errc{make_error_code(ret)};
-        logger()->error("Failed to retrieve core info: {}", errc.message());
-        throw std::system_error(errc);
+        std::system_error err{make_error_code(ret), "Failed to retrieve core info"};
+        logger()->error(err.what());
+        throw err;
     }
 
     info_.name = name_ptr;
@@ -252,11 +255,11 @@ void Core::init_core()
     if(failed(ret))
     {
         // Failed to startup core
-        info_ = {};
         auto errc{make_error_code(ret)};
         logger()->error("Failed to start {} v{}, api: {} (capabilities: {:#x}): {}", name_ptr, info_.plugin_version,
                         info_.api_version, info_.capabilities, errc.message());
-        throw std::system_error(errc);
+        info_ = {};
+        throw std::system_error(errc, "Failed to start Mupen64Plus Core " + std::string(name_ptr));
     }
 
     create_folder_structure();
