@@ -341,9 +341,9 @@ private:
         if(!ptr)
         {
             // Memory not initalized
-            auto errc{make_error_code(Error::INVALID_STATE)};
-            logger()->error("Tried to read from uninitialized emulator memory");
-            throw std::system_error(errc);
+            std::system_error err{make_error_code(Error::INVALID_STATE), "Failed to access emulator memory"};
+            logger()->error(err.what());
+            throw err;
         }
 
         return reinterpret_cast<T*>(ptr);

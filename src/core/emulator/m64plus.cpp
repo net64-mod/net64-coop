@@ -83,9 +83,9 @@ void Mupen64Plus::load_rom(void* rom_data, std::size_t n)
     auto ret {core_.do_cmd(M64PTypes::M64CMD_ROM_OPEN, static_cast<int>(n), rom_data)};
     if(failed(ret))
     {
-        auto errc{make_error_code(ret)};
-        logger()->error("Failed to load ROM image: {}", errc.message());
-        throw std::system_error(errc);
+        std::system_error err(make_error_code(ret), "Failed to load ROM image");
+        logger()->error(err.what());
+        throw err;
     }
     rom_loaded_ = true;
 }
@@ -114,9 +114,9 @@ void Mupen64Plus::execute()
 
     if(failed(ret))
     {
-        auto errc{make_error_code(ret)};
-        logger()->error("Error executing ROM image: {}", errc.message());
-        throw std::system_error(errc);
+        std::system_error err{make_error_code(ret), "Failed to execute ROM image"};
+        logger()->error(err.what());
+        throw err;
     }
 
     logger()->info("Stopped n64 emulation");
