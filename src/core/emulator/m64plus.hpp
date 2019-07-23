@@ -86,7 +86,7 @@ struct Core
     using core_attach_plugin_t = Error(*)(M64PTypes::m64p_plugin_type, M64PTypes::m64p_dynlib_handle);
     using core_detach_plugin_t = Error(*)(M64PTypes::m64p_plugin_type);
     using core_do_cmd_t = Error(*)(M64PTypes::m64p_command, int, void*);
-    using debug_get_mem_ptr_t = void* (*)(M64PTypes::m64p_dbg_memptr_type);
+    using debug_get_mem_ptr_t = volatile void* (*)(M64PTypes::m64p_dbg_memptr_type);
 
     using list_config_sections_t = Error(*)(void*, void(*)(void*, const char*));
     using open_config_section_t = Error(*)(const char*, M64PTypes::m64p_handle*);
@@ -125,7 +125,7 @@ struct Core
     void detach_plugin(M64PTypes::m64p_plugin_type type);
 
     /// Return pointer to n64 DRAM
-    void* get_mem_ptr();
+    volatile void* get_mem_ptr();
 
     Error do_cmd(M64PTypes::m64p_command cmd, int p1, void* p2);
 
@@ -334,9 +334,9 @@ private:
     inline static void check_bounds(addr_t addr, usize_t size);
 
     template<typename T>
-    T* get_mem_ptr()
+    volatile T* get_mem_ptr()
     {
-        auto ptr{core_.get_mem_ptr()};
+        volatile auto ptr{core_.get_mem_ptr()};
 
         if(!ptr)
         {
@@ -346,7 +346,7 @@ private:
             throw err;
         }
 
-        return reinterpret_cast<T*>(ptr);
+        return reinterpret_cast<volatile T*>(ptr);
     }
 
     Core core_;

@@ -156,7 +156,7 @@ void Core::detach_plugin(M64PTypes::m64p_plugin_type type)
     }
 }
 
-void* Core::get_mem_ptr()
+volatile void* Core::get_mem_ptr()
 {
     return fn_.debug_get_mem_ptr(M64PTypes::M64P_DBG_PTR_RDRAM);
 }
