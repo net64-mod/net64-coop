@@ -19,7 +19,14 @@ add_library(64coop_core STATIC
         emulator/m64plus.cpp
         emulator/m64plus.hpp
         emulator/shared_library.cpp
-        emulator/shared_library.hpp emulator/m64plus_core.cpp emulator/m64plus_plugin.cpp)
+        emulator/shared_library.hpp
+        emulator/m64plus_core.cpp
+        emulator/m64plus_plugin.cpp
+        game/client_messages.hpp
+        game/game_messages.hpp
+        game/message_listener.cpp
+        game/message_listener.hpp
+        game/net64_header.hpp)
 
 if(UNIX)
     target_link_libraries(64coop_core -ldl)
