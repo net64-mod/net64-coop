@@ -26,6 +26,8 @@ add_library(64coop_core STATIC
         game/game_messages.hpp
         game/message_listener.cpp
         game/message_listener.hpp
+        game/game_logger.cpp
+        game/game_logger.hpp
         game/net64_header.hpp)
 
 if(UNIX)
