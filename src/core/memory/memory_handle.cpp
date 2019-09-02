@@ -11,44 +11,39 @@
 namespace Core::Memory
 {
 
-Handle::Handle(Emulator::IEmulator& hdl)
+MemHandle::MemHandle(Emulator::IEmulator& hdl)
 {
     set_emulator(hdl);
 }
 
-bool Handle::operator==(const Handle& other) const
+bool MemHandle::operator==(const MemHandle& other) const
 {
     return (emu_ == other.emu_);
 }
 
-bool Handle::operator!=(const Handle& other) const
+bool MemHandle::operator!=(const MemHandle& other) const
 {
     return !(*this == other);
 }
 
-void Handle::set_emulator(Emulator::IEmulator& hdl)
+void MemHandle::set_emulator(Emulator::IEmulator& hdl)
 {
     emu_ = &hdl;
 }
 
-const Emulator::IEmulator& Handle::emulator() const
+const Emulator::IEmulator& MemHandle::emulator() const
 {
     return *emu_;
 }
 
-void Handle::read_raw(addr_t offset, u8* data, usize_t n)
+void MemHandle::read_raw(addr_t offset, u8* data, usize_t n)
 {
     emu_->read_memory(offset, data, n);
 }
 
-void Handle::write_raw(addr_t offset, const u8* data, usize_t n)
+void MemHandle::write_raw(addr_t offset, const u8* data, usize_t n)
 {
     emu_->write_memory(offset, data, n);
-}
-
-bool Handle::valid_offset(addr_t offset)
-{
-    return offset < Emulator::IEmulator::RAM_SIZE;
 }
 
 } // Core::Memory

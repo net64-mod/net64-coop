@@ -21,7 +21,7 @@ namespace Core::Memory
  *
  * Provides interface for raw memory access, type-safe memory access + conversion and aligned memory access
  */
-struct Handle
+struct MemHandle
 {
     using addr_t = n64_addr_t;
     using saddr_t = n64_saddr_t;
@@ -30,12 +30,12 @@ struct Handle
 
     static constexpr addr_t INVALID_OFFSET{std::numeric_limits<addr_t>::max()};
 
-    explicit Handle(Emulator::IEmulator& hdl);
+    explicit MemHandle(Emulator::IEmulator& hdl);
 
-    Handle(const Handle&) = default;
+    MemHandle(const MemHandle&) = default;
 
-    bool operator==(const Handle& other) const;
-    bool operator!=(const Handle& other) const;
+    bool operator==(const MemHandle& other) const;
+    bool operator!=(const MemHandle& other) const;
 
     /// Set the referenced emulator
     void set_emulator(Emulator::IEmulator& hdl);
@@ -82,7 +82,11 @@ struct Handle
     void writec_aligned(addr_t& offset, T val);
 
     /// Check if offset is a valid offset into n64 memory
-    static bool valid_offset(addr_t offset);
+    template<typename>
+    static bool valid_offset(addr_t offset)
+    {
+        return offset < Emulator::IEmulator::RAM_SIZE;
+    }
 
 private:
 
@@ -103,7 +107,7 @@ private:
 
 
 template<typename T>
-T Handle::read(addr_t offset)
+T MemHandle::read(addr_t offset)
 {
     Casted<T> val{};
     emu_->read(offset, val);
@@ -111,14 +115,14 @@ T Handle::read(addr_t offset)
 }
 
 template<typename T>
-T Handle::read_aligned(addr_t offset)
+T MemHandle::read_aligned(addr_t offset)
 {
     offset += offset % sizeof(T);
     return read<T>(offset);
 }
 
 template<typename T>
-T Handle::readc(addr_t& offset)
+T MemHandle::readc(addr_t& offset)
 {
     T val{};
     val = read<T>(offset);
@@ -127,34 +131,34 @@ T Handle::readc(addr_t& offset)
 }
 
 template<typename T>
-T Handle::readc_aligned(addr_t& offset)
+T MemHandle::readc_aligned(addr_t& offset)
 {
     offset += offset % sizeof(T);
     return readc<T>(offset);
 }
 
 template<typename T>
-void Handle::write(addr_t offset, T val)
+void MemHandle::write(addr_t offset, T val)
 {
     emu_->write(offset, static_cast<Casted<T>>(val));
 }
 
 template<typename T>
-void Handle::write_aligned(addr_t offset, T val)
+void MemHandle::write_aligned(addr_t offset, T val)
 {
     offset += offset % sizeof(T);
     write(offset, val);
 }
 
 template<typename T>
-void Handle::writec(addr_t& offset, T val)
+void MemHandle::writec(addr_t& offset, T val)
 {
     write<T>(offset, val);
     offset += sizeof(val);
 }
 
 template<typename T>
-void Handle::writec_aligned(addr_t& offset, T val)
+void MemHandle::writec_aligned(addr_t& offset, T val)
 {
     offset += offset % sizeof(T);
     writec(offset, val);

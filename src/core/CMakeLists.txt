@@ -11,8 +11,6 @@ add_library(64coop_core STATIC
         error_codes.hpp
         error_codes.cpp
         ../common/crtp.hpp
-        memory/mem_ptr.hpp
-        memory/mem_ref.hpp
         game/msg_queue.cpp
         game/msg_queue.hpp
         emulator/emulator.hpp
@@ -28,7 +26,11 @@ add_library(64coop_core STATIC
         game/message_listener.hpp
         game/game_logger.cpp
         game/game_logger.hpp
-        game/net64_header.hpp)
+        game/net64_header.hpp
+        memory/pointer.hpp
+        )
+
+include_directories(../../externals/mem64/include)
 
 if(UNIX)
     target_link_libraries(64coop_core -ldl)
