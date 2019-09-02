@@ -8,7 +8,7 @@
 #pragma once
 
 #include <optional>
-#include "core/memory/mem_ptr.hpp"
+#include "core/memory/pointer.hpp"
 #include "types.hpp"
 
 
@@ -40,11 +40,11 @@ enum struct SlotState : u8
 /// State of queue
 struct SharedState
 {
-    [[maybe_unused]] u8 game_index;             //< Index of game, unused in client code
-    u8 client_index,                            //< Current read/write index
-       size;                                    //< Size of the queue
-    Memory::N64Ptr<SlotState> descriptor_array; //< Pointer to descriptor array
-    Memory::N64Ptr<n64_message_t> msg_array;    //< Pointer to message array
+    [[maybe_unused]] u8 game_index;                //< Index of game, unused in client code
+    u8 client_index,                               //< Current read/write index
+       size;                                       //< Size of the queue
+    Memory::NestedPtr<SlotState> descriptor_array; //< Pointer to descriptor array
+    Memory::NestedPtr<n64_message_t> msg_array;    //< Pointer to message array
 };
 
 /**
