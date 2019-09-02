@@ -25,7 +25,7 @@ struct OperatorProxy
     {
     }
 
-    T* operator->()
+    const T* operator->()
     {
         return &val_;
     }
