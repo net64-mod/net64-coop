@@ -28,9 +28,7 @@ add_library(64coop_core STATIC
         game/game_logger.hpp
         game/net64_header.hpp
         memory/pointer.hpp
-        )
-
-include_directories(../../externals/mem64/include)
+        client/client.cpp client/client.hpp)
 
 if(UNIX)
     target_link_libraries(64coop_core -ldl)
