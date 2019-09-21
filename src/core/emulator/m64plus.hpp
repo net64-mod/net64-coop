@@ -79,19 +79,19 @@ struct PluginInfo
 struct Core
 {
     // Function pointer types
-    using plugin_get_version_t = Error(*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
-    using core_startup_t = Error(*)(int, const char*, const char*, void*, void(*)(void*, int, const char*), void*,
+    using plugin_get_version_t = Error(CALL*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
+    using core_startup_t = Error(CALL*)(int, const char*, const char*, void*, void(*)(void*, int, const char*), void*,
                                     void(*)(void*, M64PTypes::m64p_core_param, int));
-    using core_shutdown_t = Error(*)();
-    using core_attach_plugin_t = Error(*)(M64PTypes::m64p_plugin_type, M64PTypes::m64p_dynlib_handle);
-    using core_detach_plugin_t = Error(*)(M64PTypes::m64p_plugin_type);
-    using core_do_cmd_t = Error(*)(M64PTypes::m64p_command, int, void*);
-    using debug_get_mem_ptr_t = volatile void* (*)(M64PTypes::m64p_dbg_memptr_type);
+    using core_shutdown_t = Error(CALL*)();
+    using core_attach_plugin_t = Error(CALL*)(M64PTypes::m64p_plugin_type, M64PTypes::m64p_dynlib_handle);
+    using core_detach_plugin_t = Error(CALL*)(M64PTypes::m64p_plugin_type);
+    using core_do_cmd_t = Error(CALL*)(M64PTypes::m64p_command, int, void*);
+    using debug_get_mem_ptr_t = volatile void* (CALL*)(M64PTypes::m64p_dbg_memptr_type);
 
-    using list_config_sections_t = Error(*)(void*, void(*)(void*, const char*));
-    using open_config_section_t = Error(*)(const char*, M64PTypes::m64p_handle*);
-    using save_config_file_t = void(*)();
-    using set_config_parameter_t = Error(*)(M64PTypes::m64p_handle, const char*, M64PTypes::m64p_type, const void*);
+    using list_config_sections_t = Error(CALL*)(void*, void(*)(void*, const char*));
+    using open_config_section_t = Error(CALL*)(const char*, M64PTypes::m64p_handle*);
+    using save_config_file_t = void(CALL*)();
+    using set_config_parameter_t = Error(CALL*)(M64PTypes::m64p_handle, const char*, M64PTypes::m64p_type, const void*);
 
     /// Mupen64Plus API this frontend is compatible with
     static constexpr int API_VERSION{0x020001};
@@ -187,9 +187,9 @@ private:
 struct Plugin
 {
     // Function pointer types
-    using plugin_startup_t = Error(*)(M64PTypes::m64p_dynlib_handle, void*, void* (*)(void*, int, const char*));
-    using plugin_shutdown_t = Error(*)();
-    using plugin_get_version_t = Error(*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
+    using plugin_startup_t = Error(CALL*)(M64PTypes::m64p_dynlib_handle, void*, void* (*)(void*, int, const char*));
+    using plugin_shutdown_t = Error(CALL*)();
+    using plugin_get_version_t = Error(CALL*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
 
     /// Create plugin from dynamic library handle
     Plugin(Core& core, dynlib_t lib);
@@ -250,6 +250,8 @@ private:
 
     CLASS_LOGGER_("mupen64plus");
 };
+
+#undef CALL
 
 } // M64PlusHelper
 
