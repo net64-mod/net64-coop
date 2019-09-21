@@ -47,6 +47,7 @@ std::shared_ptr<spdlog::logger> get_logger(const std::string& name)
         auto sinks{get_logging_sinks()};
 
         auto root_logger{std::make_shared<spdlog::logger>("root", sinks.begin(), sinks.end())};
+        root_logger->set_level(spdlog::level::trace);
 
         spdlog::register_logger(root_logger);
 
