@@ -32,20 +32,18 @@ void Frontend::M64PSettings::on_close_pressed()
 
 void M64PSettings::on_open_plugin_folder()
 {
-	// Because openUrl doesn't like backslashes we have make this awful conversion
-    QDesktopServices::openUrl(QUrl(QString::fromStdString(fs::path(ui->folder_path_field->text().toStdString()).generic_string())));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(ui->folder_path_field->text()));
 }
 
 void M64PSettings::on_set_plugin_folder()
 {
-    QFileDialog dialog{this};
-    dialog.setFileMode(QFileDialog::Directory);
-    dialog.setOption(QFileDialog::ShowDirsOnly);
-    dialog.selectUrl(QUrl(ui->folder_path_field->text()));
+    auto dir{QFileDialog::getExistingDirectory(this, "Mupen64Plus Directory",
+    ui->folder_path_field->text(), QFileDialog::ShowDirsOnly)
+    };
 
-    if(dialog.exec())
+    if(!dir.isEmpty())
     {
-        ui->folder_path_field->setText(dialog.selectedFiles()[0]);
+        ui->folder_path_field->setText(dir);
         refresh_plugins();
     }
 }
