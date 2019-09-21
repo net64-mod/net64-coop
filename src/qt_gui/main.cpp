@@ -30,7 +30,6 @@ static void create_app_dirs(const AppSettings& settings)
     try
     {
         fs::create_directories(settings.main_config_dir());
-        fs::create_directories(settings.m64p_dir());
         fs::create_directories(settings.m64p_plugin_dir());
     }
     catch(const std::exception& e)
