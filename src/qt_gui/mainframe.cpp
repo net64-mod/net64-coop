@@ -55,7 +55,7 @@ void MainFrame::on_start_emulator()
         emulator_->add_plugin({emulator_->core(), (settings_->m64p_plugin_dir() / settings_->m64p_input_plugin).string()});
         emulator_->add_plugin({emulator_->core(), (settings_->m64p_plugin_dir() / settings_->m64p_rsp_plugin).string()});
 
-        std::ifstream rom_file(ui->lineEdit->text().toStdString(), std::ios::ate);
+        std::ifstream rom_file(ui->lineEdit->text().toStdString(), std::ios::ate | std::ios::binary);
         if(!rom_file)
             throw std::runtime_error("Failed to open ROM file");
 
