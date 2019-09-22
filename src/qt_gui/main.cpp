@@ -25,16 +25,32 @@ using Core::LoggerPtr;
 
 namespace fs = std::experimental::filesystem;
 
-static void create_app_dirs(const AppSettings& settings)
+
+static void install_routine(AppSettings& settings)
 {
+    // Copy mupen64plus binaries
+    if(!fs::exists(settings.m64p_default_plugin_dir()) || fs::is_empty(settings.m64p_default_plugin_dir()))
+    {
+        try
+        {
+            fs::create_directories(settings.m64p_default_plugin_dir());
+            fs::copy(settings.shipped_m64p_binaries_dir(), settings.m64p_default_plugin_dir(), fs::copy_options::recursive);
+            std::cout << "Mupen64Plus bin dir missing. Copied default binaries\n";
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "Failed to copy Mupen64Plus binaries: " << e.what() << '\n';
+        }
+    }
+
+    // Create config dir
     try
     {
         fs::create_directories(settings.main_config_dir());
-        fs::create_directories(settings.m64p_plugin_dir());
     }
     catch(const std::exception& e)
     {
-        std::cout << "Failed to create application directories: " << e.what() << '\n';
+        std::cout << "Failed to create config dir: " << e.what() << '\n';
     }
 }
 
@@ -74,7 +90,7 @@ int main(int argc, char* argv[])
 
     AppSettings settings;
     settings.appdata_path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString();
-    create_app_dirs(settings);
+    install_routine(settings);
 
     setup_logging();
 
