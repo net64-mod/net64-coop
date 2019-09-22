@@ -33,12 +33,14 @@ struct AppSettings
 
     fs::path rom_file_path;
 
-
     // Mupen64Plus configuration
     static const char* M64P_DEFAULT_PLUGIN_DIR,
                      * M64P_DEFAULT_ROOT_DIR;
 
+    fs::path shipped_m64p_binaries_dir() const;
+
     fs::path m64p_dir() const;
+    fs::path m64p_default_plugin_dir() const;
     fs::path m64p_plugin_dir() const;
 
     fs::path m64p_custom_pugin_dir;
