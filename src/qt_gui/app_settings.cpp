@@ -115,15 +115,25 @@ fs::path AppSettings::main_config_file_path() const
     return main_config_dir() / MAIN_CONFIG_FILENAME;
 }
 
+fs::path AppSettings::shipped_m64p_binaries_dir() const
+{
+    return fs::path("../share/mupen64plus");
+}
+
 fs::path AppSettings::m64p_dir() const
 {
     return appdata_path / M64P_DEFAULT_ROOT_DIR;
 }
 
+fs::path AppSettings::m64p_default_plugin_dir() const
+{
+    return m64p_dir() / "bin";
+}
+
 fs::path AppSettings::m64p_plugin_dir() const
 {
     if(m64p_custom_pugin_dir.empty())
-        return m64p_dir() / "bin";
+        return m64p_default_plugin_dir();
     else
         return m64p_custom_pugin_dir;
 }
