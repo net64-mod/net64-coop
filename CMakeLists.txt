@@ -37,7 +37,7 @@ if(BUILD_QT_FRONTEND)
     add_subdirectory(src/qt_gui)
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     set(JSON_MultipleHeaders ON)
-    add_subdirectory(externals/json)
+    add_subdirectory(externals/json EXCLUDE_FROM_ALL)
 endif()
 
 
