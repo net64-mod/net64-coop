@@ -24,6 +24,8 @@ include_directories(src externals)
 
 option(BUILD_CORE "Build core library" ON)
 option(BUILD_QT_FRONTEND "Build the Qt5 userinterface" ON)
+option(INSTALL_MUPEN64PLUS "Wether to include a Mupen64Plus installation with the build" OFF)
+set(MUPEN64PLUS_DIR "" CACHE PATH "The Mupen64Plus installation to include")
 
 if(BUILD_CORE)
     add_subdirectory(src/core)
@@ -34,4 +36,12 @@ if(BUILD_QT_FRONTEND)
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     set(JSON_MultipleHeaders ON)
     add_subdirectory(externals/json)
+endif()
+
+
+# Installation
+
+if(INSTALL_MUPEN64PLUS)
+    install(DIRECTORY ${MUPEN64PLUS_DIR}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/share/mupen64plus)
 endif()
