@@ -30,6 +30,10 @@ add_library(64coop_core STATIC
         memory/pointer.hpp
         client/client.cpp client/client.hpp)
 
+include(ENet)
+target_include_directories(64coop_core PRIVATE ${ENET_INCLUDES})
+target_link_libraries(enet_lib)
+
 if(UNIX)
     target_link_libraries(64coop_core -ldl)
 endif()
