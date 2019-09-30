@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <enet/enet.h>
 #include "core/game/msg_queue.hpp"
 #include "core/game/net64_header.hpp"
 #include "core/memory/pointer.hpp"

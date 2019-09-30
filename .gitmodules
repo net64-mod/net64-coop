@@ -11,3 +11,7 @@
 [submodule "externals/mupen-builds"]
     path = externals/mupen-builds
     url = https://github.com/net64-mod/net64-mupen-builds.git
+
+[submodule "externals/enet-lib"]
+    path = externals/enet-lib
+    url = https://github.com/lsalzman/enet
