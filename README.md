@@ -29,6 +29,7 @@ If you'd like to help the project out in other ways like in-depth testing, serve
  Dependencies
  - Qt 5.X
  
+ Steps
  - Clone the repository and pull submodules
  - Open the `CMakeLists.txt` file in the project root with Visual Studio
  - If not automatically detected, tell cmake about dependencies
@@ -44,6 +45,7 @@ If you'd like to help the project out in other ways like in-depth testing, serve
  Dependencies
  - Qt 5.X
  
+ Steps
  - Clone the repository and pull submodule `git clone --recursive https://github.com/net64-mod/net64-coop.git`
  - Create and enter build directory `mkdir net64-coop/build && cd net64-coop/build`
  - Run cmake `cmake ..`
