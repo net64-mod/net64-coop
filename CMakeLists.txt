@@ -7,8 +7,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
 
 
-option(USE_JSON_LIBRARY "Use json library" ON)
-
 include(CompilerWarnings)
 
 # Generate revision information
