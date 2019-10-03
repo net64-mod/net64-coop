@@ -40,7 +40,7 @@ If you'd like to help the project out in other ways like in-depth testing, serve
  Required tools
  - CMake
  - Git
- - C++ 17 compatiblie compiler
+ - C++ 17 compatible compiler
  
  Dependencies
  - Qt 5.X
