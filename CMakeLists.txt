@@ -7,8 +7,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
 
 
-option(USE_JSON_LIBRARY "Use json library" ON)
-
 include(CompilerWarnings)
 
 # Generate revision information
@@ -25,7 +23,14 @@ include_directories(src externals)
 option(BUILD_CORE "Build core library" ON)
 option(BUILD_QT_FRONTEND "Build the Qt5 userinterface" ON)
 option(INSTALL_MUPEN64PLUS "Wether to include a Mupen64Plus installation with the build" OFF)
-set(MUPEN64PLUS_DIR "" CACHE PATH "The Mupen64Plus installation to include")
+
+if(WIN32)
+    set(MUPEN64PLUS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/externals/mupen-builds/win32" CACHE PATH "The Mupen64Plus installation to include")
+elseif(UNIX)
+    set(MUPEN64PLUS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/externals/mupen-builds/linux-amd64" CACHE PATH "The Mupen64Plus installation to include")
+else()
+    set(MUPEN64PLUS_DIR "MUPEN64PLUS_DIR-NOT-SPECIFIED" CACHE PATH "The Mupen64Plus installation to include")
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
