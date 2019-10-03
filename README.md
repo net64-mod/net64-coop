@@ -5,9 +5,9 @@
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/h05a12lw1tbab6q8/branch/master?svg=true)](https://ci.appveyor.com/project/Henrik0x7F/net64-coop-qyobq/branch/master)
 [![Discord](https://img.shields.io/discord/559982917049253898.svg?colorB=697ec4&logo=discord&logoColor=white&style=flat)](https://discord.gg/GgGUKH8)
 
-Net64 is a work in progress Super Mario 64 modification providing fully featured cooperative multiplayer over the internet. It is written in C++ / MIPS assembly targeting Windows and Linux operating systems with a wide range of emulator compatibility.
+Net64 is a work in progress Super Mario 64 modification providing fully featured cooperative multiplayer over the internet. It is written in C / C++ targeting Windows and Linux operating systems.
 
-Net64 provides the necessary components to apply game modifications, initialize game hooks, host / connect to multiplayer sessions and synchronize gamestate. Currently the project is in early development and not ready for general use.
+Net64 provides the necessary components to run N64 games, apply modifications, initialize hooks, host / connect to multiplayer sessions and synchronize gamestate. Currently the project is in early development and not ready for general use.
 
 ## Contributing
 
@@ -20,3 +20,34 @@ If you'd like to help the project out in other ways like in-depth testing, serve
 - [Coding Style](CODING_STYLE.md)
 - [Discord Server](https://discord.gg/GgGUKH8)
  
+ ## Building on Windows
+ 
+ Required tools
+ - Visual Studio 2017 with CMake support
+ - Git
+ 
+ Dependencies
+ - Qt 5.X
+ 
+ - Clone the repository and pull submodules
+ - Open the `CMakeLists.txt` file in the project root with Visual Studio
+ - If not automatically detected, tell cmake about dependencies
+ - Click Build or Install
+ 
+ ## Building on Linux
+ 
+ Required tools
+ - CMake
+ - Git
+ - C++ 17 compatiblie compiler
+ 
+ Dependencies
+ - Qt 5.X
+ 
+ - Clone the repository and pull submodule `git clone --recursive https://github.com/net64-mod/net64-coop.git`
+ - Create and enter build directory `mkdir net64-coop/build && cd net64-coop/build`
+ - Run cmake `cmake ..`
+ - Build the project `make`
+ 
+ ## Bundling Mupen64Plus
+ Net64 internally uses the popular [Mupen64Plus emulator](https://github.com/mupen64plus). To include a build of Mupen64Plus with the installation set the cmake variable `INSTALL_MUPEN64PLUS` to `ON` and put the path to a Mupen64Plus build into `MUPEN64PLUS_DIR`. During the installation this build will be copied into the correct place to be used by Net64. It's recommendet to use a build from the [official release section](https://github.com/mupen64plus/mupen64plus-core/releases). Be sure to use a Mupen64Plus build with identical OS and architecture!
