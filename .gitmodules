@@ -7,3 +7,7 @@
     path = externals/mem64
     url = https://github.com/net64-mod/mem64.git
     branch = master
+
+[submodule "externals/mupen-builds"]
+    path = externals/mupen-builds
+    url = https://github.com/net64-mod/net64-mupen-builds.git
