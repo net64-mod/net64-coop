@@ -42,8 +42,8 @@ void MainFrame::on_start_emulator()
     }
     try
     {
-        emulator_ = Core::Emulator::Mupen64Plus{
-            Core::Emulator::Mupen64Plus::Core{
+        emulator_ = Net64::Emulator::Mupen64Plus{
+            Net64::Emulator::Mupen64Plus::Core{
                 (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(),
                 settings_->m64p_dir().string(),
                 settings_->m64p_plugin_dir().string()

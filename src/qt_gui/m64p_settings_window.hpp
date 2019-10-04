@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
-#include "core/logging.hpp"
+#include "net64/logging.hpp"
 #include "qt_gui/app_settings.hpp"
 
 

@@ -13,7 +13,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "build_info.hpp"
-#include "core/logging.hpp"
+#include "net64/logging.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/mainframe.hpp"
 
@@ -21,7 +21,7 @@
 namespace Frontend
 {
 
-using Core::LoggerPtr;
+using Net64::LoggerPtr;
 
 namespace fs = std::experimental::filesystem;
 
@@ -69,7 +69,7 @@ static void setup_logging()
     stdout_sink->set_level(spdlog::level::info);
 
     // Pass logging configuration to core
-    Core::init_logging_sinks([global_log_file, stdout_sink]{
+    Net64::init_logging_sinks([global_log_file, stdout_sink]{
         std::vector<spdlog::sink_ptr> sinks{
             stdout_sink, global_log_file
         };
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
         QApplication app{argc, argv};
 
         // Log system information
-        auto logger{Core::get_logger("frontend")};
+        auto logger{Net64::get_logger("frontend")};
         logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
                      QCoreApplication::applicationVersion().toStdString());
         logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),

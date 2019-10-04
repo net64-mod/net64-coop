@@ -8,7 +8,7 @@
 #include "app_settings.hpp"
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include "core/logging.hpp"
+#include "net64/logging.hpp"
 
 
 namespace Frontend
@@ -60,7 +60,7 @@ bool AppSettings::load(const fs::path& file)
     }
     catch(const std::exception& e)
     {
-        Core::get_logger("frontend")->warn("Failed to load config file: {}", e.what());
+        Net64::get_logger("frontend")->warn("Failed to load config file: {}", e.what());
         return false;
     }
 
@@ -98,7 +98,7 @@ bool AppSettings::save(const fs::path& file)
     }
     catch(const std::exception& e)
     {
-        Core::get_logger("frontend")->warn("Failed to save config file: {}", e.what());
+        Net64::get_logger("frontend")->warn("Failed to save config file: {}", e.what());
         return false;
     }
 

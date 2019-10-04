@@ -35,7 +35,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if(BUILD_CORE)
-    add_subdirectory(src/core)
+    add_subdirectory(src/net64)
 endif()
 
 if(BUILD_QT_FRONTEND)

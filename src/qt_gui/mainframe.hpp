@@ -3,7 +3,7 @@
 #include <future>
 #include <QMainWindow>
 #ifndef Q_MOC_RUN
-#include "core/emulator/m64plus.hpp"
+#include "net64/emulator/m64plus.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
 #endif
@@ -45,7 +45,7 @@ private:
     Ui::MainFrame* ui;
     M64PSettings* m64p_settings_win_{};
     AppSettings* settings_;
-    std::optional<Core::Emulator::Mupen64Plus> emulator_;
+    std::optional<Net64::Emulator::Mupen64Plus> emulator_;
     std::future<void> emulation_thread_;
 };
 
