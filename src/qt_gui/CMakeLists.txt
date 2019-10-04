@@ -13,7 +13,7 @@ add_executable(net64_qt_gui
                 app_settings.hpp
                 app_settings.cpp)
 
-target_link_libraries(net64_qt_gui 64coop_core)
+target_link_libraries(net64_qt_gui net64_core)
 
 # Qt libs
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)

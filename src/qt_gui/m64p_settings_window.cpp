@@ -4,7 +4,7 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QUrl>
-#include "core/emulator/m64plus.hpp"
+#include "net64/emulator/m64plus.hpp"
 
 
 namespace Frontend
@@ -73,7 +73,7 @@ void M64PSettings::closeEvent(QCloseEvent*)
 
 void M64PSettings::refresh_plugins()
 {
-    using namespace Core::Emulator::M64PTypes;
+    using namespace Net64::Emulator::M64PTypes;
 
     ui->audio_plugin_box->clear();
     ui->core_plugin_box->clear();
@@ -86,7 +86,7 @@ void M64PSettings::refresh_plugins()
         for(const auto& entry : fs::directory_iterator(ui->folder_path_field->text().toStdString()))
         {
             auto file{QString::fromStdString(entry.path().filename().string())};
-            switch(Core::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry.path().string()).type)
+            switch(Net64::Emulator::Mupen64Plus::Plugin::get_plugin_info(entry.path().string()).type)
             {
             case M64PLUGIN_CORE:
                 ui->core_plugin_box->addItem(file);
