@@ -51,4 +51,4 @@ std::error_code make_error_code(Net64::Net::S_DisconnectCode::_s_disconnect_code
     return {static_cast<int>(e), g_s_disconnect_code_category};
 }
 
-};
+}
