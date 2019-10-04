@@ -14,7 +14,6 @@
     using dynlib_t = void*;
 #elif defined _WIN32
     #include <Windows.h>
-    #undef max
     using dynlib_t = HMODULE;
 #endif
 
