@@ -5,7 +5,7 @@
 // Refer to the LICENSE file included.
 //
 
-#include <experimental/filesystem>
+#include "filesystem.hpp"
 #include <iostream>
 #include <QApplication>
 #include <QStandardPaths>
@@ -22,9 +22,6 @@ namespace Frontend
 {
 
 using Net64::LoggerPtr;
-
-namespace fs = std::experimental::filesystem;
-
 
 static void install_routine(AppSettings& settings)
 {

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <experimental/filesystem>
+#include "filesystem.hpp"
 #include <string>
 
 #ifdef __linux__
@@ -20,8 +20,6 @@
 
 namespace Net64::Emulator
 {
-
-namespace fs = std::experimental::filesystem;
 
 struct UniqueLib
 {

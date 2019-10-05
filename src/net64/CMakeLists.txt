@@ -1,4 +1,5 @@
 add_library(net64_core STATIC
+        ../filesystem.hpp
         memory/memory_handle.cpp
         memory/memory_handle.hpp
         ../common/is_instantiation.hpp
@@ -32,7 +33,10 @@ add_library(net64_core STATIC
         client.hpp
         server.cpp
         server.hpp
-        net/protocol.hpp net/errors.cpp net/errors.hpp net/protocol.cpp)
+        net/protocol.hpp
+        net/errors.cpp
+        net/errors.hpp
+        net/protocol.cpp)
 
 include(ENet)
 target_include_directories(net64_core PRIVATE ${ENET_INCLUDES})

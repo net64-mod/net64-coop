@@ -7,13 +7,11 @@
 
 #pragma once
 
-#include <experimental/filesystem>
+#include "filesystem.hpp"
 
 
 namespace Frontend
 {
-
-namespace fs = std::experimental::filesystem;
 
 struct AppSettings
 {
