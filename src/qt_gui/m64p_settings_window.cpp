@@ -1,6 +1,6 @@
 #include "m64p_settings_window.hpp"
 #include "ui_m64p_settings_window.h"
-#include <experimental/filesystem>
+#include "filesystem.hpp"
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QUrl>
@@ -9,8 +9,6 @@
 
 namespace Frontend
 {
-
-namespace fs = std::experimental::filesystem;
 
 M64PSettings::M64PSettings(QWidget* parent, AppSettings& settings)
 :QMainWindow(parent), ui(new Ui::M64PSettings), settings_{&settings}
