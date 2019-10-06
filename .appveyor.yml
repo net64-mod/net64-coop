@@ -1,16 +1,24 @@
 image: Visual Studio 2019
 
-platform:
-  - x64
- 
-configuration:
-    - Release
+environment:
+  CMAKE_PREFIX_PATH: C:\Qt\5.12.4\msvc2017\lib\cmake
 
 install:
-    - git submodule update --init --recursive
+  - git submodule update --init --recursive
+  - curl -O -L https://code.qt.io/cgit/qbs/qbs.git/plain/scripts/install-qt.sh 1>nul
+  - sh install-qt.sh --directory /c/Qt --host windows_x86 --target desktop --toolchain win32_msvc2017 --version 5.12.4 qtbase qttools qtsvg qtimageformats d3dcompiler_47 opengl32sw
 
-before_build:
-    - cmake -G "Visual Studio 16 2019" . -A x64 -DQt5_DIR="C:\Qt\5.12\msvc2017_64\lib\cmake\Qt5" -DBUILD_QT_FRONTEND=OFF
+build_script:
+  - mkdir build && cd build
+  - cmake -G "Visual Studio 16 2019" -A Win32 -DBUILD_QT_FRONTEND=ON -DINSTALL_MUPEN64PLUS=ON -DCMAKE_INSTALL_PREFIX=install ..
+  - cmake --build . --config Release
+  - cmake --install . --config Release
 
-build:
-  project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
+after_build:
+  - cd install\usr\bin
+  - xcopy /Y /S Release\* .\
+  - rmdir /S /Q Release
+
+artifacts:
+  - path: build/install
+    name: net64-coop-%APPVEYOR_REPO_COMMIT%
