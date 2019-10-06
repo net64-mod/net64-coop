@@ -41,6 +41,10 @@ endif()
 
 if(BUILD_QT_FRONTEND)
     add_subdirectory(src/qt_gui)
+    # Make the Qt GUI the startup project for Visual Studio
+    if(MSVC_IDE)
+        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT net64_qt_gui)
+    endif()
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     set(JSON_MultipleHeaders ON)
     add_subdirectory(externals/json EXCLUDE_FROM_ALL)
