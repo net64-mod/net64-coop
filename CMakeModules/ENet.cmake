@@ -12,5 +12,9 @@ add_library(enet_lib STATIC
         "${ENET_SOURCE_DIR}/unix.c"
         "${ENET_SOURCE_DIR}/win32.c")
 
+if(WIN32)
+    target_link_libraries(enet_lib PUBLIC winmm ws2_32)
+endif()
+
 target_include_directories(enet_lib PUBLIC ${ENET_INCLUDES})
 add_compile_definitions(HAS_SOCKLEN_T)
