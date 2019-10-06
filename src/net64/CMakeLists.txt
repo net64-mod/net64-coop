@@ -39,8 +39,8 @@ add_library(net64_core STATIC
         net/protocol.cpp)
 
 include(ENet)
-target_include_directories(net64_core PRIVATE ${ENET_INCLUDES})
-target_link_libraries(enet_lib)
+include_directories(${ENET_INCLUDES})
+target_link_libraries(net64_core enet_lib)
 
 if(UNIX)
     target_link_libraries(net64_core -ldl)
