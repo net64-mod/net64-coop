@@ -26,7 +26,7 @@ set(GCC_WARNINGS
 set(MSVC_WARNINGS
         /permissive
         /W4
-        /W14640
+        /w14640
         /w14242
         /w14254
         /w14263
