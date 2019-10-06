@@ -13,6 +13,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "build_info.hpp"
+#include "net64/client.hpp"
 #include "net64/logging.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/mainframe.hpp"
@@ -90,16 +91,23 @@ int main(int argc, char* argv[])
     install_routine(settings);
 
     setup_logging();
+    auto logger{Net64::get_logger("frontend")};
 
     // Load config file
     settings.load(settings.main_config_file_path());
+
+    // Initialize ENet
+    if(enet_initialize() != 0)
+    {
+        logger->critical("Failed to initialize ENet library");
+        return EXIT_FAILURE;
+    }
 
     int ret{};
     {
         QApplication app{argc, argv};
 
         // Log system information
-        auto logger{Net64::get_logger("frontend")};
         logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
                      QCoreApplication::applicationVersion().toStdString());
         logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
@@ -119,6 +127,8 @@ int main(int argc, char* argv[])
 
     // Store settings
     settings.save(settings.main_config_file_path());
+
+    enet_deinitialize();
 
     return ret;
 }

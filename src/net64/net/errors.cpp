@@ -53,4 +53,4 @@ std::error_code make_error_code(Net64::Net::Error e)
     return {static_cast<int>(e), g_net64_net_error_category};
 }
 
-};
+}
