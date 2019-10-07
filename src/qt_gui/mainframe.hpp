@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <future>
 #include <QMainWindow>
@@ -22,6 +22,16 @@ struct MainFrame : QMainWindow
     Q_OBJECT
 
 public:
+    struct Page
+    {
+        enum
+        {
+            JOIN,
+            HOST,
+            IN_GAME
+        };
+    };
+
     explicit MainFrame(QWidget* parent, AppSettings& settings);
     ~MainFrame() override;
 
