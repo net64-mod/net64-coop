@@ -10,14 +10,9 @@ install:
 
 build_script:
   - mkdir build && cd build
-  - cmake -G "Visual Studio 16 2019" -A Win32 -DBUILD_QT_FRONTEND=ON -DINSTALL_MUPEN64PLUS=ON -DCMAKE_INSTALL_PREFIX=install ..
+  - cmake -G "Visual Studio 16 2019" -A Win32 -DBUILD_QT_FRONTEND=ON -DINSTALL_MUPEN64PLUS=ON -DCMAKE_INSTALL_PREFIX=%CD%\install ..
   - cmake --build . --config Release
   - cmake --install . --config Release
-
-after_build:
-  - cd install\usr\bin
-  - xcopy /Y /S Release\* .\
-  - rmdir /S /Q Release
 
 artifacts:
   - path: build/install
