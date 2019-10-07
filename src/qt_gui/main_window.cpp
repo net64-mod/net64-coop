@@ -31,19 +31,19 @@ void MainWindow::on_join_host_changed(QAction* action)
     {
         ui->stackedWidget->setCurrentIndex(Page::HOST);
         action->setText("Join game");
-        join_host_menu_->setTitle("Host game ↓");
+        join_host_menu_->setTitle("Host game");
     }
     else if(ui->stackedWidget->currentIndex() == Page::HOST)
     {
         ui->stackedWidget->setCurrentIndex(Page::JOIN);
         action->setText("Host game");
-        join_host_menu_->setTitle("Join game ↓");
+        join_host_menu_->setTitle("Join game");
     }
 }
 
 void MainWindow::setup_menus()
 {
-    join_host_menu_ = ui->menubar->addMenu("Join game ↓");
+    join_host_menu_ = ui->menubar->addMenu("Join game");
     auto settings_menu{ui->menubar->addMenu("Settings")};
     auto info_menu{ui->menubar->addMenu("Info")};
 
