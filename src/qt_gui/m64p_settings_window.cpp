@@ -4,7 +4,6 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QUrl>
-#include "net64/emulator/m64plus.hpp"
 
 
 namespace Frontend

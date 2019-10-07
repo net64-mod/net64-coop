@@ -36,7 +36,9 @@ add_library(net64_core STATIC
         net/protocol.hpp
         net/errors.cpp
         net/errors.hpp
-        net/protocol.cpp)
+        net/protocol.cpp
+        net64.cpp
+        net64.hpp)
 
 include(ENet)
 include_directories(${ENET_INCLUDES})

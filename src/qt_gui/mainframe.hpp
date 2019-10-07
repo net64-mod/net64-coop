@@ -3,7 +3,7 @@
 #include <future>
 #include <QMainWindow>
 #ifndef Q_MOC_RUN
-#include "net64/emulator/m64plus.hpp"
+#include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
 #endif

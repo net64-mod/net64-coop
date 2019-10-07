@@ -13,8 +13,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "build_info.hpp"
-#include "net64/client.hpp"
-#include "net64/logging.hpp"
+#include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/mainframe.hpp"
 
@@ -97,9 +96,9 @@ int main(int argc, char* argv[])
     settings.load(settings.main_config_file_path());
 
     // Initialize ENet
-    if(enet_initialize() != 0)
+    if(!Net64::initialize())
     {
-        logger->critical("Failed to initialize ENet library");
+        logger->critical("Failed to Net64 library");
         return EXIT_FAILURE;
     }
 
@@ -128,7 +127,7 @@ int main(int argc, char* argv[])
     // Store settings
     settings.save(settings.main_config_file_path());
 
-    enet_deinitialize();
+    Net64::deinitialize();
 
     return ret;
 }
