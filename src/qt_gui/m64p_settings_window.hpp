@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QMainWindow>
-#include "net64/logging.hpp"
+#ifndef Q_MOC_RUN
+#include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
+#endif
 
 
 namespace Ui {
