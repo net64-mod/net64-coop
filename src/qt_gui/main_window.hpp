@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
+#include "qt_gui/multiplayer_settings_window.hpp"
 
 
 namespace Ui {
@@ -54,6 +55,7 @@ private:
     AppSettings* settings_;
     QMenu* join_host_menu_;
     M64PSettings* m64p_cfg_win_{};
+    MultiplayerSettingsWindow* multiplayer_cfg_win_{};
 };
 
 } // Frontend

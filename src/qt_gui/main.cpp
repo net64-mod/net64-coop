@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 {
     using namespace Frontend;
 
-    QCoreApplication::setApplicationName("Net64-Coop");
+    QCoreApplication::setApplicationName("Net64");
     QCoreApplication::setOrganizationName("Net64 Project");
     QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
 

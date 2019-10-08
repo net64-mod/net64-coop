@@ -126,7 +126,7 @@
          </widget>
         </item>
         <item alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="pushButton_3">
+         <widget class="QPushButton" name="start_server_btn">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -161,26 +161,75 @@
          </layout>
         </item>
         <item>
-         <widget class="QTabWidget" name="server_list_tabs">
-          <property name="currentIndex">
-           <number>0</number>
-          </property>
-          <widget class="QWidget" name="internet_tab">
-           <attribute name="title">
-            <string>Internet</string>
-           </attribute>
-          </widget>
-          <widget class="QWidget" name="favorites_tab">
-           <attribute name="title">
-            <string>Favorites</string>
-           </attribute>
-          </widget>
-          <widget class="QWidget" name="friends_tab">
-           <attribute name="title">
-            <string>Friends</string>
-           </attribute>
-          </widget>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item alignment="Qt::AlignVCenter">
+           <widget class="QLabel" name="label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Server list</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QComboBox" name="comboBox_2">
+            <item>
+             <property name="text">
+              <string>Internet</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Favorites</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Friends</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox">
+            <item>
+             <property name="text">
+              <string>Any game</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Super Mario 64 (US)</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_2">
+            <property name="text">
+             <string>Refresh</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget"/>
         </item>
         <item alignment="Qt::AlignRight">
          <widget class="QPushButton" name="join_server_btn">
@@ -199,6 +248,41 @@
          </widget>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="ingame_page">
+       <widget class="QWidget" name="">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>270</y>
+          <width>258</width>
+          <height>223</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QTextEdit" name="textEdit"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLineEdit" name="lineEdit">
+             <property name="placeholderText">
+              <string>Send a message</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton">
+             <property name="text">
+              <string>Send</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </widget>
     </item>

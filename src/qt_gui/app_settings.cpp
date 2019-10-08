@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by henrik on 07.06.19
 // Copyright 2019 Net64 Coop Project
 // Licensed under GPLv3
@@ -64,6 +64,9 @@ bool AppSettings::load(const fs::path& file)
         load_string(m64p_input_plugin, m64p_obj["input_plugin"]);
         load_string(m64p_rsp_plugin, m64p_obj["rsp_plugin"]);
 
+        // Load username
+        load_string(username, json["username"]);
+
     }
     catch(const std::exception& e)
     {
@@ -94,6 +97,9 @@ bool AppSettings::save(const fs::path& file)
         m64p_obj["input_plugin"] = m64p_input_plugin;
         m64p_obj["rsp_plugin"] = m64p_rsp_plugin;
         m64p_obj["core_plugin"] = m64p_core_plugin;
+
+        // Store username
+        json["username"] = username;
 
 
         // Write to file

@@ -18,6 +18,8 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     ui->stackedWidget->setCurrentIndex(Page::JOIN);
 
     setup_menus();
+
+    setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 }
 
 MainWindow::~MainWindow()
@@ -52,7 +54,7 @@ void MainWindow::setup_menus()
 
     connect(settings_menu->addAction("Multiplayer"), &QAction::triggered, this, [this]()
     {
-
+        show_window(multiplayer_cfg_win_, *settings_);
     });
     connect(settings_menu->addAction("Emulator"), &QAction::triggered, this, [this]()
     {
