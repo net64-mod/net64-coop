@@ -20,8 +20,7 @@
 
 namespace Net64::Emulator
 {
-
-struct Mupen64Plus;
+class Mupen64Plus;
 
 // Don't pollute global namespace
 namespace M64PTypes
@@ -32,7 +31,7 @@ namespace M64PTypes
 namespace M64PlusHelper
 {
 
-struct Plugin;
+class Plugin;
 
 /// Mupen64Plus error codes
 enum struct Error
@@ -76,8 +75,11 @@ struct PluginInfo
 /**
  * Dynamically loaded Mupen64Plus core
  */
-struct Core final
+class Core final
 {
+    friend class ::Net64::Emulator::Mupen64Plus;
+    friend class ::Net64::Emulator::M64PlusHelper::Plugin;
+
     // Function pointer types
     using plugin_get_version_t = Error(CALL*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
     using debug_context_t = void*;
@@ -153,7 +155,6 @@ struct Core final
     /// Return general information about the core
     const PluginInfo& info() const;
 
-private:
     Core() = default;
 
     void init_symbols();
@@ -198,19 +199,12 @@ private:
 /**
  * Dynamically loaded Mupen64Plus plugin
  */
-struct Plugin
+class Plugin final
 {
-    // Function pointer types
-    using plugin_startup_t = Error(CALL*)(M64PTypes::m64p_dynlib_handle, void*, void* (*)(void*, int, const char*));
-    using plugin_shutdown_t = Error(CALL*)();
-    using plugin_get_version_t = Error(CALL*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
+    friend class ::Net64::Emulator::Mupen64Plus;
+    friend class ::Net64::Emulator::M64PlusHelper::Core;
 
-    /// Create plugin from dynamic library handle
-    Plugin(Core& core, dynlib_t lib);
-
-    /// Create plugin from library path
-    Plugin(Core& core, const std::string& lib_path);
-
+public:
     /// Non-copyable
     Plugin(const Plugin&) = delete;
 
@@ -224,12 +218,6 @@ struct Plugin
 
     friend void swap(Plugin& first, Plugin& second) noexcept;
 
-    /// Return general information about the plugin
-    const PluginInfo& info() const;
-
-    /// Return native library handle
-    dynlib_t handle();
-
     /**
      * Load file as plugin and return information about it.
      * Returns type = M64PLUGIN_NULL if not a plugin
@@ -237,11 +225,27 @@ struct Plugin
     static PluginInfo get_plugin_info(const std::string& file);
     static PluginInfo get_plugin_info(dynlib_t lib);
 
+private:
+    // Function pointer types
+    using plugin_startup_t = Error(CALL*)(M64PTypes::m64p_dynlib_handle, void*, void* (*)(void*, int, const char*));
+    using plugin_shutdown_t = Error(CALL*)();
+    using plugin_get_version_t = Error(CALL*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
+
+    /// Create plugin from dynamic library handle
+    Plugin(Core& core, dynlib_t lib);
+
+    /// Create plugin from library path
+    Plugin(Core& core, const std::string& lib_path);
+
+    /// Return general information about the plugin
+    const PluginInfo& info() const;
+
+    /// Return native library handle
+    dynlib_t handle();
+
     /// Get string representation of plugin type id
     static const char* type_str(M64PTypes::m64p_plugin_type type_id);
 
-
-private:
     void init_symbols();
     void init_plugin(dynlib_t core_lib);
     void destroy_plugin();
@@ -272,8 +276,9 @@ private:
 /**
  * Mupen64Plus instance
  */
-struct Mupen64Plus final : IEmulator
+class Mupen64Plus final : public IEmulator
 {
+public:
     using Core = M64PlusHelper::Core;
     using Plugin = M64PlusHelper::Plugin;
     using PluginInfo = M64PlusHelper::PluginInfo;
@@ -281,8 +286,8 @@ struct Mupen64Plus final : IEmulator
 
     static constexpr usize_t BSWAP_SIZE{4};
 
-
-    explicit Mupen64Plus(Core&& core);
+    /// Create emulator from library file
+    explicit Mupen64Plus(const std::string& lib_path, std::string root_path, std::string data_path);
 
     /// Non copyable
     Mupen64Plus(Mupen64Plus&) = delete;
@@ -298,7 +303,7 @@ struct Mupen64Plus final : IEmulator
     friend void swap(Mupen64Plus& first, Mupen64Plus& second) noexcept;
 
     /// Register a plugin
-    void add_plugin(Plugin&& plugin);
+    void add_plugin(const std::string& lib_path);
 
     /// Remove a plugin
     void remove_plugin(M64PTypes::m64p_plugin_type type);
@@ -329,8 +334,6 @@ struct Mupen64Plus final : IEmulator
     void write(addr_t addr, u64 val) final;
     void write(addr_t addr, f32 val) final;
     void write(addr_t addr, f64 val) final;
-
-    Core& core();
 
     bool running() const override;
 
