@@ -25,8 +25,8 @@ bool failed(Mupen64Plus::Error err)
 
 }
 
-Mupen64Plus::Mupen64Plus(Core&& core)
-:core_{std::move(core)}
+Mupen64Plus::Mupen64Plus(const std::string& lib_path, std::string root_path, std::string data_path)
+:core_{lib_path, std::move(root_path), std::move(data_path)}
 {
 }
 
@@ -64,10 +64,11 @@ void swap(Mupen64Plus& first, Mupen64Plus& second) noexcept
     first.running_.exchange(second.running_);
 }
 
-void Mupen64Plus::add_plugin(Plugin&& plugin)
+void Mupen64Plus::add_plugin(const std::string& lib_path)
 {
     assert(!running_);
 
+    Plugin plugin{ core_, lib_path };
     plugins_[plugin.info().type] = std::move(plugin);
 }
 
@@ -142,11 +143,6 @@ void Mupen64Plus::stop()
         core_.do_cmd(M64CMD_STOP, 0, nullptr);
         core_.do_cmd(M64CMD_CORE_STATE_QUERY, M64CORE_EMU_STATE, &state);
     }while(state != M64EMU_STOPPED);
-}
-
-Mupen64Plus::Core& Mupen64Plus::core()
-{
-    return core_;
 }
 
 bool Mupen64Plus::running() const
