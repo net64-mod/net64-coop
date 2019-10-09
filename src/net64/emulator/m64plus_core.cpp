@@ -212,7 +212,7 @@ void Core::set_config_parameter(M64PTypes::m64p_handle handle, const char* param
     }
 }
 
-void Core::set_state_callback(state_callback_f cb)
+void Core::set_state_callback(state_callback_f cb) noexcept
 {
     *state_callback_ = std::move(cb);
 }

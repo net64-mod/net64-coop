@@ -28,45 +28,25 @@ bool failed(Mupen64Plus::Error err)
 Mupen64Plus::Mupen64Plus(const std::string& lib_path, std::string root_path, std::string data_path)
 :core_{lib_path, std::move(root_path), std::move(data_path)}
 {
-}
-
-Mupen64Plus::Mupen64Plus(Mupen64Plus&& other) noexcept
-:core_{std::move(other.core_)},
-plugins_{std::move(other.plugins_)},
-running_{other.running_.load()}
-{
-}
-
-Mupen64Plus& Mupen64Plus::operator=(Mupen64Plus&& other) noexcept
-{
-    swap(*this, other);
-
-    return *this;
+    assert(!has_instance);
+    has_instance = true;
 }
 
 Mupen64Plus::~Mupen64Plus()
 {
-    if(core_.handle() != nullptr && rom_loaded())
+    if(core_.handle())
     {
-        if(running_)
-            stop();
-        unload_rom();
+        stop();
+        if(rom_loaded_)
+            unload_rom();
     }
-}
-
-void swap(Mupen64Plus& first, Mupen64Plus& second) noexcept
-{
-    using std::swap;
-
-    swap(first.core_, second.core_);
-    swap(first.plugins_, second.plugins_);
-    swap(first.rom_loaded_, second.rom_loaded_);
-    first.running_.exchange(second.running_);
+    has_instance = false;
 }
 
 void Mupen64Plus::add_plugin(const std::string& lib_path)
 {
-    assert(!running_);
+    std::lock_guard g(mutex_);
+    assert(!running());
 
     Plugin plugin{ core_, lib_path };
     plugins_[plugin.info().type] = std::move(plugin);
@@ -74,13 +54,17 @@ void Mupen64Plus::add_plugin(const std::string& lib_path)
 
 void Mupen64Plus::remove_plugin(M64PTypes::m64p_plugin_type type)
 {
-    assert(!running_);
+    std::lock_guard g(mutex_);
+    assert(!running());
 
     plugins_[type] = {};
 }
 
 void Mupen64Plus::load_rom(void* rom_data, std::size_t n)
 {
+    std::lock_guard g(mutex_);
+    assert(!rom_loaded_);
+
     auto ret {core_.do_cmd(M64PTypes::M64CMD_ROM_OPEN, static_cast<int>(n), rom_data)};
     if(failed(ret))
     {
@@ -93,6 +77,10 @@ void Mupen64Plus::load_rom(void* rom_data, std::size_t n)
 
 void Mupen64Plus::unload_rom()
 {
+    std::lock_guard g(mutex_);
+    assert(rom_loaded_);
+    assert(!running());
+
     rom_loaded_ = false;
 
     auto ret{core_.do_cmd(M64PTypes::M64CMD_ROM_CLOSE, 0, nullptr)};
@@ -105,49 +93,107 @@ void Mupen64Plus::unload_rom()
 
 void Mupen64Plus::execute()
 {
-    running_ = true;
+    // NOTE: This code is unfortunately complicated. Take care to not violate the assumptions
+    // documented below and in the stop() function.
+    assert(rom_loaded_);
+
+    // Take ownership of mutex_, this guarantees nobody will change state_ while we own mutex_.
+    // Because we are manually managing mutex_ no exceptions can be thrown while it's locked.
+    mutex_.lock();
+
+    // Do nothing if the emulator is not stopped
+    if(state_ != State::Stopped)
+    {
+        mutex_.unlock();
+        return;
+    }
+
+    state_ = State::Starting;
     core_.prepare_config_file();
     attach_plugins();
-    logger()->info("Started n64 emulation");
+    core_.set_state_callback([this](M64PTypes::m64p_core_param param_type, int new_value) noexcept
+    {
+        if(param_type == M64PTypes::M64CORE_EMU_STATE)
+        {
+            switch (new_value)
+            {
+            case M64PTypes::M64EMU_STOPPED:
+                // This is to guarantee execute() owns mutex_ when do_cmd returns
+                mutex_.lock();
+                state_ = State::Stopped;
+                break;
+            case M64PTypes::M64EMU_RUNNING:
+                if(state_ == State::Starting)
+                {
+                    // To guarantee that stop() cannot be entered while starting we kept mutex_
+                    // now that we are running we want to be able to stop, so unlock it.
+                    state_ = State::Running;
+                    mutex_.unlock();
+                    loginfo_noexcept("Started n64 emulation");
+                }
+                break;
+            case M64PTypes::M64EMU_PAUSED:
+                mutex_.lock();
+                state_ = State::Paused;
+                mutex_.unlock();
+                break;
+            default:
+                assert(false);
+            }
+        }
+    });
+    loginfo_noexcept("Starting n64 emulation");
     auto ret{core_.do_cmd(M64PTypes::M64CMD_EXECUTE, 0, nullptr)};
     detach_plugins();
-    running_ = false;
+    assert(state_ == State::Stopped);
 
     if(failed(ret))
     {
         std::system_error err{make_error_code(ret), "Failed to execute ROM image"};
+        mutex_.unlock();
         logger()->error(err.what());
         throw err;
     }
 
-    logger()->info("Stopped n64 emulation");
+    loginfo_noexcept("Stopped n64 emulation");
+    mutex_.unlock();
 }
 
 void Mupen64Plus::stop()
 {
-    using namespace M64PTypes;
+    // Take ownership of mutex_, this guarantees nobody will change state_
+    // while we own mutex_.
+    mutex_.lock();
 
-    if(!running_)
+    // Do nothing if already stopped or stopping
+    if(state_ == State::Stopped || state_ == State::Stopping)
+    {
+        mutex_.unlock();
         return;
+    }
 
-    // Wait for emulator to be fully started
-    m64p_emu_state state{};
-    do
-    {
-        core_.do_cmd(M64CMD_CORE_STATE_QUERY, M64CORE_EMU_STATE, &state);
-    }while(state != M64EMU_RUNNING);
+    // We cannot be starting because execute() owns mutex_ until state_ == State::Started,
+    // because we own mutex_ execute() cannot be between Starting and Started.
+    assert(state_ == State::Running || state_ == State::Paused);
 
-    // Wait for emulator to be fully stopped
-    do
+    // Stop the emulator
+    loginfo_noexcept("Stopping n64 emulation");
+    core_.do_cmd(M64PTypes::M64CMD_STOP, 0, nullptr);
+    state_ = State::Stopping;
+    mutex_.unlock();
+
+    // Wait for the emulator to be stopped
+    while(state_ != State::Stopped)
     {
-        core_.do_cmd(M64CMD_STOP, 0, nullptr);
-        core_.do_cmd(M64CMD_CORE_STATE_QUERY, M64CORE_EMU_STATE, &state);
-    }while(state != M64EMU_STOPPED);
+        std::this_thread::yield();
+        // Workaround for: https://github.com/mupen64plus/mupen64plus-core/issues/681
+        core_.do_cmd(M64PTypes::M64CMD_STOP, 0, nullptr);
+    }
 }
 
 bool Mupen64Plus::running() const
 {
-    return running_;
+    return state_ != State::Stopped;
 }
 
 bool Mupen64Plus::rom_loaded() const
@@ -155,8 +201,9 @@ bool Mupen64Plus::rom_loaded() const
     return rom_loaded_;
 }
 
-void Mupen64Plus::attach_plugins()
+void Mupen64Plus::attach_plugins() noexcept
 {
+    // We already own mutex_
     using namespace M64PTypes;
 
     core_.attach_plugin(plugins_[M64PLUGIN_GFX].value());
@@ -165,8 +212,9 @@ void Mupen64Plus::attach_plugins()
     core_.attach_plugin(plugins_[M64PLUGIN_RSP].value());
 }
 
-void Mupen64Plus::detach_plugins()
+void Mupen64Plus::detach_plugins() noexcept
 {
+    // We already own mutex_
     using namespace M64PTypes;
 
     core_.detach_plugin(plugins_[M64PLUGIN_GFX]->info().type);
@@ -186,8 +234,21 @@ void Mupen64Plus::check_bounds(addr_t addr, usize_t size)
     }
 }
 
+void Mupen64Plus::loginfo_noexcept(const char* msg) noexcept
+{
+    try
+    {
+        logger()->info(msg);
+    }
+    catch (...)
+    {
+    }
+}
+
 bool Mupen64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 {
+    std::lock_guard g(const_cast<Mupen64Plus*>(this)->mutex_);
+
     return plugins_[type].has_value();
 }
 
@@ -469,7 +530,7 @@ const struct M64PlusErrorCategory : std::error_category
 namespace Net64::Emulator::M64PlusHelper
 {
 
-std::error_code make_error_code(Error e)
+std::error_code make_error_code(Error e) noexcept
 {
     return {static_cast<int>(e), m64p_error_category_g};
 }

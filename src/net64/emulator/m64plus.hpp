@@ -13,6 +13,7 @@
 #include <string_view>
 #include <system_error>
 #include <optional>
+#include <mutex>
 #include "net64/emulator/emulator.hpp"
 #include "net64/emulator/shared_library.hpp"
 #include "net64/logging.hpp"
@@ -59,7 +60,7 @@ enum struct Error
 };
 
 /// Overload for Mupen64Plus error codes
-std::error_code make_error_code(Error e);
+std::error_code make_error_code(Error e) noexcept;
 
 
 /// Contains information retrieved via PluginGetVersion
@@ -147,7 +148,7 @@ class Core final
     void set_config_parameter(M64PTypes::m64p_handle handle, const char* param_name,
                               M64PTypes::m64p_type type, const void* data);
 
-    void set_state_callback(state_callback_f cb);
+    void set_state_callback(state_callback_f cb) noexcept;
 
     /// Return native library handle
     dynlib_t handle();
@@ -274,7 +275,7 @@ private:
 } // M64PlusHelper
 
 /**
- * Mupen64Plus instance
+ * Mupen64Plus instance. Only one instance of this class can be alive at a time.
  */
 class Mupen64Plus final : public IEmulator
 {
@@ -292,15 +293,10 @@ public:
     /// Non copyable
     Mupen64Plus(Mupen64Plus&) = delete;
 
-    /// Moveable
-    Mupen64Plus(Mupen64Plus&& other) noexcept;
-
-    /// Move assignment
-    Mupen64Plus& operator=(Mupen64Plus&& other) noexcept;
+    /// Non movable
+    Mupen64Plus(Mupen64Plus&& other) = delete;
 
     ~Mupen64Plus() override;
-
-    friend void swap(Mupen64Plus& first, Mupen64Plus& second) noexcept;
 
     /// Register a plugin
     void add_plugin(const std::string& lib_path);
@@ -348,9 +344,10 @@ public:
     bool has_plugin(M64PTypes::m64p_plugin_type type) const;
 
 private:
-    void attach_plugins();
-    void detach_plugins();
+    void attach_plugins() noexcept;
+    void detach_plugins() noexcept;
     inline static void check_bounds(addr_t addr, usize_t size);
+    void loginfo_noexcept(const char* msg) noexcept;
 
     template<typename T>
     volatile T* get_mem_ptr()
@@ -370,8 +367,21 @@ private:
 
     Core core_;
     std::array<std::optional<Plugin>, 6> plugins_{};
-    std::atomic_bool running_{};
+
     bool rom_loaded_{};
+
+    enum class State
+    {
+        Stopped,
+        Stopping,
+        Starting,
+        Running,
+        Paused,
+    };
+    std::atomic<State> state_{State::Stopped}; // Only modify while owning mutex_!
+    std::mutex mutex_;
+
+    inline static bool has_instance = false;
 
     CLASS_LOGGER_("mupen64plus")
 };
