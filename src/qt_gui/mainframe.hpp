@@ -24,6 +24,9 @@ public:
     explicit MainFrame(QWidget* parent, AppSettings& settings);
     ~MainFrame();
 
+protected:
+    void closeEvent(QCloseEvent* event) override;
+
 private slots:
     void on_action_emulator_settings_triggered();
     void on_start_emulator();

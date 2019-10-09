@@ -26,6 +26,16 @@ MainFrame::~MainFrame()
     delete ui;
 }
 
+void MainFrame::closeEvent(QCloseEvent* event)
+{
+    if (emulator_)
+    {
+        emulator_.reset();
+        emulation_thread_.get();
+    }
+    QMainWindow::closeEvent(event);
+}
+
 void MainFrame::on_action_emulator_settings_triggered()
 {
     show_window(m64p_settings_win_, *settings_);
@@ -35,7 +45,7 @@ void MainFrame::on_start_emulator()
 {
     if(emulator_)
     {
-        emulator_ = nullptr;
+        emulator_.reset();
         emulation_thread_.get();
         ui->pushButton->setText("Start");
         return;
@@ -67,6 +77,8 @@ void MainFrame::on_start_emulator()
         emulation_thread_ = std::async([this]()
         {
             emulator_->execute();
+            ui->pushButton->setText("Start");
+            emulator_.reset();
         });
 
         ui->pushButton->setText("Stop");
