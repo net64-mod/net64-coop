@@ -45,7 +45,7 @@ private:
     Ui::MainFrame* ui;
     M64PSettings* m64p_settings_win_{};
     AppSettings* settings_;
-    std::optional<Net64::Emulator::Mupen64Plus> emulator_;
+    std::unique_ptr<Net64::Emulator::Mupen64Plus> emulator_;
     std::future<void> emulation_thread_;
 };
 

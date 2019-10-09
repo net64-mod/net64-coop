@@ -33,20 +33,20 @@ void MainFrame::on_action_emulator_settings_triggered()
 
 void MainFrame::on_start_emulator()
 {
-    if(emulator_.has_value())
+    if(emulator_)
     {
-        emulator_ = {};
+        emulator_ = nullptr;
         emulation_thread_.get();
         ui->pushButton->setText("Start");
         return;
     }
     try
     {
-        emulator_ = Net64::Emulator::Mupen64Plus{
+        emulator_ = std::make_unique<Net64::Emulator::Mupen64Plus>(
             (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(),
             settings_->m64p_dir().string(),
             settings_->m64p_plugin_dir().string()
-        };
+        );
 
         emulator_->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_video_plugin).string());
         emulator_->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_audio_plugin).string());
