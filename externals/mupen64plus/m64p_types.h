@@ -107,7 +107,8 @@ typedef enum {
   M64PLUGIN_GFX,
   M64PLUGIN_AUDIO,
   M64PLUGIN_INPUT,
-  M64PLUGIN_CORE
+  M64PLUGIN_CORE,
+  M64PLUGIN_MAX
 } m64p_plugin_type;
 
 typedef enum {

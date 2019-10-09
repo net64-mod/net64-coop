@@ -61,37 +61,12 @@ Core::Core(const std::string& lib_path, std::string root_path, std::string data_
     init_core();
 }
 
-Core::Core(Core&& other) noexcept
-: Core()
-{
-    swap(*this, other);
-}
-
-Core& Core::operator=(Core&& other) noexcept
-{
-    swap(*this, other);
-
-    return *this;
-}
-
 Core::~Core()
 {
     if(!handle_.lib)
         return;
 
     destroy_core();
-}
-
-void swap(Core& first, Core& second) noexcept
-{
-    using std::swap;
-
-    swap(first.handle_, second.handle_);
-    swap(first.fn_, second.fn_);
-    swap(first.info_, second.info_);
-    swap(first.state_callback_, second.state_callback_);
-    swap(first.root_path_, second.root_path_);
-    swap(first.data_path_, second.data_path_);
 }
 
 void Core::prepare_config_file()

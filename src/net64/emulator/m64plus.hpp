@@ -115,18 +115,13 @@ class Core final
     /// Create core from library file
     Core(const std::string& lib_path, std::string root_path, std::string data_path);
 
-    /// Non-copyable
+    /// Non copyable
     Core(const Core&) = delete;
 
-    /// Moveable
-    Core(Core&& other) noexcept;
-
-    /// Move assignment
-    Core& operator=(Core&& other) noexcept;
+    /// Non movable
+    Core(Core&& other) = delete;
 
     ~Core();
-
-    friend void swap(Core& first, Core& second) noexcept;
 
     void prepare_config_file();
 
@@ -155,8 +150,6 @@ class Core final
 
     /// Return general information about the core
     const PluginInfo& info() const;
-
-    Core() = default;
 
     void init_symbols();
     void init_core();
@@ -206,18 +199,13 @@ class Plugin final
     friend class ::Net64::Emulator::M64PlusHelper::Core;
 
 public:
-    /// Non-copyable
+    /// Non copyable
     Plugin(const Plugin&) = delete;
 
-    /// Moveable
-    Plugin(Plugin&& other) noexcept;
-
-    /// Move assignment
-    Plugin& operator=(Plugin&& other) noexcept;
+    /// Non movable
+    Plugin(Plugin&& other) = delete;
 
     ~Plugin();
-
-    friend void swap(Plugin& first, Plugin& second) noexcept;
 
     /**
      * Load file as plugin and return information about it.
@@ -256,7 +244,6 @@ private:
     {
         fn_ptr = reinterpret_cast<T>(get_symbol(handle_.lib, name));
     }
-
 
     UniqueLib handle_{};
     struct
@@ -366,7 +353,7 @@ private:
     }
 
     Core core_;
-    std::array<std::optional<Plugin>, 6> plugins_{};
+    std::array<std::unique_ptr<Plugin>, M64PTypes::M64PLUGIN_MAX> plugins_{};
 
     bool rom_loaded_{};
 
