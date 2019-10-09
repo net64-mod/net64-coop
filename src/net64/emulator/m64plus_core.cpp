@@ -62,9 +62,9 @@ Core::Core(const std::string& lib_path, std::string root_path, std::string data_
 }
 
 Core::Core(Core&& other) noexcept
-:handle_{std::move(other.handle_)}, fn_{other.fn_},
-root_path_{std::move(other.root_path_)}, data_path_{std::move(other.data_path_)}
+: Core()
 {
+    swap(*this, other);
 }
 
 Core& Core::operator=(Core&& other) noexcept
@@ -88,6 +88,7 @@ void swap(Core& first, Core& second) noexcept
 
     swap(first.handle_, second.handle_);
     swap(first.fn_, second.fn_);
+    swap(first.info_, second.info_);
     swap(first.root_path_, second.root_path_);
     swap(first.data_path_, second.data_path_);
 }
