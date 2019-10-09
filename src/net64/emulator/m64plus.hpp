@@ -76,12 +76,17 @@ struct PluginInfo
 /**
  * Dynamically loaded Mupen64Plus core
  */
-struct Core
+struct Core final
 {
     // Function pointer types
     using plugin_get_version_t = Error(CALL*)(M64PTypes::m64p_plugin_type*, int*, int*, const char**, int*);
-    using core_startup_t = Error(CALL*)(int, const char*, const char*, void*, void(*)(void*, int, const char*), void*,
-                                    void(*)(void*, M64PTypes::m64p_core_param, int));
+    using debug_context_t = void*;
+    using debug_callback_t = void(*)(void*, int, const char*);
+    using state_context_t = void*;
+    using state_callback_t = void(*)(void*, M64PTypes::m64p_core_param, int);
+    using core_startup_t = Error(CALL*)(int, const char*, const char*,
+                                    debug_context_t, debug_callback_t,
+                                    state_context_t, state_callback_t);
     using core_shutdown_t = Error(CALL*)();
     using core_attach_plugin_t = Error(CALL*)(M64PTypes::m64p_plugin_type, M64PTypes::m64p_dynlib_handle);
     using core_detach_plugin_t = Error(CALL*)(M64PTypes::m64p_plugin_type);
@@ -92,6 +97,8 @@ struct Core
     using open_config_section_t = Error(CALL*)(const char*, M64PTypes::m64p_handle*);
     using save_config_file_t = void(CALL*)();
     using set_config_parameter_t = Error(CALL*)(M64PTypes::m64p_handle, const char*, M64PTypes::m64p_type, const void*);
+
+    using state_callback_f = std::function<void(M64PTypes::m64p_core_param, int)>;
 
     /// Mupen64Plus API this frontend is compatible with
     static constexpr int API_VERSION{0x020001};
@@ -138,6 +145,8 @@ struct Core
     void set_config_parameter(M64PTypes::m64p_handle handle, const char* param_name,
                               M64PTypes::m64p_type type, const void* data);
 
+    void set_state_callback(state_callback_f cb);
+
     /// Return native library handle
     dynlib_t handle();
 
@@ -152,6 +161,8 @@ private:
     void create_folder_structure();
     void destroy_core();
 
+    static void state_callback_c(void* context, M64PTypes::m64p_core_param param_type, int new_value);
+
     template<typename T>
     void resolve_symbol(T& fn_ptr, const char* name)
     {
@@ -159,7 +170,7 @@ private:
     }
 
     UniqueLib handle_{};
-    struct
+    struct CoreFunctions
     {
         plugin_get_version_t plugin_get_version;
         core_startup_t core_startup;
@@ -174,6 +185,7 @@ private:
         set_config_parameter_t set_config_parameter;
     }fn_{};
     PluginInfo info_;
+    std::unique_ptr<state_callback_f> state_callback_ = std::make_unique<state_callback_f>();
 
     std::string root_path_,
                 data_path_;

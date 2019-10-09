@@ -89,6 +89,7 @@ void swap(Core& first, Core& second) noexcept
     swap(first.handle_, second.handle_);
     swap(first.fn_, second.fn_);
     swap(first.info_, second.info_);
+    swap(first.state_callback_, second.state_callback_);
     swap(first.root_path_, second.root_path_);
     swap(first.data_path_, second.data_path_);
 }
@@ -211,6 +212,11 @@ void Core::set_config_parameter(M64PTypes::m64p_handle handle, const char* param
     }
 }
 
+void Core::set_state_callback(state_callback_f cb)
+{
+    *state_callback_ = std::move(cb);
+}
+
 void Core::init_symbols()
 {
     resolve_symbol(fn_.plugin_get_version, "PluginGetVersion");
@@ -252,7 +258,7 @@ void Core::init_core()
 
     std::string config_path{(fs::path(root_path_) / "config").string()};
 
-    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path_.c_str(), nullptr, nullptr, nullptr, nullptr);
+    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path_.c_str(), nullptr, nullptr, state_callback_.get(), state_callback_c);
     if(failed(ret))
     {
         // Failed to startup core
@@ -295,6 +301,13 @@ void Core::destroy_core()
         logger()->warn("Failed to correctly shutdown core: ", errc.message());
     }
     logger()->info("Shutdown {}", Plugin::type_str(M64PTypes::M64PLUGIN_CORE));
+}
+
+void Core::state_callback_c(void* context, M64PTypes::m64p_core_param param_type, int new_value)
+{
+    auto cb = reinterpret_cast<state_callback_f*>(context);
+    if (*cb)
+        (*cb)(param_type, new_value);
 }
 
 dynlib_t Core::handle()
