@@ -145,6 +145,8 @@ struct Core
     const PluginInfo& info() const;
 
 private:
+    Core() = default;
+
     void init_symbols();
     void init_core();
     void create_folder_structure();
