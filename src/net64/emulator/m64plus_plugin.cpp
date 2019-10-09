@@ -49,33 +49,12 @@ Plugin::Plugin(Core& core, const std::string& lib_path)
     init_plugin(core.handle());
 }
 
-Plugin::Plugin(Plugin&& other) noexcept
-:handle_{std::move(other.handle_)}, fn_{other.fn_}, info_{other.info_}
-{
-}
-
-Plugin& Plugin::operator=(Plugin&& other) noexcept
-{
-    swap(*this, other);
-
-    return *this;
-}
-
 Plugin::~Plugin()
 {
     if(!handle_.lib)
         return;
 
     destroy_plugin();
-}
-
-void swap(Plugin& first, Plugin& second) noexcept
-{
-    using std::swap;
-
-    swap(first.handle_, second.handle_);
-    swap(first.info_, second.info_);
-    swap(first.fn_, second.fn_);
 }
 
 const PluginInfo& Plugin::info() const

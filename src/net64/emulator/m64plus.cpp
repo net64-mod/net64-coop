@@ -48,8 +48,8 @@ void Mupen64Plus::add_plugin(const std::string& lib_path)
     std::lock_guard g(mutex_);
     assert(!running());
 
-    Plugin plugin{ core_, lib_path };
-    plugins_[plugin.info().type] = std::move(plugin);
+    auto plugin = new Plugin(core_, lib_path);
+    plugins_[plugin->info().type] = std::unique_ptr<Plugin>(plugin);
 }
 
 void Mupen64Plus::remove_plugin(M64PTypes::m64p_plugin_type type)
@@ -57,7 +57,7 @@ void Mupen64Plus::remove_plugin(M64PTypes::m64p_plugin_type type)
     std::lock_guard g(mutex_);
     assert(!running());
 
-    plugins_[type] = {};
+    plugins_[type].reset();
 }
 
 void Mupen64Plus::load_rom(void* rom_data, std::size_t n)
@@ -206,10 +206,10 @@ void Mupen64Plus::attach_plugins() noexcept
     // We already own mutex_
     using namespace M64PTypes;
 
-    core_.attach_plugin(plugins_[M64PLUGIN_GFX].value());
-    core_.attach_plugin(plugins_[M64PLUGIN_AUDIO].value());
-    core_.attach_plugin(plugins_[M64PLUGIN_INPUT].value());
-    core_.attach_plugin(plugins_[M64PLUGIN_RSP].value());
+    core_.attach_plugin(*plugins_[M64PLUGIN_GFX]);
+    core_.attach_plugin(*plugins_[M64PLUGIN_AUDIO]);
+    core_.attach_plugin(*plugins_[M64PLUGIN_INPUT]);
+    core_.attach_plugin(*plugins_[M64PLUGIN_RSP]);
 }
 
 void Mupen64Plus::detach_plugins() noexcept
@@ -249,7 +249,9 @@ bool Mupen64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 {
     std::lock_guard g(const_cast<Mupen64Plus*>(this)->mutex_);
 
-    return plugins_[type].has_value();
+    if (plugins_[type])
+        return true;
+    return false;
 }
 
 void Mupen64Plus::read_memory(addr_t addr, void* data, usize_t n)
