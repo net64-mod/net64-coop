@@ -192,6 +192,11 @@ void Core::set_state_callback(state_callback_f cb) noexcept
     *state_callback_ = std::move(cb);
 }
 
+void Core::set_debug_callback(debug_callback_f cb) noexcept
+{
+    *debug_callback_ = std::move(cb);
+}
+
 void Core::init_symbols()
 {
     resolve_symbol(fn_.plugin_get_version, "PluginGetVersion");
@@ -233,7 +238,7 @@ void Core::init_core()
 
     std::string config_path{(fs::path(root_path_) / "config").string()};
 
-    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path_.c_str(), nullptr, nullptr, state_callback_.get(), state_callback_c);
+    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path_.c_str(), debug_callback_.get(), debug_callback_c, state_callback_.get(), state_callback_c);
     if(failed(ret))
     {
         // Failed to startup core
@@ -283,6 +288,13 @@ void Core::state_callback_c(void* context, M64PTypes::m64p_core_param param_type
     auto cb = reinterpret_cast<state_callback_f*>(context);
     if (*cb)
         (*cb)(param_type, new_value);
+}
+
+void Core::debug_callback_c(void* context, int level, const char* message)
+{
+    auto cb = reinterpret_cast<debug_callback_f*>(context);
+    if (*cb)
+        (*cb)(level, message);
 }
 
 dynlib_t Core::handle()

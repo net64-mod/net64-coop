@@ -102,6 +102,7 @@ class Core final
     using set_config_parameter_t = Error(CALL*)(M64PTypes::m64p_handle, const char*, M64PTypes::m64p_type, const void*);
 
     using state_callback_f = std::function<void(M64PTypes::m64p_core_param, int)>;
+    using debug_callback_f = std::function<void(int, const char*)>;
 
     /// Mupen64Plus API this frontend is compatible with
     static constexpr int API_VERSION{0x020001};
@@ -144,6 +145,7 @@ class Core final
                               M64PTypes::m64p_type type, const void* data);
 
     void set_state_callback(state_callback_f cb) noexcept;
+    void set_debug_callback(debug_callback_f cb) noexcept;
 
     /// Return native library handle
     dynlib_t handle();
@@ -157,6 +159,7 @@ class Core final
     void destroy_core();
 
     static void state_callback_c(void* context, M64PTypes::m64p_core_param param_type, int new_value);
+    static void debug_callback_c(void* context, int level, const char* message);
 
     template<typename T>
     void resolve_symbol(T& fn_ptr, const char* name)
@@ -181,6 +184,7 @@ class Core final
     }fn_{};
     PluginInfo info_;
     std::unique_ptr<state_callback_f> state_callback_ = std::make_unique<state_callback_f>();
+    std::unique_ptr<debug_callback_f> debug_callback_ = std::make_unique<debug_callback_f>();
 
     std::string root_path_,
                 data_path_;
