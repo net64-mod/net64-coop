@@ -1,12 +1,10 @@
 image: Visual Studio 2019
 
 environment:
-  CMAKE_PREFIX_PATH: C:\Qt\5.12.4\msvc2017\lib\cmake
+  CMAKE_PREFIX_PATH: C:\Qt\5.12.5\msvc2017\lib\cmake
 
 install:
   - git submodule update --init --recursive
-  - curl -O -L https://code.qt.io/cgit/qbs/qbs.git/plain/scripts/install-qt.sh 1>nul
-  - sh install-qt.sh --directory /c/Qt --host windows_x86 --target desktop --toolchain win32_msvc2017 --version 5.12.4 qtbase qttools qtsvg qtimageformats d3dcompiler_47 opengl32sw
 
 build_script:
   - mkdir build && cd build
