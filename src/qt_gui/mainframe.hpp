@@ -27,9 +27,13 @@ public:
 protected:
     void closeEvent(QCloseEvent* event) override;
 
+signals:
+    void emulator_state(Net64::Emulator::State);
+
 private slots:
     void on_action_emulator_settings_triggered();
     void on_start_emulator();
+    void on_emulator_state(Net64::Emulator::State state);
 
 private:
     template<typename T, typename... TArgs>
@@ -53,3 +57,5 @@ private:
 };
 
 } // Frontend
+
+Q_DECLARE_METATYPE(Net64::Emulator::State)

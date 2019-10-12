@@ -17,6 +17,9 @@ MainFrame::MainFrame(QWidget* parent, AppSettings& settings)
     setWindowIcon(QIcon{":/icons/net64-icon128.png"});
 
     ui->lineEdit->setText(QString::fromStdString(settings_->rom_file_path.string()));
+
+    qRegisterMetaType<Net64::Emulator::State>();
+    connect(this, &MainFrame::emulator_state, this, &MainFrame::on_emulator_state);
 }
 
 MainFrame::~MainFrame()
@@ -28,7 +31,7 @@ MainFrame::~MainFrame()
 
 void MainFrame::closeEvent(QCloseEvent* event)
 {
-    if (emulator_)
+    if(emulator_)
     {
         emulator_.reset();
         emulation_thread_.get();
@@ -47,7 +50,6 @@ void MainFrame::on_start_emulator()
     {
         emulator_.reset();
         emulation_thread_.get();
-        ui->pushButton->setText("Start");
         return;
     }
     try
@@ -76,12 +78,12 @@ void MainFrame::on_start_emulator()
 
         emulation_thread_ = std::async([this]()
         {
-            emulator_->execute();
-            ui->pushButton->setText("Start");
+            emulator_->execute([this](auto state)
+            {
+                this->emulator_state(state);
+            });
             emulator_.reset();
         });
-
-        ui->pushButton->setText("Stop");
     }
     catch(const std::system_error& e)
     {
@@ -90,6 +92,26 @@ void MainFrame::on_start_emulator()
         box.setText(QString::fromStdString("An error has occurred: "s + e.what() + "\nError code: " +
                                            e.code().category().name() + ":"s + std::to_string(e.code().value())));
         box.exec();
+    }
+}
+
+void MainFrame::on_emulator_state(Net64::Emulator::State state)
+{
+    using Net64::Emulator::State;
+
+    switch(state)
+    {
+    case State::STARTING:
+        ui->pushButton->setDisabled(true);
+        break;
+    case State::RUNNING:
+        ui->pushButton->setEnabled(true);
+        ui->pushButton->setText("Stop");
+        break;
+    case State::STOPPED:
+        ui->pushButton->setText("Start");
+        break;
+    default: break;
     }
 }
 
