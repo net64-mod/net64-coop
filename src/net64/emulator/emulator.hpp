@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include "net64/logging.hpp"
 #include "types.hpp"
@@ -15,6 +16,14 @@
 namespace Net64::Emulator
 {
 
+enum struct State
+{
+    STOPPED,
+    STARTING,
+    RUNNING,
+    PAUSED
+};
+
 /// Interface for n64 emulators
 struct IEmulator
 {
@@ -22,6 +31,8 @@ struct IEmulator
     using saddr_t = n64_saddr_t;
     using usize_t = n64_usize_t;
     using ssize_t = n64_ssize_t;
+
+    using StateCallback = std::function<void(State)>;
 
     virtual ~IEmulator() = default;
 
@@ -32,7 +43,7 @@ struct IEmulator
     virtual void unload_rom() = 0;
 
     /// Execute rom, blocking
-    virtual void execute() = 0;
+    virtual void execute(const StateCallback& fn = {}) = 0;
 
     /// Stop execution
     virtual void stop() = 0;

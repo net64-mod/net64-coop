@@ -300,7 +300,7 @@ public:
 
     void unload_rom() override;
 
-    void execute() override;
+    void execute(const StateCallback& fn = {}) override;
 
     void stop() override;
 

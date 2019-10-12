@@ -91,11 +91,25 @@ void Mupen64Plus::unload_rom()
     }
 }
 
-void Mupen64Plus::execute()
+void Mupen64Plus::execute(const StateCallback& fn)
 {
     // NOTE: This code is unfortunately complicated. Take care to not violate the assumptions
     // documented below and in the stop() function.
     assert(rom_loaded_);
+
+    // Safely call user provided callback
+    auto notify{[this, &fn](Emulator::State state) noexcept
+    {
+        try
+        {
+            if(fn)
+                fn(state);
+        }
+        catch(...)
+        {
+            loginfo_noexcept("Exception in user state callback");
+        }
+    }};
 
     // Take ownership of mutex_, this guarantees nobody will change state_ while we own mutex_.
     // Because we are manually managing mutex_ no exceptions can be thrown while it's locked.
@@ -109,9 +123,10 @@ void Mupen64Plus::execute()
     }
 
     state_ = State::Starting;
+    notify(Emulator::State::STARTING);
     core_.prepare_config_file();
     attach_plugins();
-    core_.set_state_callback([this](M64PTypes::m64p_core_param param_type, int new_value) noexcept
+    core_.set_state_callback([this, &notify](M64PTypes::m64p_core_param param_type, int new_value) noexcept
     {
         if(param_type == M64PTypes::M64CORE_EMU_STATE)
         {
@@ -131,11 +146,13 @@ void Mupen64Plus::execute()
                     mutex_.unlock();
                     loginfo_noexcept("Started n64 emulation");
                 }
+                notify(Emulator::State::RUNNING);
                 break;
             case M64PTypes::M64EMU_PAUSED:
                 mutex_.lock();
                 state_ = State::Paused;
                 mutex_.unlock();
+                notify(Emulator::State::PAUSED);
                 break;
             default:
                 assert(false);
@@ -157,6 +174,7 @@ void Mupen64Plus::execute()
 
     loginfo_noexcept("Stopped n64 emulation");
     mutex_.unlock();
+    notify(Emulator::State::STOPPED);
 }
 
 void Mupen64Plus::stop()
