@@ -45,9 +45,15 @@ if(BUILD_QT_FRONTEND)
     if(MSVC_IDE)
         set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT net64_qt_gui)
     endif()
+
+    # json
     set(JSON_BuildTests OFF CACHE INTERNAL "")
-    set(JSON_MultipleHeaders ON)
+    set(JSON_Install OFF CACHE INTERNAL "")
+    set(JSON_MultipleHeaders ON CACHE INTERNAL "")
     add_subdirectory(externals/json EXCLUDE_FROM_ALL)
+
+    # zlib
+    add_subdirectory(externals/zlib EXCLUDE_FROM_ALL)
 endif()
 
 

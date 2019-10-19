@@ -304,6 +304,10 @@ public:
 
     void stop() override;
 
+    void save_state(const std::string& filename);
+
+    void restore_state(const std::string& filename);
+
     // Read & Write implementations
     void read_memory(addr_t addr, void* data, usize_t n) override;
     void write_memory(addr_t addr, const void* data, usize_t n) override;
@@ -321,6 +325,7 @@ public:
     void write(addr_t addr, u64 val) final;
     void write(addr_t addr, f32 val) final;
     void write(addr_t addr, f64 val) final;
+    uint8_t* mem_ptr() { return (uint8_t*)get_mem_ptr<uint8_t>(); }
 
     bool running() const override;
 
