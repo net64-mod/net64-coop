@@ -23,6 +23,39 @@ namespace Frontend
 
 using Net64::LoggerPtr;
 
+static void set_default_mupen_plugins(AppSettings& settings)
+{
+    using namespace Net64::Emulator::M64PTypes;
+    using Net64::Emulator::M64PlusHelper::Plugin;
+
+    // Helper function
+    auto set_plugin_if_empty{[](auto& config_string, const auto& file_path, auto plugin_type)
+    {
+        if(config_string.empty())
+        {
+            if(file_path.string().find(AppSettings::M64P_DEFAULT_PLUGINS[plugin_type]) != std::string::npos &&
+               fs::is_regular_file(file_path) && Plugin::get_plugin_info(file_path.string()).type == plugin_type)
+            {
+                config_string = file_path.filename().string();
+            }
+            else
+            {
+                Net64::get_logger("frontend")->warn("Did not find default {} plugin",
+                                  Plugin::type_str(M64PLUGIN_CORE));
+            }
+        }
+    }};
+
+    for(auto dir_entry : fs::directory_iterator(settings.m64p_plugin_dir()))
+    {
+        set_plugin_if_empty(settings.m64p_core_plugin, dir_entry.path(), M64PLUGIN_CORE);
+        set_plugin_if_empty(settings.m64p_video_plugin, dir_entry.path(), M64PLUGIN_GFX);
+        set_plugin_if_empty(settings.m64p_audio_plugin, dir_entry.path(), M64PLUGIN_AUDIO);
+        set_plugin_if_empty(settings.m64p_input_plugin, dir_entry.path(), M64PLUGIN_INPUT);
+        set_plugin_if_empty(settings.m64p_rsp_plugin, dir_entry.path(), M64PLUGIN_RSP);
+    }
+}
+
 static void install_routine(AppSettings& settings)
 {
     // Copy mupen64plus binaries
@@ -94,6 +127,7 @@ int main(int argc, char* argv[])
 
     // Load config file
     settings.load(settings.main_config_file_path());
+    set_default_mupen_plugins(settings);
 
     // Initialize ENet
     if(!Net64::initialize())

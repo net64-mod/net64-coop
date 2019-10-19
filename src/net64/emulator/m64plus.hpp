@@ -218,6 +218,9 @@ public:
     static PluginInfo get_plugin_info(const std::string& file);
     static PluginInfo get_plugin_info(dynlib_t lib);
 
+    /// Get string representation of plugin type id
+    static const char* type_str(M64PTypes::m64p_plugin_type type_id);
+
 private:
     // Function pointer types
     using plugin_startup_t = Error(CALL*)(M64PTypes::m64p_dynlib_handle, void*, void* (*)(void*, int, const char*));
@@ -235,9 +238,6 @@ private:
 
     /// Return native library handle
     dynlib_t handle();
-
-    /// Get string representation of plugin type id
-    static const char* type_str(M64PTypes::m64p_plugin_type type_id);
 
     void init_symbols();
     void init_plugin(dynlib_t core_lib);
