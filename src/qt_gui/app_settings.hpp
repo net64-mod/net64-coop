@@ -34,6 +34,7 @@ struct AppSettings
     // Mupen64Plus configuration
     static const char* M64P_DEFAULT_PLUGIN_DIR,
                      * M64P_DEFAULT_ROOT_DIR;
+    static const char* M64P_DEFAULT_PLUGINS[6];
 
     fs::path shipped_m64p_binaries_dir() const;
 

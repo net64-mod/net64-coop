@@ -18,7 +18,14 @@ const char* AppSettings::MAIN_CONFIG_SUB_DIR{"config/"};
 const char* AppSettings::MAIN_CONFIG_FILENAME{"config.json"};
 
 const char* AppSettings::M64P_DEFAULT_ROOT_DIR{"mupen64plus/"};
-
+const char* AppSettings::M64P_DEFAULT_PLUGINS[]{
+    "",
+    "mupen64plus-rsp-hle",         ///< RSP plugin
+    "mupen64plus-video-GLideN64",  ///< GFX plugin
+    "mupen64plus-audio-sdl",       ///< Audio plugin
+    "mupen64plus-input-sdl",       ///< Input plugin
+    "mupen64plus"                  ///< Core plugin
+};
 
 bool AppSettings::load(const fs::path& file)
 {
