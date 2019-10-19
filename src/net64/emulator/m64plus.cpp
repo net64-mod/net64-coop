@@ -159,6 +159,13 @@ void Mupen64Plus::execute(const StateCallback& fn)
             }
         }
     });
+    core_.set_debug_callback([this](int level, const char* message)
+    {
+        printf("%d %s\n", level, message);
+        /*if (strncmp(message, "Starting R4300 emulator: ", 25) == 0)
+            emulation_started();*/
+        //logger()->info("%d: %s", level, message);
+    });
     loginfo_noexcept("Starting n64 emulation");
     auto ret{core_.do_cmd(M64PTypes::M64CMD_EXECUTE, 0, nullptr)};
     detach_plugins();

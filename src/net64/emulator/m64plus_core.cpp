@@ -104,6 +104,9 @@ void Core::prepare_config_file()
             path = (fs::path(this_ptr->root_path_) / "save").string();
             this_ptr->set_config_parameter(hdl, "SaveStatePath", M64PTypes::M64TYPE_STRING, path.c_str());
             this_ptr->set_config_parameter(hdl, "SaveSRAMPath", M64PTypes::M64TYPE_STRING, path.c_str());
+            // Enable interpreter
+            int emumode = 0; // set emu mode to: 0=Pure Interpreter 1=Interpreter 2=DynaRec
+            this_ptr->set_config_parameter(hdl, "R4300Emulator", M64PTypes::M64TYPE_INT, &emumode);
         }
     });
 

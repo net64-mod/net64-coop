@@ -14,4 +14,8 @@
 
 [submodule "externals/enet-lib"]
     path = externals/enet-lib
-    url = https://github.com/lsalzman/enet
+    url = https://github.com/lsalzman/enet.git
+
+[submodule "externals/zlib"]
+	path = externals/zlib
+	url = https://github.com/ucpu/zlib.git

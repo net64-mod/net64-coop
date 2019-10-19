@@ -1,5 +1,30 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/net64-icon128.png</file>
+        <file>patches/5b6000</file>
+        <file>patches/5d4000</file>
+        <file>patches/7cb000</file>
+        <file>patches/7ea000</file>
+        <file>patches/29d35c</file>
+        <file>patches/36a000</file>
+        <file>patches/37a550</file>
+        <file>patches/369e80</file>
+        <file>patches/369f00</file>
+        <file>patches/369f40</file>
+        <file>patches/369fc0</file>
+        <file>patches/2773f8</file>
+        <file>patches/2777c4</file>
+        <file>patches/2794b0</file>
+        <file>patches/3198B4</file>
+        <file>patches/27761c</file>
+        <file>patches/27770c</file>
+        <file>patches/277184</file>
+        <file>patches/277308</file>
+        <file>patches/277520</file>
+        <file>patches/279854</file>
+        <file>patches/369400</file>
+        <file>patches/369800</file>
+        <file>patches/570000</file>
+        <file>patches/591000</file>
     </qresource>
 </RCC>

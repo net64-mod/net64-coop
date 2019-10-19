@@ -1,14 +1,11 @@
 image: Visual Studio 2019
 
-environment:
-  CMAKE_PREFIX_PATH: C:\Qt\5.12.5\msvc2017\lib\cmake
-
 install:
   - git submodule update --init --recursive
 
 build_script:
   - mkdir build && cd build
-  - cmake -G "Visual Studio 16 2019" -A Win32 -DBUILD_QT_FRONTEND=ON -DINSTALL_MUPEN64PLUS=ON -DCMAKE_INSTALL_PREFIX=%CD%\install ..
+  - cmake -G "Visual Studio 16 2019" -A Win32 -DBUILD_QT_FRONTEND=ON -DINSTALL_MUPEN64PLUS=ON -DCMAKE_INSTALL_PREFIX=%CD%\install -DCMAKE_PREFIX_PATH=C:\Qt\5.12.5\msvc2017\lib\cmake ..
   - cmake --build . --config Release
   - cmake --install . --config Release
 
