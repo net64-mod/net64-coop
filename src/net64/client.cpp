@@ -56,7 +56,7 @@ std::error_code Client::connect(const char* ip, std::uint16_t port)
         peer_ = std::move(peer);
         on_connect();
 
-        return {0, std::generic_category()};
+        return {};
     }
 
     return make_error_code(Net::Error::TIMED_OUT);
