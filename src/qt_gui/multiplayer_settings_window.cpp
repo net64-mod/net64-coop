@@ -12,6 +12,9 @@ MultiplayerSettingsWindow::MultiplayerSettingsWindow(AppSettings& settings, QWid
     ui(new Ui::MultiplayerSettingsWindow), settings_{&settings}
 {
     ui->setupUi(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    adjustSize();
+    setFixedSize(size());
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &MultiplayerSettingsWindow::on_ok);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &MultiplayerSettingsWindow::on_cancel);

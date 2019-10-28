@@ -1,6 +1,10 @@
 ﻿#pragma once
 
+#include <future>
+#include <memory>
+#include <optional>
 #include <QMainWindow>
+#include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
 #include "qt_gui/multiplayer_settings_window.hpp"
@@ -31,11 +35,24 @@ public:
     explicit MainWindow(AppSettings& settings, QWidget* parent = nullptr);
     ~MainWindow();
 
+signals:
+    void emulator_state(Net64::Emulator::State state);
+
 private slots:
     void on_join_host_changed(QAction* action);
+    void on_emulator_settings();
+    void on_start_server();
+    void on_stop_server();
+    void on_connect();
+    void on_disconnect();
+    void on_emulator_state(Net64::Emulator::State state);
 
 private:
     void setup_menus();
+    void setup_signals();
+    void start_emulator();
+    void stop_emulator();
+    void set_page(int page);
 
     template<typename T, typename... TArgs>
     void show_window(T*& win_ptr, TArgs&&... args)
@@ -50,12 +67,39 @@ private:
         win_ptr->activateWindow();
     }
 
-
     Ui::MainWindow* ui;
     AppSettings* settings_;
     QMenu* join_host_menu_;
     M64PSettings* m64p_cfg_win_{};
     MultiplayerSettingsWindow* multiplayer_cfg_win_{};
+    int last_page_{Page::JOIN};
+
+    std::unique_ptr<Net64::Emulator::IEmulator> emulator_;
+    std::future<void> emulation_thread_;
+    std::optional<Net64::Client> client_;
+    std::optional<Net64::Server> server_;
+
+    CLASS_LOGGER_("frontend")
+};
+
+struct ClientObject : QObject
+{
+    Q_OBJECT
+};
+
+struct ClientThread : QObject
+{
+    Q_OBJECT
+};
+
+struct ServerObject : QObject
+{
+    Q_OBJECT
+};
+
+struct ServerThread : QObject
+{
+    Q_OBJECT
 };
 
 } // Frontend

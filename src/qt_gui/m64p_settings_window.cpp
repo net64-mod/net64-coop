@@ -13,6 +13,8 @@ M64PSettings::M64PSettings(AppSettings& settings, QWidget* parent)
 :QMainWindow(parent), ui(new Ui::M64PSettings), settings_{&settings}
 {
     ui->setupUi(this);
+    adjustSize();
+    setFixedSize(size());
     ui->folder_path_field->setText(QString::fromStdString(settings_->m64p_plugin_dir().string()));
     refresh_plugins();
 }

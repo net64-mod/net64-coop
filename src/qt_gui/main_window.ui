@@ -18,25 +18,25 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="host_page">
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
-         <widget class="QGroupBox" name="server_info_box">
+         <widget class="QGroupBox" name="grp_server_info">
           <property name="title">
            <string>Server info</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QLineEdit" name="server_name_tbx">
+            <widget class="QLineEdit" name="tbx_server_name">
              <property name="placeholderText">
               <string>Server name</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QTextEdit" name="server_description_tbx">
+            <widget class="QTextEdit" name="tbx_server_description">
              <property name="placeholderText">
               <string>Server description</string>
              </property>
@@ -52,7 +52,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <widget class="QComboBox" name="romhack_choice">
+            <widget class="QComboBox" name="chc_romhack">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -67,27 +67,27 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="network_settings_box">
+         <widget class="QGroupBox" name="grp_network_settings">
           <property name="title">
            <string>Network settings</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
-            <widget class="QLabel" name="port_label">
+            <widget class="QLabel" name="lbl_port">
              <property name="text">
               <string>Port</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLabel" name="max_players_label">
+            <widget class="QLabel" name="lbl_max_players">
              <property name="text">
               <string>Max players</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QSpinBox" name="port_sbx">
+            <widget class="QSpinBox" name="sbx_port">
              <property name="frame">
               <bool>true</bool>
              </property>
@@ -103,9 +103,15 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QSpinBox" name="max_players_sbx">
+            <widget class="QSpinBox" name="sbx_max_players">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="maximum">
+              <number>24</number>
+             </property>
              <property name="value">
-              <number>8</number>
+              <number>4</number>
              </property>
              <property name="displayIntegerBase">
               <number>10</number>
@@ -113,7 +119,7 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QCheckBox" name="upnp_cbx">
+            <widget class="QCheckBox" name="cbx_upnp">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -126,7 +132,7 @@
          </widget>
         </item>
         <item alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="start_server_btn">
+         <widget class="QPushButton" name="btn_start_server">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -145,14 +151,14 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QLineEdit" name="join_ip_tbx">
+           <widget class="QLineEdit" name="tbx_join_ip">
             <property name="placeholderText">
              <string>Join server via IP address</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="connect_ip_btn">
+           <widget class="QPushButton" name="btn_connect_ip">
             <property name="text">
              <string>Join</string>
             </property>
@@ -161,78 +167,20 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item alignment="Qt::AlignVCenter">
-           <widget class="QLabel" name="label">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Server list</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QComboBox" name="comboBox_2">
-            <item>
-             <property name="text">
-              <string>Internet</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Favorites</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Friends</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="comboBox">
-            <item>
-             <property name="text">
-              <string>Any game</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Super Mario 64 (US)</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_2">
-            <property name="text">
-             <string>Refresh</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QTableWidget" name="tableWidget"/>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="join_server_btn">
+         <widget class="QPushButton" name="btn_join_server">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -250,38 +198,18 @@
        </layout>
       </widget>
       <widget class="QWidget" name="ingame_page">
-       <widget class="QWidget" name="">
+       <widget class="QPushButton" name="btn_stop">
         <property name="geometry">
          <rect>
-          <x>80</x>
-          <y>270</y>
-          <width>258</width>
-          <height>223</height>
+          <x>109</x>
+          <y>220</y>
+          <width>111</width>
+          <height>61</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_6">
-         <item>
-          <widget class="QTextEdit" name="textEdit"/>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <widget class="QLineEdit" name="lineEdit">
-             <property name="placeholderText">
-              <string>Send a message</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushButton">
-             <property name="text">
-              <string>Send</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
+        <property name="text">
+         <string>Stop</string>
+        </property>
        </widget>
       </widget>
      </widget>
