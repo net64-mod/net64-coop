@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <QMainWindow>
+#include <QThread>
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
@@ -82,24 +83,39 @@ private:
     CLASS_LOGGER_("frontend")
 };
 
-struct ClientObject : QObject
-{
-    Q_OBJECT
-};
-
 struct ClientThread : QObject
 {
     Q_OBJECT
-};
 
-struct ServerObject : QObject
-{
-    Q_OBJECT
-};
+public:
+    enum struct State
+    {
+        STOPPED,
+        HOOKING,
+        HOOKED,
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTING,
+        DISCONNECTED
+    };
 
-struct ServerThread : QObject
-{
-    Q_OBJECT
+    ClientThread(Net64::Memory::MemHandle hdl);
+    ~ClientThread();
+
+
+
+signals:
+    void state_changed(State);
+
+private slots:
+    void tick();
+    void check_initialized();
+    void connect();
+    void disconnect();
+
+private:
+    std::optional<Net64::Client> client_;
+    QThread thread_;
 };
 
 } // Frontend
