@@ -14,6 +14,8 @@ MainFrame::MainFrame(QWidget* parent, AppSettings& settings)
 {
     ui->setupUi(this);
 
+    connect(ui->menubar->addMenu("Utilities")->addAction("VCDIFF Patcher"), &QAction::triggered, this, &MainFrame::on_open_patch_dialog);
+
     setWindowIcon(QIcon{":/icons/net64-icon128.png"});
 
     ui->lineEdit->setText(QString::fromStdString(settings_->rom_file_path.string()));
@@ -113,6 +115,11 @@ void MainFrame::on_emulator_state(Net64::Emulator::State state)
         break;
     default: break;
     }
+}
+
+void MainFrame::on_open_patch_dialog()
+{
+    show_window(patch_dialog_);
 }
 
 } // Frontend

@@ -6,6 +6,7 @@
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
+#include "qt_gui/patch_dialog.hpp"
 #endif
 
 
@@ -22,7 +23,7 @@ struct MainFrame : QMainWindow
 
 public:
     explicit MainFrame(QWidget* parent, AppSettings& settings);
-    ~MainFrame();
+    ~MainFrame() override;
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -34,6 +35,7 @@ private slots:
     void on_action_emulator_settings_triggered();
     void on_start_emulator();
     void on_emulator_state(Net64::Emulator::State state);
+    void on_open_patch_dialog();
 
 private:
     template<typename T, typename... TArgs>
@@ -51,6 +53,7 @@ private:
 
     Ui::MainFrame* ui;
     M64PSettings* m64p_settings_win_{};
+    PatchDialog* patch_dialog_{};
     AppSettings* settings_;
     std::unique_ptr<Net64::Emulator::Mupen64Plus> emulator_;
     std::future<void> emulation_thread_;

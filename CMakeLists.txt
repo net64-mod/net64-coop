@@ -48,6 +48,10 @@ if(BUILD_QT_FRONTEND)
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     set(JSON_MultipleHeaders ON)
     add_subdirectory(externals/json EXCLUDE_FROM_ALL)
+    if(MSVC)
+        add_compile_options("/Zc:__cplusplus")
+    endif()
+    add_subdirectory(externals/open-vcdiff EXCLUDE_FROM_ALL)
 endif()
 
 
