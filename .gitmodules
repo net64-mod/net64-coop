@@ -15,3 +15,6 @@
 [submodule "externals/enet-lib"]
     path = externals/enet-lib
     url = https://github.com/lsalzman/enet
+[submodule "externals/open-vcdiff"]
+	path = externals/open-vcdiff
+	url = https://github.com/google/open-vcdiff.git

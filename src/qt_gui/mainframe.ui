@@ -64,6 +64,11 @@
     <string>Configure the N64 emulation</string>
    </property>
   </action>
+  <action name="actionCreate_VCDIFF_Patch">
+   <property name="text">
+    <string>Create VCDIFF Patch</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>

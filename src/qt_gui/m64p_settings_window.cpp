@@ -35,7 +35,7 @@ void M64PSettings::on_open_plugin_folder()
 void M64PSettings::on_set_plugin_folder()
 {
     auto dir{QFileDialog::getExistingDirectory(this, "Mupen64Plus Directory",
-    ui->folder_path_field->text(), QFileDialog::ShowDirsOnly)
+        ui->folder_path_field->text(), QFileDialog::ShowDirsOnly)
     };
 
     if(!dir.isEmpty())
