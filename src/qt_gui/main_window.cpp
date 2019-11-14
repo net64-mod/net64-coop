@@ -54,29 +54,44 @@ void MainWindow::on_join_host_changed(QAction* action)
 
 void MainWindow::on_emulator_settings()
 {
-
+    show_window(m64p_cfg_win_);
 }
 
 void MainWindow::on_start_server()
 {
-    try
+    if(emu_state_ != Net64::Emulator::State::RUNNING)
     {
-        start_emulator();
-    }
-    catch(...)
-    {
-        logger()->error("Failed to start emulator uWu");
+        try
+        {
+            start_emulator();
+        }
+        catch(...)
+        {
+            logger()->error("Failed to start emulator");
+            return;
+        }
     }
 }
 
 void MainWindow::on_stop_server()
 {
-    stop_emulator();
+
 }
 
 void MainWindow::on_connect()
 {
+    if(emu_state_ != Net64::Emulator::State::RUNNING)
+    {
 
+    }
+
+    if(client_.state() == ClientObject::State::STOPPED)
+    {
+        client_.hook(Net64::Memory::MemHandle(*emulator_));
+        return;
+    }
+
+    //client_.connect();
 }
 
 void MainWindow::on_disconnect()
@@ -87,6 +102,8 @@ void MainWindow::on_disconnect()
 void MainWindow::on_emulator_state(Net64::Emulator::State state)
 {
     using Net64::Emulator::State;
+
+    emu_state_ = state;
 
     switch(state)
     {
@@ -200,6 +217,148 @@ void MainWindow::set_page(int page)
 {
     last_page_= ui->stackedWidget->currentIndex();
     ui->stackedWidget->setCurrentIndex(page);
+}
+
+
+ClientObject::ClientObject()
+{
+    timer_.setTimerType(Qt::PreciseTimer);
+    timer_.setInterval(INTERV.count());
+    connect(&timer_, &QTimer::timout, this, &ClientObject::tick);
+}
+
+void ClientObject::hook(Net64::Memory::MemHandle hdl)
+{
+    mem_hdl_ = hdl;
+    state_changed(state_ = State::HOOKING, {});
+}
+
+void ClientObject::connect(std::string addr, std::uint16_t port)
+{
+    state_changed(State::CONNECTING, {});
+    auto ret{client_->connect(addr.c_str(), port)};
+    state_changed(State::CONNECTED, ret);
+}
+
+void ClientObject::disconnect()
+{
+    state_changed(State::DISCONNECTING, {});
+    client_->disconnect();
+    state_changed(State::HOOKED, {});
+}
+
+void ClientObject::unhook()
+{
+    state_changed(StateState::STOPPED, {});
+    client_ = {};
+    mem_hdl_ = {};
+}
+
+void ClientObject::cancel()
+{
+    if(state_ == State::HOOKING)
+    {
+        state_changed(state_ = State::STOPPED, {});
+    }
+}
+
+void ClientObject::tick()
+{
+    switch(state_)
+    {
+    case State::HOOKING:
+        if(Net64::Client::game_initialized(*mem_hdl_))
+        {
+            std::error_code rc;
+            State new_state{State::HOOKED};
+            try
+            {
+                client_ = Net64::Client(*mem_hdl_);
+            }
+            catch(const std::system_error& e)
+            {
+                rc = e.code();
+                new_state = State::HOOKING;
+            }
+            catch(const std::exception& e)
+            {
+                logger()->error("Error while starting Net64 client: {}", e.what());
+                new_state = State::HOOKING;
+            }
+            catch(...)
+            {
+                logger()->error("Unkown error while starting Net64 client");
+                new_state = State::HOOKING;
+            }
+            state_changed(State::HOOKING, new_state, rc);
+        }
+        break;
+    case State::HOOKED:
+    case State::CONNECTED:
+        client_->tick();
+        break;
+    default: break;
+    }
+}
+
+
+ClientThread::ClientThread()
+{
+    auto* client{new ClientObject};
+
+    client->moveToThread(&thread_);
+    QObject::connect(&thread_, &QThread::finished, client, &QObject::deleteLater);
+    QObject::connect(client, &ClientObject::state_changed, this, &ClientThread::on_state_changed);
+    QObject::connect(this, &ClientThread::s_connect, client, &ClientObject::connect);
+    QObject::connect(this, &ClientThread::s_hook, client, &ClientObject::hook);
+    QObject::connect(this, &ClientThread::s_disconnect, client, &ClientObject::disconnect);
+    QObject::connect(this, &ClientThread::s_unhook, client, &ClientObject::unhook);
+    QObject::connect(this, &ClientThread::s_cancel, client, &ClientObject::cancel);
+
+    thread_.start();
+}
+
+ClientThread::~ClientThread()
+{
+    thread_.quit();
+    thread_.wait();
+}
+
+ClientObject::State ClientThread::state() const
+{
+    return state_;
+}
+
+void ClientThread::on_state_changed(ClientObject::State state, std::error_code ec)
+{
+    if(!ec)
+        state_ = state;
+    state_changed(state, ec);
+}
+
+void ClientThread::hook(Net64::Memory::MemHandle hdl)
+{
+    s_hook(hdl);
+}
+
+void ClientThread::connect(std::string addr, std::uint16_t port)
+{
+    s_connect(std::move(addr), port);
+}
+
+void ClientThread::disconnect()
+{
+    s_disconnect();
+}
+
+void ClientThread::unhook()
+{
+    s_unhook();
+}
+
+void ClientThread::cancel()
+{
+    s_cancel();
 }
 
 } // Frontend

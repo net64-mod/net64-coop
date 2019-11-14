@@ -22,12 +22,6 @@ Client::Client(Memory::MemHandle mem_hdl):
         throw std::system_error(make_error_code(Net::Error::ENET_HOST_CREATION));
 }
 
-Client::~Client()
-{
-    peer_.reset();
-    host_.reset();
-}
-
 std::error_code Client::connect(const char* ip, std::uint16_t port)
 {
     if(peer_)

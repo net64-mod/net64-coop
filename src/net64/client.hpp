@@ -28,8 +28,6 @@ struct Client
 
     explicit Client(Memory::MemHandle mem_hdl);
 
-    ~Client();
-
     std::error_code connect(const char* ip, std::uint16_t port);
     void disconnect();
 

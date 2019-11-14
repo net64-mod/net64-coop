@@ -11,6 +11,7 @@
 #include "net64/logging.hpp"
 #include "net64/server.hpp"
 #include "net64/emulator/m64plus.hpp"
+#include "net64/memory/pointer.hpp"
 
 
 namespace Net64
