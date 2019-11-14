@@ -21,6 +21,7 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     ui->setupUi(this);
     setFixedSize(size());
     ui->statusbar->setSizeGripEnabled(false);
+    ui->statusbar->addWidget(statustext_ = new QLabel);
 
     set_page(Page::HOST);
     ui->btn_stop->setDisabled(true);
@@ -54,23 +55,13 @@ void MainWindow::on_join_host_changed(QAction* action)
 
 void MainWindow::on_emulator_settings()
 {
-    show_window(m64p_cfg_win_);
 }
 
 void MainWindow::on_start_server()
 {
-    if(emu_state_ != Net64::Emulator::State::RUNNING)
-    {
-        try
-        {
-            start_emulator();
-        }
-        catch(...)
-        {
-            logger()->error("Failed to start emulator");
-            return;
-        }
-    }
+    // start server
+
+    on_connect();
 }
 
 void MainWindow::on_stop_server()
@@ -82,7 +73,12 @@ void MainWindow::on_connect()
 {
     if(emu_state_ != Net64::Emulator::State::RUNNING)
     {
-
+        try
+        {
+            start_emulator();
+        }
+        catch(...)
+        {}
     }
 
     if(client_.state() == ClientObject::State::STOPPED)
@@ -91,7 +87,7 @@ void MainWindow::on_connect()
         return;
     }
 
-    //client_.connect();
+    client_.connect(ui->tbx_join_ip->text().toStdString(), (std::uint16_t)ui->sbx_port->value());
 }
 
 void MainWindow::on_disconnect()
@@ -120,6 +116,69 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
         set_page(last_page_);
         break;
     default: break;
+    }
+}
+
+void MainWindow::on_client_state(ClientObject::State state, std::error_code rc)
+{
+    using State = ClientObject::State;
+
+    QMessageBox box(this);
+
+    switch(state)
+    {
+    case State::HOOKING:
+        if(rc)
+        {
+            box.setWindowTitle("Failed start Net64 client initialization");
+            box.setText(QString::fromStdString(rc.message()));
+            break;
+        }
+        statustext_->setText("Initializing Net64 client...");
+        break;
+    case State::HOOKED:
+        if(rc)
+        {
+            box.setWindowTitle("Failed to initialize Net64 client");
+            box.setText(QString::fromStdString(rc.message()));
+            box.show();
+            break;
+        }
+        statustext_->setText("Initialized");
+        if(connect_after_hooking_)
+        {
+            connect_after_hooking_ = false;
+            client_.connect(ui->tbx_join_ip->text().toStdString(), (std::uint16_t)ui->sbx_port->value());
+        }
+        break;
+    case State::CONNECTING:
+        if(rc)
+        {
+            break;
+        }
+        statustext_->setText("Connecting...");
+        break;
+    case State::CONNECTED:
+        if(rc)
+        {
+            break;
+        }
+        statustext_->setText("Connected");
+        break;
+    case State::DISCONNECTING:
+        if(rc)
+        {
+            break;
+        }
+        statustext_->setText("Disconnecting...");
+        break;
+    case State::STOPPED:
+        if(rc)
+        {
+            break;
+        }
+        statustext_->setText("Ready");
+        break;
     }
 }
 
@@ -224,7 +283,7 @@ ClientObject::ClientObject()
 {
     timer_.setTimerType(Qt::PreciseTimer);
     timer_.setInterval(INTERV.count());
-    connect(&timer_, &QTimer::timout, this, &ClientObject::tick);
+    QObject::connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
 }
 
 void ClientObject::hook(Net64::Memory::MemHandle hdl)
@@ -249,7 +308,7 @@ void ClientObject::disconnect()
 
 void ClientObject::unhook()
 {
-    state_changed(StateState::STOPPED, {});
+    state_changed(State::STOPPED, {});
     client_ = {};
     mem_hdl_ = {};
 }
@@ -270,7 +329,6 @@ void ClientObject::tick()
         if(Net64::Client::game_initialized(*mem_hdl_))
         {
             std::error_code rc;
-            State new_state{State::HOOKED};
             try
             {
                 client_ = Net64::Client(*mem_hdl_);
@@ -278,19 +336,18 @@ void ClientObject::tick()
             catch(const std::system_error& e)
             {
                 rc = e.code();
-                new_state = State::HOOKING;
             }
             catch(const std::exception& e)
             {
                 logger()->error("Error while starting Net64 client: {}", e.what());
-                new_state = State::HOOKING;
+                rc = make_error_code(Net64::ErrorCode::UNKNOWN);
             }
             catch(...)
             {
                 logger()->error("Unkown error while starting Net64 client");
-                new_state = State::HOOKING;
+                rc = make_error_code(Net64::ErrorCode::UNKNOWN);
             }
-            state_changed(State::HOOKING, new_state, rc);
+            state_changed(State::HOOKING, rc);
         }
         break;
     case State::HOOKED:

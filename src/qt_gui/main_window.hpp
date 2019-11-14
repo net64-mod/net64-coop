@@ -3,6 +3,7 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <QLabel>
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
@@ -51,7 +52,7 @@ private slots:
     void tick();
 
 signals:
-    void state_changed(State, State, std::error_code);
+    void state_changed(State, std::error_code);
 
 private:
     std::optional<Net64::Client> client_;
@@ -81,7 +82,7 @@ public slots:
     void cancel();
 
 signals:
-    void state_changed(ClientObject::State, ClientObject::State, std::error_code);
+    void state_changed(ClientObject::State, std::error_code);
 
 private slots:
     void on_state_changed(ClientObject::State state, std::error_code ec);
@@ -117,7 +118,7 @@ public:
     ~MainWindow() override;
 
 signals:
-    void emulator_state(ClientObject::State, ClientObject::State, std::error_code);
+    void emulator_state(Net64::Emulator::State);
 
 private slots:
     void on_join_host_changed(QAction* action);
@@ -127,7 +128,7 @@ private slots:
     void on_connect();
     void on_disconnect();
     void on_emulator_state(Net64::Emulator::State state);
-    void on_client_state(ClientObject::State from, ClientObject::State to, std::error_code ec);
+    void on_client_state(ClientObject::State state, std::error_code ec);
 
 private:
     void setup_menus();
@@ -154,6 +155,7 @@ private:
     }
 
     Ui::MainWindow* ui;
+    QLabel* statustext_{};
     AppSettings* settings_;
     QMenu* join_host_menu_;
     M64PSettings* m64p_cfg_win_{};
