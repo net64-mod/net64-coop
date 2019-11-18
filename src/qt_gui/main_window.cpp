@@ -283,7 +283,7 @@ ClientObject::ClientObject()
 {
     timer_.setTimerType(Qt::PreciseTimer);
     timer_.setInterval(INTERV.count());
-    QObject::connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
+    connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
 }
 
 void ClientObject::hook(Net64::Memory::MemHandle hdl)
