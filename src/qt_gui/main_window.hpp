@@ -37,12 +37,14 @@ public:
         DISCONNECTING
     };
 
+    using OptionalMemHandle = std::optional<Net64::Memory::MemHandle>;
+
     ClientObject();
 
     static constexpr std::chrono::milliseconds INTERV{25};
 
 public slots:
-    void hook(Net64::Memory::MemHandle hdl);
+    void hook(OptionalMemHandle hdl);
     void connect(std::string addr, std::uint16_t port);
     void disconnect();
     void unhook();
@@ -52,7 +54,7 @@ private slots:
     void tick();
 
 signals:
-    void state_changed(State, std::error_code);
+    void state_changed(ClientObject::State, std::error_code);
 
 private:
     std::optional<Net64::Client> client_;
@@ -68,6 +70,8 @@ struct ClientThread : QObject
     Q_OBJECT
 
 public:
+    using OptionalMemHandle = std::optional<Net64::Memory::MemHandle>;
+
     explicit ClientThread();
     ~ClientThread() override;
 
@@ -75,20 +79,23 @@ public:
     ClientObject::State state() const;
 
 public slots:
-    void hook(Net64::Memory::MemHandle hdl);
+    void hook(OptionalMemHandle hdl);
     void connect(std::string addr, std::uint16_t port);
     void disconnect();
     void unhook();
     void cancel();
 
 signals:
-    void state_changed(ClientObject::State, std::error_code);
+    void hooked(std::error_code);
+    void connected(std::error_code);
+    void disconnected(std::error_code);
+    void unhooked(std::error_code);
 
 private slots:
     void on_state_changed(ClientObject::State state, std::error_code ec);
 
 signals:
-    void s_hook(Net64::Memory::MemHandle);
+    void s_hook(OptionalMemHandle);
     void s_connect(std::string, std::uint16_t);
     void s_disconnect();
     void s_unhook();
@@ -128,7 +135,6 @@ private slots:
     void on_connect();
     void on_disconnect();
     void on_emulator_state(Net64::Emulator::State state);
-    void on_client_state(ClientObject::State state, std::error_code ec);
 
 private:
     void setup_menus();
@@ -154,6 +160,17 @@ private:
         win_ptr->activateWindow();
     }
 
+    template<typename Sender, typename Signal, typename Functor>
+    void connect_once(Sender sender, Signal signal, Functor fn)
+    {
+        auto context_ptr{std::make_unique<QObject>()};
+        QObject::connect(sender, signal, context_ptr.get(), [this, fn, context{std::move(context_ptr)}](auto&&... args) mutable
+        {
+            fn(std::forward<decltype(args)>(args)...);
+            context.release();
+        });
+    }
+
     Ui::MainWindow* ui;
     QLabel* statustext_{};
     AppSettings* settings_;
@@ -166,7 +183,8 @@ private:
     std::future<void> emulation_thread_;
     Net64::Emulator::State emu_state_{Net64::Emulator::State::STOPPED};
     ClientThread client_;
-    bool connect_after_hooking_{false};
+    bool connect_after_hooking_{false},
+         hook_after_emu_start_{false};
 
     CLASS_LOGGER_("frontend")
 };

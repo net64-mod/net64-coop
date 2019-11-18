@@ -22,6 +22,7 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     setFixedSize(size());
     ui->statusbar->setSizeGripEnabled(false);
     ui->statusbar->addWidget(statustext_ = new QLabel);
+    statustext_->setText("ldskjflksdfj");
 
     set_page(Page::HOST);
     ui->btn_stop->setDisabled(true);
@@ -76,14 +77,23 @@ void MainWindow::on_connect()
         try
         {
             start_emulator();
+            hook_after_emu_start_ = true;
+            connect_once(&client_, &ClientThread::hooked, [this](auto ec)
+            {
+                if(ec)
+                    return;
+                client_.connect("", 0);
+            });
+            return;
         }
         catch(...)
-        {}
+        {return;}
     }
 
     if(client_.state() == ClientObject::State::STOPPED)
     {
         client_.hook(Net64::Memory::MemHandle(*emulator_));
+        connect_after_hooking_ = true;
         return;
     }
 
@@ -92,7 +102,10 @@ void MainWindow::on_connect()
 
 void MainWindow::on_disconnect()
 {
-
+    if(client_.state() == ClientObject::State::CONNECTED)
+    {
+        client_.disconnect();
+    }
 }
 
 void MainWindow::on_emulator_state(Net64::Emulator::State state)
@@ -109,6 +122,11 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
     case State::RUNNING:
         set_page(Page::IN_GAME);
         ui->btn_stop->setEnabled(true);
+        if(hook_after_emu_start_)
+        {
+            hook_after_emu_start_ = false;
+            init_client();
+        }
         break;
     case State::STOPPED:
         ui->btn_stop->setDisabled(true);
@@ -116,69 +134,6 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
         set_page(last_page_);
         break;
     default: break;
-    }
-}
-
-void MainWindow::on_client_state(ClientObject::State state, std::error_code rc)
-{
-    using State = ClientObject::State;
-
-    QMessageBox box(this);
-
-    switch(state)
-    {
-    case State::HOOKING:
-        if(rc)
-        {
-            box.setWindowTitle("Failed start Net64 client initialization");
-            box.setText(QString::fromStdString(rc.message()));
-            break;
-        }
-        statustext_->setText("Initializing Net64 client...");
-        break;
-    case State::HOOKED:
-        if(rc)
-        {
-            box.setWindowTitle("Failed to initialize Net64 client");
-            box.setText(QString::fromStdString(rc.message()));
-            box.show();
-            break;
-        }
-        statustext_->setText("Initialized");
-        if(connect_after_hooking_)
-        {
-            connect_after_hooking_ = false;
-            client_.connect(ui->tbx_join_ip->text().toStdString(), (std::uint16_t)ui->sbx_port->value());
-        }
-        break;
-    case State::CONNECTING:
-        if(rc)
-        {
-            break;
-        }
-        statustext_->setText("Connecting...");
-        break;
-    case State::CONNECTED:
-        if(rc)
-        {
-            break;
-        }
-        statustext_->setText("Connected");
-        break;
-    case State::DISCONNECTING:
-        if(rc)
-        {
-            break;
-        }
-        statustext_->setText("Disconnecting...");
-        break;
-    case State::STOPPED:
-        if(rc)
-        {
-            break;
-        }
-        statustext_->setText("Ready");
-        break;
     }
 }
 
@@ -228,6 +183,7 @@ void MainWindow::setup_signals()
 
 void MainWindow::start_emulator()
 {
+    logger()->info("start_emulator()");
     assert(!emulator_);
     
     auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
@@ -272,6 +228,31 @@ void MainWindow::stop_emulator()
     emulation_thread_.get();
 }
 
+void MainWindow::init_client()
+{
+    logger()->info("init_client()");
+    if(!emulator_)
+        return;
+
+    client_.hook(Net64::Memory::MemHandle(*emulator_));
+}
+
+void MainWindow::connect_client()
+{
+    logger()->info("connect_client()");
+    client_.connect("", 0);
+}
+
+void MainWindow::disconnect_client()
+{
+    client_.disconnect();
+}
+
+void MainWindow::destroy_client()
+{
+    client_.unhook();
+}
+
 void MainWindow::set_page(int page)
 {
     last_page_= ui->stackedWidget->currentIndex();
@@ -281,12 +262,16 @@ void MainWindow::set_page(int page)
 
 ClientObject::ClientObject()
 {
+    qRegisterMetaType<OptionalMemHandle>("OptionalMemHandle>");
+    qRegisterMetaType<ClientObject::State>("ClientObject::State");
+    qRegisterMetaType<std::error_code>("std::error_code");
+
     timer_.setTimerType(Qt::PreciseTimer);
     timer_.setInterval(INTERV.count());
-    connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
+    QObject::connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
 }
 
-void ClientObject::hook(Net64::Memory::MemHandle hdl)
+void ClientObject::hook(OptionalMemHandle hdl)
 {
     mem_hdl_ = hdl;
     state_changed(state_ = State::HOOKING, {});
@@ -388,12 +373,45 @@ ClientObject::State ClientThread::state() const
 
 void ClientThread::on_state_changed(ClientObject::State state, std::error_code ec)
 {
-    if(!ec)
-        state_ = state;
-    state_changed(state, ec);
+    using State = ClientObject::State;
+
+    auto update_state{[this, state, ec]()
+    {
+        if(!ec)
+        {
+            state_ = state;
+            return;
+        }
+        switch(state)
+        {
+        case State::HOOKED:
+            state_ = State::STOPPED;
+            break;
+        case State::CONNECTED:
+            state_ = State::HOOKED;
+            break;
+        }
+    }};
+
+    switch(state)
+    {
+    case State::STOPPED:
+        unhooked(ec);
+        break;
+    case State::HOOKED:
+        if(state_ == State::STOPPED)
+            hooked(ec);
+        else if(state_ == State::DISCONNECTING)
+            disconnected(ec);
+        break;
+    case State::CONNECTED:
+        connected(ec);
+        break;
+    }
+    update_state();
 }
 
-void ClientThread::hook(Net64::Memory::MemHandle hdl)
+void ClientThread::hook(OptionalMemHandle hdl)
 {
     s_hook(hdl);
 }
