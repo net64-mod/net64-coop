@@ -48,7 +48,6 @@ public slots:
     void connect(std::string addr, std::uint16_t port);
     void disconnect();
     void unhook();
-    void cancel();
 
 private slots:
     void tick();
@@ -83,7 +82,6 @@ public slots:
     void connect(std::string addr, std::uint16_t port);
     void disconnect();
     void unhook();
-    void cancel();
 
 signals:
     void hooked(std::error_code);
@@ -99,11 +97,11 @@ signals:
     void s_connect(std::string, std::uint16_t);
     void s_disconnect();
     void s_unhook();
-    void s_cancel();
 
 private:
     QThread thread_;
-    ClientObject::State state_{ClientObject::State::STOPPED};
+    ClientObject::State state_{ClientObject::State::STOPPED},
+                        old_state_{state_};
 };
 
 struct MainWindow : QMainWindow
@@ -139,7 +137,7 @@ private slots:
 private:
     void setup_menus();
     void setup_signals();
-    void start_emulator();
+    bool start_emulator();
     void stop_emulator();
     void init_client();
     void connect_client();
@@ -147,6 +145,7 @@ private:
     void destroy_client();
     void set_page(int page);
 
+private:
     template<typename T, typename... TArgs>
     void show_window(T*& win_ptr, TArgs&&... args)
     {
@@ -167,6 +166,16 @@ private:
         QObject::connect(sender, signal, context_ptr.get(), [this, fn, context{std::move(context_ptr)}](auto&&... args) mutable
         {
             fn(std::forward<decltype(args)>(args)...);
+            context.release();
+        });
+    }
+    template<typename Sender, typename Signal, typename Receiver, typename Slot>
+    void connect_once(Sender sender, Signal signal, Receiver receiver, Slot slot)
+    {
+        auto context_ptr{std::make_unique<QObject>()};
+        QObject::connect(sender, signal, context_ptr.get(), [this, receiver, slot, context{std::move(context_ptr)}](auto&&... args) mutable
+        {
+            receiver->*slot(std::forward<decltype(args)>(args)...);
             context.release();
         });
     }

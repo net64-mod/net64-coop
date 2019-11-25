@@ -72,28 +72,20 @@ void MainWindow::on_stop_server()
 
 void MainWindow::on_connect()
 {
-    if(emu_state_ != Net64::Emulator::State::RUNNING)
+    if(emu_state_ == Net64::Emulator::State::STOPPED)
     {
-        try
-        {
-            start_emulator();
-            hook_after_emu_start_ = true;
-            connect_once(&client_, &ClientThread::hooked, [this](auto ec)
-            {
-                if(ec)
-                    return;
-                client_.connect("", 0);
-            });
+
+        if(!start_emulator())
             return;
-        }
-        catch(...)
-        {return;}
+        hook_after_emu_start_ = true;
+        connect_once(&client_, &ClientThread::hooked, this, &MainWindow::connect_client);
+        return;
     }
 
     if(client_.state() == ClientObject::State::STOPPED)
     {
         client_.hook(Net64::Memory::MemHandle(*emulator_));
-        connect_after_hooking_ = true;
+
         return;
     }
 
@@ -181,43 +173,51 @@ void MainWindow::setup_signals()
     connect(ui->btn_start_server, &QPushButton::clicked, this, &MainWindow::on_start_server);
 }
 
-void MainWindow::start_emulator()
+bool MainWindow::start_emulator()
 {
-    logger()->info("start_emulator()");
     assert(!emulator_);
-    
-    auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
-        (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(),
-        settings_->m64p_dir().string(),
-        settings_->m64p_plugin_dir().string()
-    )};
 
-    emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_video_plugin).string());
-    emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_audio_plugin).string());
-    emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_input_plugin).string());
-    emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_rsp_plugin).string());
-
-    emulator_ = std::move(emu);
-
-    std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
-    if(!rom_file)
-        throw std::runtime_error("Failed to open ROM file");
-
-    std::vector<std::byte> rom_image(static_cast<std::size_t>(rom_file.tellg()));
-    rom_file.seekg(0);
-    rom_file.read(reinterpret_cast<char*>(rom_image.data()), static_cast<long>(rom_image.size()));
-    rom_file.close();
-
-    emulator_->load_rom(rom_image.data(), rom_image.size());
-
-    emulation_thread_ = std::async([this]()
+    try
     {
-        emulator_->execute([this](auto state)
+        auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
+        (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(), settings_->m64p_dir().string(),
+        settings_->m64p_plugin_dir().string())};
+
+        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_video_plugin).string());
+        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_audio_plugin).string());
+        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_input_plugin).string());
+        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_rsp_plugin).string());
+
+        emulator_ = std::move(emu);
+
+        std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
+        if(!rom_file)
+            throw std::runtime_error("Failed to open ROM file");
+
+        std::vector<std::byte> rom_image(static_cast<std::size_t>(rom_file.tellg()));
+        rom_file.seekg(0);
+        rom_file.read(reinterpret_cast<char*>(rom_image.data()), static_cast<long>(rom_image.size()));
+        rom_file.close();
+
+        emulator_->load_rom(rom_image.data(), rom_image.size());
+
+        emulation_thread_ = std::async([this]()
         {
-            this->emulator_state(state);
+            emulator_->execute([this](auto state)
+            {
+                this->emulator_state(state);
+            });
+            emulator_.reset();
         });
-        emulator_.reset();
-    });
+    }
+    catch(const std::system_error& e)
+    {
+
+
+        return false;
+    }
+
+    return true;
 }
 
 void MainWindow::stop_emulator()
@@ -239,7 +239,6 @@ void MainWindow::init_client()
 
 void MainWindow::connect_client()
 {
-    logger()->info("connect_client()");
     client_.connect("", 0);
 }
 
@@ -293,17 +292,16 @@ void ClientObject::disconnect()
 
 void ClientObject::unhook()
 {
-    state_changed(State::STOPPED, {});
     client_ = {};
     mem_hdl_ = {};
-}
 
-void ClientObject::cancel()
-{
     if(state_ == State::HOOKING)
     {
         state_changed(state_ = State::STOPPED, {});
+        return;
     }
+
+    state_changed(State::STOPPED, {});
 }
 
 void ClientObject::tick()
@@ -355,7 +353,6 @@ ClientThread::ClientThread()
     QObject::connect(this, &ClientThread::s_hook, client, &ClientObject::hook);
     QObject::connect(this, &ClientThread::s_disconnect, client, &ClientObject::disconnect);
     QObject::connect(this, &ClientThread::s_unhook, client, &ClientObject::unhook);
-    QObject::connect(this, &ClientThread::s_cancel, client, &ClientObject::cancel);
 
     thread_.start();
 }
@@ -375,24 +372,6 @@ void ClientThread::on_state_changed(ClientObject::State state, std::error_code e
 {
     using State = ClientObject::State;
 
-    auto update_state{[this, state, ec]()
-    {
-        if(!ec)
-        {
-            state_ = state;
-            return;
-        }
-        switch(state)
-        {
-        case State::HOOKED:
-            state_ = State::STOPPED;
-            break;
-        case State::CONNECTED:
-            state_ = State::HOOKED;
-            break;
-        }
-    }};
-
     switch(state)
     {
     case State::STOPPED:
@@ -408,7 +387,9 @@ void ClientThread::on_state_changed(ClientObject::State state, std::error_code e
         connected(ec);
         break;
     }
-    update_state();
+
+    if(!ec)
+        old_state_ = std::exchange(state_, state);
 }
 
 void ClientThread::hook(OptionalMemHandle hdl)
@@ -429,11 +410,6 @@ void ClientThread::disconnect()
 void ClientThread::unhook()
 {
     s_unhook();
-}
-
-void ClientThread::cancel()
-{
-    s_cancel();
 }
 
 } // Frontend
