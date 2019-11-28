@@ -32,11 +32,12 @@ constexpr u16 CLIENT_COMPAT_VER{0};
 constexpr u32 MAGIC_NUMBER{0x43303050}; // "C00P"
 
 /// Fixed addresses in the game
+/// These are all physical addresses (0x0 - 0x7FFFFF)
 namespace FixedAddr
 {
 
-constexpr n64_addr_t HEADER_PTR{0x807FFFFC};      ///< Location of a pointer to net64's global state
-constexpr n64_addr_t MAGIC_NUMBER{0x807FFFF8};    ///< Location of net64's magic number
+constexpr n64_addr_t HEADER_PTR{0x7FFFFC};      ///< Location of a pointer to net64's global state
+constexpr n64_addr_t MAGIC_NUMBER{0x7FFFF8};    ///< Location of net64's magic number
 
 }
 

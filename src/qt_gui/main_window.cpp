@@ -11,6 +11,11 @@ namespace Frontend
 
 using namespace std::string_literals;
 
+static QString format_error_msg(std::error_code ec)
+{
+    return "[" + QString::fromStdString(ec.category().name()) + ":" + QString(ec.value()) + "] " + QString::fromStdString(ec.message());
+}
+
 MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -22,7 +27,6 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     setFixedSize(size());
     ui->statusbar->setSizeGripEnabled(false);
     ui->statusbar->addWidget(statustext_ = new QLabel);
-    statustext_->setText("ldskjflksdfj");
 
     set_page(Page::HOST);
     ui->btn_stop->setDisabled(true);
@@ -78,13 +82,24 @@ void MainWindow::on_connect()
         if(!start_emulator())
             return;
         hook_after_emu_start_ = true;
-        connect_once(&client_, &ClientThread::hooked, this, &MainWindow::connect_client);
+        connect_once(&client_, &ClientThread::hooked, [this](auto ec)
+        {
+            if(!ec)
+                connect_client();
+        });
         return;
     }
 
     if(client_.state() == ClientObject::State::STOPPED)
     {
         client_.hook(Net64::Memory::MemHandle(*emulator_));
+        statustext_->setText("Hooking...");
+
+        connect_once(&client_, &ClientThread::hooked, [this](auto ec)
+        {
+            if(!ec)
+                connect_client();
+        });
 
         return;
     }
@@ -129,6 +144,20 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
     }
 }
 
+void MainWindow::on_client_hooked(std::error_code ec)
+{
+    if(ec)
+    {
+        QMessageBox box;
+        box.setWindowTitle("Failed to initialize Net64 client");
+        box.setText(format_error_msg(ec));
+        box.exec();
+        return;
+    }
+
+    statustext_->setText("Initialized");
+}
+
 void MainWindow::setup_menus()
 {
     join_host_menu_ = ui->menubar->addMenu("Join game");
@@ -171,6 +200,7 @@ void MainWindow::setup_signals()
     connect(this, &MainWindow::emulator_state, this, &MainWindow::on_emulator_state);
     connect(ui->btn_stop, &QPushButton::clicked, this, &MainWindow::on_stop_server);
     connect(ui->btn_start_server, &QPushButton::clicked, this, &MainWindow::on_start_server);
+    connect(&client_, &ClientThread::hooked, this, &MainWindow::on_client_hooked);
 }
 
 bool MainWindow::start_emulator()
@@ -230,11 +260,11 @@ void MainWindow::stop_emulator()
 
 void MainWindow::init_client()
 {
-    logger()->info("init_client()");
     if(!emulator_)
         return;
 
     client_.hook(Net64::Memory::MemHandle(*emulator_));
+    statustext_->setText("Initializing...");
 }
 
 void MainWindow::connect_client()
@@ -261,16 +291,17 @@ void MainWindow::set_page(int page)
 
 ClientObject::ClientObject()
 {
-    qRegisterMetaType<OptionalMemHandle>("OptionalMemHandle>");
-    qRegisterMetaType<ClientObject::State>("ClientObject::State");
+    qRegisterMetaType<OptionalMemHandle>("Frontend::ClientObject::OptionalMemHandle");
+    qRegisterMetaType<State>("Frontend::ClientObject::State");
     qRegisterMetaType<std::error_code>("std::error_code");
 
     timer_.setTimerType(Qt::PreciseTimer);
     timer_.setInterval(INTERV.count());
     QObject::connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
+    timer_.start();
 }
 
-void ClientObject::hook(OptionalMemHandle hdl)
+void ClientObject::hook(Frontend::ClientObject::OptionalMemHandle hdl)
 {
     mem_hdl_ = hdl;
     state_changed(state_ = State::HOOKING, {});
@@ -311,26 +342,26 @@ void ClientObject::tick()
     case State::HOOKING:
         if(Net64::Client::game_initialized(*mem_hdl_))
         {
-            std::error_code rc;
+            std::error_code ec;
             try
             {
                 client_ = Net64::Client(*mem_hdl_);
             }
             catch(const std::system_error& e)
             {
-                rc = e.code();
+                ec = e.code();
             }
             catch(const std::exception& e)
             {
                 logger()->error("Error while starting Net64 client: {}", e.what());
-                rc = make_error_code(Net64::ErrorCode::UNKNOWN);
+                ec = make_error_code(Net64::ErrorCode::UNKNOWN);
             }
             catch(...)
             {
                 logger()->error("Unkown error while starting Net64 client");
-                rc = make_error_code(Net64::ErrorCode::UNKNOWN);
+                ec = make_error_code(Net64::ErrorCode::UNKNOWN);
             }
-            state_changed(State::HOOKING, rc);
+            state_changed(State::HOOKING, ec);
         }
         break;
     case State::HOOKED:
@@ -389,10 +420,10 @@ void ClientThread::on_state_changed(ClientObject::State state, std::error_code e
     }
 
     if(!ec)
-        old_state_ = std::exchange(state_, state);
+        state_ = state;
 }
 
-void ClientThread::hook(OptionalMemHandle hdl)
+void ClientThread::hook(Frontend::ClientObject::OptionalMemHandle hdl)
 {
     s_hook(hdl);
 }

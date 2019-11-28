@@ -44,7 +44,7 @@ public:
     static constexpr std::chrono::milliseconds INTERV{25};
 
 public slots:
-    void hook(OptionalMemHandle hdl);
+    void hook(Frontend::ClientObject::OptionalMemHandle hdl);
     void connect(std::string addr, std::uint16_t port);
     void disconnect();
     void unhook();
@@ -53,7 +53,7 @@ private slots:
     void tick();
 
 signals:
-    void state_changed(ClientObject::State, std::error_code);
+    void state_changed(Frontend::ClientObject::State, std::error_code);
 
 private:
     std::optional<Net64::Client> client_;
@@ -69,8 +69,6 @@ struct ClientThread : QObject
     Q_OBJECT
 
 public:
-    using OptionalMemHandle = std::optional<Net64::Memory::MemHandle>;
-
     explicit ClientThread();
     ~ClientThread() override;
 
@@ -78,7 +76,7 @@ public:
     ClientObject::State state() const;
 
 public slots:
-    void hook(OptionalMemHandle hdl);
+    void hook(Frontend::ClientObject::OptionalMemHandle hdl);
     void connect(std::string addr, std::uint16_t port);
     void disconnect();
     void unhook();
@@ -90,18 +88,17 @@ signals:
     void unhooked(std::error_code);
 
 private slots:
-    void on_state_changed(ClientObject::State state, std::error_code ec);
+    void on_state_changed(Frontend::ClientObject::State state, std::error_code ec);
 
 signals:
-    void s_hook(OptionalMemHandle);
+    void s_hook(Frontend::ClientObject::OptionalMemHandle);
     void s_connect(std::string, std::uint16_t);
     void s_disconnect();
     void s_unhook();
 
 private:
     QThread thread_;
-    ClientObject::State state_{ClientObject::State::STOPPED},
-                        old_state_{state_};
+    ClientObject::State state_{ClientObject::State::STOPPED};
 };
 
 struct MainWindow : QMainWindow
@@ -133,6 +130,7 @@ private slots:
     void on_connect();
     void on_disconnect();
     void on_emulator_state(Net64::Emulator::State state);
+    void on_client_hooked(std::error_code rc);
 
 private:
     void setup_menus();
