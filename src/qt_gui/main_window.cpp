@@ -139,6 +139,11 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
         ui->btn_stop->setDisabled(true);
         ui->btn_start_server->setEnabled(true);
         set_page(last_page_);
+        client_.unhook();
+        while(client_.state() != ClientObject::State::STOPPED)
+            std::this_thread::yield();
+        emulator_.reset();
+        emulation_thread_.get();
         break;
     default: break;
     }
@@ -149,6 +154,7 @@ void MainWindow::on_client_hooked(std::error_code ec)
     if(ec)
     {
         QMessageBox box;
+        box.setIcon(QMessageBox::Critical);
         box.setWindowTitle("Failed to initialize Net64 client");
         box.setText(format_error_msg(ec));
         box.exec();
@@ -156,6 +162,21 @@ void MainWindow::on_client_hooked(std::error_code ec)
     }
 
     statustext_->setText("Initialized");
+}
+
+void MainWindow::on_client_connected(std::error_code ec)
+{
+    if(ec)
+    {
+        QMessageBox box;
+        box.setIcon(QMessageBox::Critical);
+        box.setWindowTitle("Failed to connect to server");
+        box.setText(format_error_msg(ec));
+        box.exec();
+        return;
+    }
+
+    statustext_->setText("Connected");
 }
 
 void MainWindow::setup_menus()
@@ -218,8 +239,6 @@ bool MainWindow::start_emulator()
         emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_input_plugin).string());
         emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_rsp_plugin).string());
 
-        emulator_ = std::move(emu);
-
         std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
         if(!rom_file)
             throw std::runtime_error("Failed to open ROM file");
@@ -229,7 +248,9 @@ bool MainWindow::start_emulator()
         rom_file.read(reinterpret_cast<char*>(rom_image.data()), static_cast<long>(rom_image.size()));
         rom_file.close();
 
-        emulator_->load_rom(rom_image.data(), rom_image.size());
+        emu->load_rom(rom_image.data(), rom_image.size());
+
+        emulator_ = std::move(emu);
 
         emulation_thread_ = std::async([this]()
         {
@@ -237,12 +258,25 @@ bool MainWindow::start_emulator()
             {
                 this->emulator_state(state);
             });
-            emulator_.reset();
         });
     }
     catch(const std::system_error& e)
     {
+        QMessageBox box;
+        box.setIcon(QMessageBox::Critical);
+        box.setWindowTitle("Failed to start emulator");
+        box.setText(format_error_msg(e.code()));
+        box.exec();
 
+        return false;
+    }
+    catch(const std::exception& e)
+    {
+        QMessageBox box;
+        box.setIcon(QMessageBox::Critical);
+        box.setWindowTitle("Error");
+        box.setText(QString::fromStdString(e.what()));
+        box.exec();
 
         return false;
     }
@@ -295,10 +329,10 @@ ClientObject::ClientObject()
     qRegisterMetaType<State>("Frontend::ClientObject::State");
     qRegisterMetaType<std::error_code>("std::error_code");
 
-    timer_.setTimerType(Qt::PreciseTimer);
-    timer_.setInterval(INTERV.count());
-    QObject::connect(&timer_, &QTimer::timeout, this, &ClientObject::tick);
-    timer_.start();
+    timer_->setTimerType(Qt::PreciseTimer);
+    timer_->setInterval(INTERV.count());
+    QObject::connect(timer_, &QTimer::timeout, this, &ClientObject::tick);
+    timer_->start();
 }
 
 void ClientObject::hook(Frontend::ClientObject::OptionalMemHandle hdl)

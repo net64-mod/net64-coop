@@ -59,7 +59,7 @@ private:
     std::optional<Net64::Client> client_;
     std::optional<Net64::Memory::MemHandle> mem_hdl_;
     State state_{State::STOPPED};
-    QTimer timer_;
+    QTimer* timer_{new QTimer(this)};
 
     CLASS_LOGGER_("frontend")
 };
@@ -130,7 +130,8 @@ private slots:
     void on_connect();
     void on_disconnect();
     void on_emulator_state(Net64::Emulator::State state);
-    void on_client_hooked(std::error_code rc);
+    void on_client_hooked(std::error_code ec);
+    void on_client_connected(std::error_code ec);
 
 private:
     void setup_menus();
