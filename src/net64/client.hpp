@@ -55,6 +55,8 @@ private:
     HostHandle host_;
     PeerHandle peer_;
     std::uint32_t disconnect_code_{};
+
+    CLASS_LOGGER_("client")
 };
 
 } // Net64

@@ -32,6 +32,8 @@ struct IEmulator
     using usize_t = n64_usize_t;
     using ssize_t = n64_ssize_t;
 
+    static constexpr addr_t LOGICAL_BASE{0x80000000};
+
     using StateCallback = std::function<void(State)>;
 
     virtual ~IEmulator() = default;

@@ -241,6 +241,16 @@ void Mupen64Plus::detach_plugins() noexcept
     core_.detach_plugin(plugins_[M64PLUGIN_RSP]->info().type);
 }
 
+void Mupen64Plus::logical2physical(addr_t& addr)
+{
+    if(addr < LOGICAL_BASE)
+    {
+        logger()->error("Logical address {:#x} does not map to any physical address", addr);
+        throw std::system_error(Error::INVALID_ADDR);
+    }
+    addr -= LOGICAL_BASE;
+}
+
 void Mupen64Plus::check_bounds(addr_t addr, usize_t size)
 {
     if(addr + size > RAM_SIZE)
@@ -274,6 +284,7 @@ bool Mupen64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 
 void Mupen64Plus::read_memory(addr_t addr, void* data, usize_t n)
 {
+    logical2physical(addr);
     check_bounds(addr, n);
 
     auto ptr{get_mem_ptr<u8>()};
@@ -323,6 +334,7 @@ void Mupen64Plus::write_memory(addr_t addr, const void* data, usize_t n)
            aligned_len{n + begin_padding + end_padding};
 
 
+    logical2physical(addr);
     check_bounds(aligned_addr, aligned_len);
 
 
@@ -348,6 +360,7 @@ void Mupen64Plus::write_memory(addr_t addr, const void* data, usize_t n)
 
 void Mupen64Plus::read(addr_t addr, u8& val)
 {
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -359,8 +372,6 @@ void Mupen64Plus::read(addr_t addr, u8& val)
 
 void Mupen64Plus::read(addr_t addr, u16& val)
 {
-    check_bounds(addr, sizeof(val));
-
     u8 tmp[2];
     read(addr, tmp[0]);
     read(addr + 1, tmp[1]);
@@ -370,8 +381,6 @@ void Mupen64Plus::read(addr_t addr, u16& val)
 
 void Mupen64Plus::read(addr_t addr, u32& val)
 {
-    check_bounds(addr, sizeof(val));
-
     u8 tmp[4];
     read(addr, tmp[0]);
     read(addr + 1, tmp[1]);
@@ -384,8 +393,6 @@ void Mupen64Plus::read(addr_t addr, u32& val)
 
 void Mupen64Plus::read(addr_t addr, u64& val)
 {
-    check_bounds(addr, sizeof(val));
-
     u32 tmp[2];
     read(addr, tmp[0]);
     read(addr + 4, tmp[1]);
@@ -398,6 +405,7 @@ void Mupen64Plus::read(addr_t addr, f32& val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -412,6 +420,7 @@ void Mupen64Plus::read(addr_t addr, f64& val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -423,6 +432,7 @@ void Mupen64Plus::read(addr_t addr, f64& val)
 
 void Mupen64Plus::write(addr_t addr, u8 val)
 {
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -434,16 +444,12 @@ void Mupen64Plus::write(addr_t addr, u8 val)
 
 void Mupen64Plus::write(addr_t addr, u16 val)
 {
-    check_bounds(addr, sizeof(val));
-
     write(addr + 1, static_cast<u8>(val & 0xffu));
     write(addr, static_cast<u8>((val & 0xff00u) >> 8u));
 }
 
 void Mupen64Plus::write(addr_t addr, u32 val)
 {
-    check_bounds(addr, sizeof(val));
-
     write(addr + 3, static_cast<u8>(val & 0xffu));
     write(addr + 2, static_cast<u8>((val & 0xff00u) >> 8u));
     write(addr + 1, static_cast<u8>((val & 0xff0000u) >> 16u));
@@ -452,8 +458,6 @@ void Mupen64Plus::write(addr_t addr, u32 val)
 
 void Mupen64Plus::write(addr_t addr, u64 val)
 {
-    check_bounds(addr, sizeof(val));
-
     write(addr + 4, static_cast<u32>(val & 0xffffffffu));
     write(addr, static_cast<u32>((val & 0xffffffff00000000u) >> 32u));
 }
@@ -463,6 +467,7 @@ void Mupen64Plus::write(addr_t addr, f32 val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -477,6 +482,7 @@ void Mupen64Plus::write(addr_t addr, f64 val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};

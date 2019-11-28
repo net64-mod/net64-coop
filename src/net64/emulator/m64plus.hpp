@@ -337,8 +337,9 @@ public:
 private:
     void attach_plugins() noexcept;
     void detach_plugins() noexcept;
+    inline static void logical2physical(addr_t& addr);
     inline static void check_bounds(addr_t addr, usize_t size);
-    void loginfo_noexcept(const char* msg) noexcept;
+    static void loginfo_noexcept(const char* msg) noexcept;
 
     template<typename T>
     volatile T* get_mem_ptr()

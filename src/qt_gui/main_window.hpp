@@ -132,6 +132,7 @@ private slots:
     void on_emulator_state(Net64::Emulator::State state);
     void on_client_hooked(std::error_code ec);
     void on_client_connected(std::error_code ec);
+    void on_client_unhooked(std::error_code ec);
 
 private:
     void setup_menus();
@@ -161,21 +162,21 @@ private:
     template<typename Sender, typename Signal, typename Functor>
     void connect_once(Sender sender, Signal signal, Functor fn)
     {
-        auto context_ptr{std::make_unique<QObject>()};
-        QObject::connect(sender, signal, context_ptr.get(), [this, fn, context{std::move(context_ptr)}](auto&&... args) mutable
+        auto context_ptr{new QObject};
+        QObject::connect(sender, signal, context_ptr, [this, fn, context_ptr](auto&&... args) mutable
         {
             fn(std::forward<decltype(args)>(args)...);
-            context.release();
+            delete context_ptr;
         });
     }
     template<typename Sender, typename Signal, typename Receiver, typename Slot>
     void connect_once(Sender sender, Signal signal, Receiver receiver, Slot slot)
     {
-        auto context_ptr{std::make_unique<QObject>()};
-        QObject::connect(sender, signal, context_ptr.get(), [this, receiver, slot, context{std::move(context_ptr)}](auto&&... args) mutable
+        auto context_ptr{new QObject};
+        QObject::connect(sender, signal, context_ptr, [this, receiver, slot, context_ptr](auto&&... args) mutable
         {
             receiver->*slot(std::forward<decltype(args)>(args)...);
-            context.release();
+            delete context_ptr;
         });
     }
 

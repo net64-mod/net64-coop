@@ -27,6 +27,7 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     setFixedSize(size());
     ui->statusbar->setSizeGripEnabled(false);
     ui->statusbar->addWidget(statustext_ = new QLabel);
+    statustext_->setText("Ready");
 
     set_page(Page::HOST);
     ui->btn_stop->setDisabled(true);
@@ -125,8 +126,10 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
     {
     case State::STARTING:
         ui->btn_start_server->setDisabled(true);
+        statustext_->setText("Starting...");
         break;
     case State::RUNNING:
+        statustext_->setText("Ready");
         set_page(Page::IN_GAME);
         ui->btn_stop->setEnabled(true);
         if(hook_after_emu_start_)
@@ -136,14 +139,15 @@ void MainWindow::on_emulator_state(Net64::Emulator::State state)
         }
         break;
     case State::STOPPED:
+        statustext_->setText("Ready");
         ui->btn_stop->setDisabled(true);
         ui->btn_start_server->setEnabled(true);
         set_page(last_page_);
         client_.unhook();
-        while(client_.state() != ClientObject::State::STOPPED)
-            std::this_thread::yield();
-        emulator_.reset();
-        emulation_thread_.get();
+        connect_once(&client_, &ClientThread::unhooked, [this](auto)
+        {
+            stop_emulator();
+        });
         break;
     default: break;
     }
@@ -177,6 +181,11 @@ void MainWindow::on_client_connected(std::error_code ec)
     }
 
     statustext_->setText("Connected");
+}
+
+void MainWindow::on_client_unhooked(std::error_code)
+{
+    statustext_->setText("Ready");
 }
 
 void MainWindow::setup_menus()
@@ -222,6 +231,7 @@ void MainWindow::setup_signals()
     connect(ui->btn_stop, &QPushButton::clicked, this, &MainWindow::on_stop_server);
     connect(ui->btn_start_server, &QPushButton::clicked, this, &MainWindow::on_start_server);
     connect(&client_, &ClientThread::hooked, this, &MainWindow::on_client_hooked);
+    connect(&client_, &ClientThread::unhooked, this, &MainWindow::on_client_unhooked);
 }
 
 bool MainWindow::start_emulator()
@@ -328,6 +338,8 @@ ClientObject::ClientObject()
     qRegisterMetaType<OptionalMemHandle>("Frontend::ClientObject::OptionalMemHandle");
     qRegisterMetaType<State>("Frontend::ClientObject::State");
     qRegisterMetaType<std::error_code>("std::error_code");
+    qRegisterMetaType<std::string>("std::string");
+    qRegisterMetaType<std::uint16_t>("std::uint16_t");
 
     timer_->setTimerType(Qt::PreciseTimer);
     timer_->setInterval(INTERV.count());
@@ -360,13 +372,7 @@ void ClientObject::unhook()
     client_ = {};
     mem_hdl_ = {};
 
-    if(state_ == State::HOOKING)
-    {
-        state_changed(state_ = State::STOPPED, {});
-        return;
-    }
-
-    state_changed(State::STOPPED, {});
+    state_changed(state_ = State::STOPPED, {});
 }
 
 void ClientObject::tick()
@@ -395,7 +401,7 @@ void ClientObject::tick()
                 logger()->error("Unkown error while starting Net64 client");
                 ec = make_error_code(Net64::ErrorCode::UNKNOWN);
             }
-            state_changed(State::HOOKING, ec);
+            state_changed(state_ = State::HOOKED, ec);
         }
         break;
     case State::HOOKED:
@@ -443,7 +449,7 @@ void ClientThread::on_state_changed(ClientObject::State state, std::error_code e
         unhooked(ec);
         break;
     case State::HOOKED:
-        if(state_ == State::STOPPED)
+        if(state_ == State::HOOKING)
             hooked(ec);
         else if(state_ == State::DISCONNECTING)
             disconnected(ec);
