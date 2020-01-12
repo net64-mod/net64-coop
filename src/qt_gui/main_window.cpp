@@ -16,6 +16,15 @@ static QString format_error_msg(std::error_code ec)
     return "[" + QString::fromStdString(ec.category().name()) + ":" + QString(ec.value()) + "] " + QString::fromStdString(ec.message());
 }
 
+static void error_popup(const char* action, const QString& reason)
+{
+    QMessageBox box;
+    box.setIcon(QMessageBox::Critical);
+    box.setWindowTitle(action);
+    box.setText(reason);
+    box.exec();
+}
+
 MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -36,6 +45,16 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     setup_signals();
 
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
+
+    // temp
+    std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
+    if(!rom_file)
+        throw std::runtime_error("Failed to open ROM file");
+
+    rom_image_.resize(static_cast<std::size_t>(rom_file.tellg()));
+    rom_file.seekg(0);
+    rom_file.read(reinterpret_cast<char*>(rom_image_.data()), static_cast<long>(rom_image_.size()));
+    rom_file.close();
 }
 
 MainWindow::~MainWindow()
@@ -61,96 +80,6 @@ void MainWindow::on_join_host_changed(QAction* action)
 
 void MainWindow::on_emulator_settings()
 {
-}
-
-void MainWindow::on_start_server()
-{
-    // start server
-
-    on_connect();
-}
-
-void MainWindow::on_stop_server()
-{
-
-}
-
-void MainWindow::on_connect()
-{
-    if(emu_state_ == Net64::Emulator::State::STOPPED)
-    {
-
-        if(!start_emulator())
-            return;
-        hook_after_emu_start_ = true;
-        connect_once(&client_, &ClientThread::hooked, [this](auto ec)
-        {
-            if(!ec)
-                connect_client();
-        });
-        return;
-    }
-
-    if(client_.state() == ClientObject::State::STOPPED)
-    {
-        client_.hook(Net64::Memory::MemHandle(*emulator_));
-        statustext_->setText("Hooking...");
-
-        connect_once(&client_, &ClientThread::hooked, [this](auto ec)
-        {
-            if(!ec)
-                connect_client();
-        });
-
-        return;
-    }
-
-    client_.connect(ui->tbx_join_ip->text().toStdString(), (std::uint16_t)ui->sbx_port->value());
-}
-
-void MainWindow::on_disconnect()
-{
-    if(client_.state() == ClientObject::State::CONNECTED)
-    {
-        client_.disconnect();
-    }
-}
-
-void MainWindow::on_emulator_state(Net64::Emulator::State state)
-{
-    using Net64::Emulator::State;
-
-    emu_state_ = state;
-
-    switch(state)
-    {
-    case State::STARTING:
-        ui->btn_start_server->setDisabled(true);
-        statustext_->setText("Starting...");
-        break;
-    case State::RUNNING:
-        statustext_->setText("Ready");
-        set_page(Page::IN_GAME);
-        ui->btn_stop->setEnabled(true);
-        if(hook_after_emu_start_)
-        {
-            hook_after_emu_start_ = false;
-            init_client();
-        }
-        break;
-    case State::STOPPED:
-        statustext_->setText("Ready");
-        ui->btn_stop->setDisabled(true);
-        ui->btn_start_server->setEnabled(true);
-        set_page(last_page_);
-        client_.unhook();
-        connect_once(&client_, &ClientThread::unhooked, [this](auto)
-        {
-            stop_emulator();
-        });
-        break;
-    default: break;
-    }
 }
 
 void MainWindow::on_client_hooked(std::error_code ec)
@@ -186,6 +115,79 @@ void MainWindow::on_client_connected(std::error_code ec)
 void MainWindow::on_client_unhooked(std::error_code)
 {
     statustext_->setText("Ready");
+}
+
+void MainWindow::on_start_server_btn_pressed()
+{
+
+}
+
+void MainWindow::on_connect_btn_pressed()
+{
+    if(!net64_thread_.is_emulator_initialized())
+    {
+        connect_once(&net64_thread_, &Net64Thread::emulator_initialized, [this](auto ec)
+        {
+            if(ec)
+            {
+                error_popup("Failed to initialize emulator", format_error_msg(ec));
+            }
+            else
+            {
+                on_connect_btn_pressed();
+            }
+        });
+        net64_thread_.initialize_emulator();
+        return;
+    }
+
+    if(!net64_thread_.is_emulation_running())
+    {
+        connect_once(&net64_thread_, &Net64Thread::emulation_started, [this](auto ec)
+        {
+            if(ec)
+            {
+                error_popup("Failed to launch emulator", format_error_msg(ec));
+            }
+            else
+            {
+                on_connect_btn_pressed();
+            }
+        });
+        net64_thread_.start_emulation(rom_image_);
+        return;
+    }
+
+    if(!net64_thread_.is_net64_initialized())
+    {
+        connect_once(&net64_thread_, &Net64Thread::net64_initialized, [this](auto ec)
+        {
+            if(ec)
+            {
+                error_popup("Failed to initialize Net64", format_error_msg(ec));
+            }
+            else
+            {
+                on_connect_btn_pressed();
+            }
+        });
+        return;
+    }
+
+    //net64_thread_.connect(ui->tbx_join_ip->text().toStdString(), (std::uint16_t)ui->sbx_port->value());
+}
+
+void MainWindow::on_disconnect_btn_pressed()
+{
+    if(!net64_thread_.is_connected())
+        return;
+
+    net64_thread_.disconnect();
+}
+
+void MainWindow::on_stop_server_btn_pressed()
+{
+
 }
 
 void MainWindow::setup_menus()
@@ -227,260 +229,13 @@ void MainWindow::setup_menus()
 
 void MainWindow::setup_signals()
 {
-    connect(this, &MainWindow::emulator_state, this, &MainWindow::on_emulator_state);
-    connect(ui->btn_stop, &QPushButton::clicked, this, &MainWindow::on_stop_server);
-    connect(ui->btn_start_server, &QPushButton::clicked, this, &MainWindow::on_start_server);
-    connect(&client_, &ClientThread::hooked, this, &MainWindow::on_client_hooked);
-    connect(&client_, &ClientThread::unhooked, this, &MainWindow::on_client_unhooked);
-}
-
-bool MainWindow::start_emulator()
-{
-    assert(!emulator_);
-
-    try
-    {
-        auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
-        (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(), settings_->m64p_dir().string(),
-        settings_->m64p_plugin_dir().string())};
-
-        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_video_plugin).string());
-        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_audio_plugin).string());
-        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_input_plugin).string());
-        emu->add_plugin((settings_->m64p_plugin_dir() / settings_->m64p_rsp_plugin).string());
-
-        std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
-        if(!rom_file)
-            throw std::runtime_error("Failed to open ROM file");
-
-        std::vector<std::byte> rom_image(static_cast<std::size_t>(rom_file.tellg()));
-        rom_file.seekg(0);
-        rom_file.read(reinterpret_cast<char*>(rom_image.data()), static_cast<long>(rom_image.size()));
-        rom_file.close();
-
-        emu->load_rom(rom_image.data(), rom_image.size());
-
-        emulator_ = std::move(emu);
-
-        emulation_thread_ = std::async([this]()
-        {
-            emulator_->execute([this](auto state)
-            {
-                this->emulator_state(state);
-            });
-        });
-    }
-    catch(const std::system_error& e)
-    {
-        QMessageBox box;
-        box.setIcon(QMessageBox::Critical);
-        box.setWindowTitle("Failed to start emulator");
-        box.setText(format_error_msg(e.code()));
-        box.exec();
-
-        return false;
-    }
-    catch(const std::exception& e)
-    {
-        QMessageBox box;
-        box.setIcon(QMessageBox::Critical);
-        box.setWindowTitle("Error");
-        box.setText(QString::fromStdString(e.what()));
-        box.exec();
-
-        return false;
-    }
-
-    return true;
-}
-
-void MainWindow::stop_emulator()
-{
-    assert(emulator_);
-
-    emulator_.reset();
-    emulation_thread_.get();
-}
-
-void MainWindow::init_client()
-{
-    if(!emulator_)
-        return;
-
-    client_.hook(Net64::Memory::MemHandle(*emulator_));
-    statustext_->setText("Initializing...");
-}
-
-void MainWindow::connect_client()
-{
-    client_.connect("", 0);
-}
-
-void MainWindow::disconnect_client()
-{
-    client_.disconnect();
-}
-
-void MainWindow::destroy_client()
-{
-    client_.unhook();
+    connect(ui->btn_connect_ip, &QPushButton::clicked, this, &MainWindow::on_connect_btn_pressed);
 }
 
 void MainWindow::set_page(int page)
 {
     last_page_= ui->stackedWidget->currentIndex();
     ui->stackedWidget->setCurrentIndex(page);
-}
-
-
-ClientObject::ClientObject()
-{
-    qRegisterMetaType<OptionalMemHandle>("Frontend::ClientObject::OptionalMemHandle");
-    qRegisterMetaType<State>("Frontend::ClientObject::State");
-    qRegisterMetaType<std::error_code>("std::error_code");
-    qRegisterMetaType<std::string>("std::string");
-    qRegisterMetaType<std::uint16_t>("std::uint16_t");
-
-    timer_->setTimerType(Qt::PreciseTimer);
-    timer_->setInterval(INTERV.count());
-    QObject::connect(timer_, &QTimer::timeout, this, &ClientObject::tick);
-    timer_->start();
-}
-
-void ClientObject::hook(Frontend::ClientObject::OptionalMemHandle hdl)
-{
-    mem_hdl_ = hdl;
-    state_changed(state_ = State::HOOKING, {});
-}
-
-void ClientObject::connect(std::string addr, std::uint16_t port)
-{
-    state_changed(State::CONNECTING, {});
-    auto ret{client_->connect(addr.c_str(), port)};
-    state_changed(State::CONNECTED, ret);
-}
-
-void ClientObject::disconnect()
-{
-    state_changed(State::DISCONNECTING, {});
-    client_->disconnect();
-    state_changed(State::HOOKED, {});
-}
-
-void ClientObject::unhook()
-{
-    client_ = {};
-    mem_hdl_ = {};
-
-    state_changed(state_ = State::STOPPED, {});
-}
-
-void ClientObject::tick()
-{
-    switch(state_)
-    {
-    case State::HOOKING:
-        if(Net64::Client::game_initialized(*mem_hdl_))
-        {
-            std::error_code ec;
-            try
-            {
-                client_ = Net64::Client(*mem_hdl_);
-            }
-            catch(const std::system_error& e)
-            {
-                ec = e.code();
-            }
-            catch(const std::exception& e)
-            {
-                logger()->error("Error while starting Net64 client: {}", e.what());
-                ec = make_error_code(Net64::ErrorCode::UNKNOWN);
-            }
-            catch(...)
-            {
-                logger()->error("Unkown error while starting Net64 client");
-                ec = make_error_code(Net64::ErrorCode::UNKNOWN);
-            }
-            state_changed(state_ = State::HOOKED, ec);
-        }
-        break;
-    case State::HOOKED:
-    case State::CONNECTED:
-        client_->tick();
-        break;
-    default: break;
-    }
-}
-
-
-ClientThread::ClientThread()
-{
-    auto* client{new ClientObject};
-
-    client->moveToThread(&thread_);
-    QObject::connect(&thread_, &QThread::finished, client, &QObject::deleteLater);
-    QObject::connect(client, &ClientObject::state_changed, this, &ClientThread::on_state_changed);
-    QObject::connect(this, &ClientThread::s_connect, client, &ClientObject::connect);
-    QObject::connect(this, &ClientThread::s_hook, client, &ClientObject::hook);
-    QObject::connect(this, &ClientThread::s_disconnect, client, &ClientObject::disconnect);
-    QObject::connect(this, &ClientThread::s_unhook, client, &ClientObject::unhook);
-
-    thread_.start();
-}
-
-ClientThread::~ClientThread()
-{
-    thread_.quit();
-    thread_.wait();
-}
-
-ClientObject::State ClientThread::state() const
-{
-    return state_;
-}
-
-void ClientThread::on_state_changed(ClientObject::State state, std::error_code ec)
-{
-    using State = ClientObject::State;
-
-    switch(state)
-    {
-    case State::STOPPED:
-        unhooked(ec);
-        break;
-    case State::HOOKED:
-        if(state_ == State::HOOKING)
-            hooked(ec);
-        else if(state_ == State::DISCONNECTING)
-            disconnected(ec);
-        break;
-    case State::CONNECTED:
-        connected(ec);
-        break;
-    }
-
-    if(!ec)
-        state_ = state;
-}
-
-void ClientThread::hook(Frontend::ClientObject::OptionalMemHandle hdl)
-{
-    s_hook(hdl);
-}
-
-void ClientThread::connect(std::string addr, std::uint16_t port)
-{
-    s_connect(std::move(addr), port);
-}
-
-void ClientThread::disconnect()
-{
-    s_disconnect();
-}
-
-void ClientThread::unhook()
-{
-    s_unhook();
 }
 
 } // Frontend

@@ -169,6 +169,7 @@ void Mupen64Plus::execute(const StateCallback& fn)
         std::system_error err{make_error_code(ret), "Failed to execute ROM image"};
         mutex_.unlock();
         logger()->error(err.what());
+        notify(Emulator::State::STOPPED);
         throw err;
     }
 

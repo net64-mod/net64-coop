@@ -12,6 +12,7 @@
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
 #include "qt_gui/multiplayer_settings_window.hpp"
+#include "qt_gui/net64_thread.hpp"
 #endif
 
 
@@ -21,85 +22,6 @@ class MainWindow;
 
 namespace Frontend
 {
-
-struct ClientObject : QObject
-{
-    Q_OBJECT
-
-public:
-    enum struct State
-    {
-        STOPPED,
-        HOOKING,
-        HOOKED,
-        CONNECTING,
-        CONNECTED,
-        DISCONNECTING
-    };
-
-    using OptionalMemHandle = std::optional<Net64::Memory::MemHandle>;
-
-    ClientObject();
-
-    static constexpr std::chrono::milliseconds INTERV{25};
-
-public slots:
-    void hook(Frontend::ClientObject::OptionalMemHandle hdl);
-    void connect(std::string addr, std::uint16_t port);
-    void disconnect();
-    void unhook();
-
-private slots:
-    void tick();
-
-signals:
-    void state_changed(Frontend::ClientObject::State, std::error_code);
-
-private:
-    std::optional<Net64::Client> client_;
-    std::optional<Net64::Memory::MemHandle> mem_hdl_;
-    State state_{State::STOPPED};
-    QTimer* timer_{new QTimer(this)};
-
-    CLASS_LOGGER_("frontend")
-};
-
-struct ClientThread : QObject
-{
-    Q_OBJECT
-
-public:
-    explicit ClientThread();
-    ~ClientThread() override;
-
-    [[nodiscard]]
-    ClientObject::State state() const;
-
-public slots:
-    void hook(Frontend::ClientObject::OptionalMemHandle hdl);
-    void connect(std::string addr, std::uint16_t port);
-    void disconnect();
-    void unhook();
-
-signals:
-    void hooked(std::error_code);
-    void connected(std::error_code);
-    void disconnected(std::error_code);
-    void unhooked(std::error_code);
-
-private slots:
-    void on_state_changed(Frontend::ClientObject::State state, std::error_code ec);
-
-signals:
-    void s_hook(Frontend::ClientObject::OptionalMemHandle);
-    void s_connect(std::string, std::uint16_t);
-    void s_disconnect();
-    void s_unhook();
-
-private:
-    QThread thread_;
-    ClientObject::State state_{ClientObject::State::STOPPED};
-};
 
 struct MainWindow : QMainWindow
 {
@@ -120,29 +42,27 @@ public:
     ~MainWindow() override;
 
 signals:
-    void emulator_state(Net64::Emulator::State);
+    void emulator_starting();
+    void emulator_running();
+    void emulator_paused();
+    void emulator_stopped();
 
 private slots:
     void on_join_host_changed(QAction* action);
     void on_emulator_settings();
-    void on_start_server();
-    void on_stop_server();
-    void on_connect();
-    void on_disconnect();
-    void on_emulator_state(Net64::Emulator::State state);
     void on_client_hooked(std::error_code ec);
     void on_client_connected(std::error_code ec);
     void on_client_unhooked(std::error_code ec);
 
+    void on_start_server_btn_pressed();
+    void on_connect_btn_pressed();
+    void on_disconnect_btn_pressed();
+    void on_stop_server_btn_pressed();
+
 private:
     void setup_menus();
     void setup_signals();
-    bool start_emulator();
-    void stop_emulator();
-    void init_client();
-    void connect_client();
-    void disconnect_client();
-    void destroy_client();
+
     void set_page(int page);
 
 private:
@@ -188,12 +108,8 @@ private:
     MultiplayerSettingsWindow* multiplayer_cfg_win_{};
     int last_page_{Page::JOIN};
 
-    std::unique_ptr<Net64::Emulator::IEmulator> emulator_;
-    std::future<void> emulation_thread_;
-    Net64::Emulator::State emu_state_{Net64::Emulator::State::STOPPED};
-    ClientThread client_;
-    bool connect_after_hooking_{false},
-         hook_after_emu_start_{false};
+    Net64Thread net64_thread_{*settings_};
+    std::vector<std::byte> rom_image_;
 
     CLASS_LOGGER_("frontend")
 };

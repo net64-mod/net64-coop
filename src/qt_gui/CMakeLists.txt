@@ -17,7 +17,9 @@ add_executable(net64_qt_gui
                 vcdiff_patcher.cpp
                 vcdiff_patcher.hpp
                 patch_dialog.hpp
-                patch_dialog.cpp)
+                patch_dialog.cpp
+                net64_thread.hpp
+                net64_thread.cpp)
 
 target_link_libraries(net64_qt_gui net64_core)
 
