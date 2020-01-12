@@ -64,10 +64,10 @@ void Net64Obj::initialize_emulator()
             config_->m64p_plugin_dir().string()
         )};
 
-        emu->add_plugin(config_->m64p_plugin_dir() / config_->m64p_audio_plugin);
-        emu->add_plugin(config_->m64p_plugin_dir() / config_->m64p_rsp_plugin);
-        emu->add_plugin(config_->m64p_plugin_dir() / config_->m64p_input_plugin);
-        emu->add_plugin(config_->m64p_plugin_dir() / config_->m64p_video_plugin);
+        emu->add_plugin((config_->m64p_plugin_dir() / config_->m64p_audio_plugin).string());
+        emu->add_plugin((config_->m64p_plugin_dir() / config_->m64p_rsp_plugin).string());
+        emu->add_plugin((config_->m64p_plugin_dir() / config_->m64p_input_plugin).string());
+        emu->add_plugin((config_->m64p_plugin_dir() / config_->m64p_video_plugin).string());
 
         emulator_ = std::move(emu);
     }
