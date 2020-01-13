@@ -49,7 +49,7 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     // temp
     std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
     if(!rom_file)
-        throw std::runtime_error("Failed to open ROM file");
+        return;
 
     rom_image_.resize(static_cast<std::size_t>(rom_file.tellg()));
     rom_file.seekg(0);
