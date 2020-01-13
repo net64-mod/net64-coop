@@ -12,8 +12,10 @@
 #include <future>
 #include <QThread>
 #include <QTimer>
+#ifndef Q_MOC_RUN
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
+#endif
 
 
 namespace Frontend
