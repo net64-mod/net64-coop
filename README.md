@@ -50,6 +50,12 @@ If you'd like to help the project out in other ways like in-depth testing, serve
  - Create and enter build directory `mkdir net64-coop/build && cd net64-coop/build`
  - Run cmake `cmake ..`
  - Build the project `make`
- 
- ## Bundling Mupen64Plus
- Net64 internally uses the popular [Mupen64Plus emulator](https://github.com/mupen64plus). To include a build of Mupen64Plus with the installation set the cmake variable `INSTALL_MUPEN64PLUS` to `ON`. By default this will include an x86 build on Windows and an amd64 build on Linux. If you are building for a different architecture, you have to manually set `MUPEN64PLUS_DIR` to point to the correct Mupen64Plus installation. It's recommendet to use a build from the [official release section](https://github.com/mupen64plus/mupen64plus-core/releases). Be sure to use a Mupen64Plus build with the same OS and architecture as the Net64 build!
+
+## Bundling Mupen64Plus
+Net64 internally uses the [Mupen64Plus emulator](https://github.com/mupen64plus).
+On 32Bit Windows and 64Bit Linux builds a build of Mupen64Plus is automatically bundled when running `make install`.
+If you are building for a different architecture, you have to manually set `MUPEN64PLUS_DIR` to point to the correct Mupen64Plus installation.
+It's recommendet to use a build from the [official release section](https://github.com/mupen64plus/mupen64plus-core/releases).
+Be sure to use a Mupen64Plus build with the same OS and architecture as the Net64 build!
+
+In case you don't want to bundle Mupen64Plus you can set the cmake variable `INSTALL_MUPEN64PLUS` to `OFF`.
