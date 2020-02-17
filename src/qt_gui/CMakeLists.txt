@@ -25,8 +25,10 @@ target_link_libraries(net64_qt_gui Qt5::Widgets)
 include_directories(${Qt5_Widgtes_INCLUDES})
 
 # json library
-target_link_libraries(net64_qt_gui nlohmann_json::nlohmann_json)
+include(nlohmann_json)
+target_include_directories(net64_qt_gui PRIVATE "${JSON_INCLUDES}")
 
+# vcdiff library
 target_link_libraries(net64_qt_gui vcddec vcdenc)
 target_include_directories(net64_qt_gui PRIVATE "${PROJECT_SOURCE_DIR}/externals/open-vcdiff/src")
 
