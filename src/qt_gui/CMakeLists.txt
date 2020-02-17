@@ -34,6 +34,8 @@ if(UNIX)
     target_link_libraries(net64_qt_gui -lpthread -lstdc++fs)
 endif()
 
+set_target_properties(net64_qt_gui PROPERTIES RUNTIME_OUTPUT_NAME "net64")
+
 if(WIN32)
     # Include MSVC libs
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION usr/bin)
@@ -52,10 +54,25 @@ endif()
 
 
 # Installation
+
+# We're copying the whole cmake binary dir into /usr/bin to bundle the Qt environment on Windows.
+# Unfortunately this does not make the program executable.
+# As such we install the executable separately as target and ignore it when copying the directory later.
+
+get_target_property(QT_GUI_EXECUTABLE_NAME_BASE net64_qt_gui RUNTIME_OUTPUT_NAME)
+
+# Install net64 executable
+install(TARGETS net64_qt_gui
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/bin
+        RENAME "net64")
+
+# Install everything else in the runtime output dir
 if(CMAKE_CONFIGURATION_TYPES)
     install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/"
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/bin)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/bin
+            PATTERN "net64*" EXCLUDE)
 else()
     install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/bin)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/bin
+            PATTERN "${QT_GUI_EXECUTABLE_NAME_BASE}*" EXCLUDE)
 endif()

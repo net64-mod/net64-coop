@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
 
+set(CMAKE_INSTALL_MESSAGE LAZY)
 
 add_compile_definitions(NOMINMAX)
 include(CompilerWarnings)
@@ -35,6 +36,7 @@ else()
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
 
 if(BUILD_CORE)
     add_subdirectory(src/net64)
