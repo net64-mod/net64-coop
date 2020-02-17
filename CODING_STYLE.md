@@ -58,16 +58,12 @@ We recommend to follow these guidelines when writing code for Net64. They aren't
     - `static constexpr MAGIC_NUMBER{0x7F}`
     - `template<unsigned OPCODE_WIDTH>`
     
-- Template type paramters are upper CamelCase prefixed with an upper case T or just T, U, V...:
-    - `template<typename TIdentifier>`
+- Template type paramters are upper CamelCase or just T, U, V...:
+    - `template<typename Identifier>`
     
-- #defines should be all upper case with a '_' postfix:
+- defines should be all upper case with a '_' postfix:
     - `#define USE_PROCESS_HANDLE_LINUX_`
     - `#define CHECK_(expr) assert(expr)`
-
-- Please use all upper case letters for hexadecimal literals:
-    - Right: `0x0AF83B`
-    - Wrong: `0x0af83b`
 
 
 ## Comments
@@ -141,8 +137,8 @@ struct RWHandle : RHandle   // Always use struct instead of class
     // 5. Static variables
 
 
-    RWHandle(Emulator& hdl) // Prefer references over pointers
-    :RHandle(hdl)
+    RWHandle(Emulator& hdl): // Prefer references over pointers
+        RHandle(hdl)
     {
     }
 
