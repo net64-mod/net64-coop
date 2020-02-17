@@ -1,8 +1,3 @@
-[submodule "externals/json"]
-    path = externals/json
-    url = https://github.com/nlohmann/json.git
-    branch = master
-
 [submodule "externals/mem64"]
     path = externals/mem64
     url = https://github.com/net64-mod/mem64.git
