@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Net64
+GenericName=Super Mario 64 Online
+Comment=Super Mario 64 online mode
+Icon=net64
+Exec=net64
+Terminal=false
+Categories=Game;
+Keywords=N64;Nintendo;
