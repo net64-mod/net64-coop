@@ -59,5 +59,5 @@ endif()
 
 if(INSTALL_MUPEN64PLUS)
     install(DIRECTORY "${MUPEN64PLUS_DIR}/"
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/share/mupen64plus)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/share/net64/mupen64plus)
 endif()
