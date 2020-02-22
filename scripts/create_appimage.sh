@@ -9,6 +9,4 @@ wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous
 
 chmod +x linuxdeploy*.AppImage
 
-export OUTPUT="Net64.AppImage"
-
 ./linuxdeploy-x86_64.AppImage --appdir $1 -d "${DIR}/../dist/Net64.desktop" -i "${DIR}/../dist/net64.png" --output appimage
