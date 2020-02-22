@@ -76,4 +76,7 @@ namespace filesystem = experimental::filesystem;
 
 namespace fs = std::filesystem;
 
+/// Return path to usr directory
+fs::path install_dir();
+
 #endif // #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL

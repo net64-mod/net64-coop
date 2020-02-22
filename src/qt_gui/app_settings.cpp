@@ -124,7 +124,7 @@ fs::path AppSettings::main_config_file_path() const
 
 fs::path AppSettings::shipped_m64p_binaries_dir() const
 {
-    return fs::path("../share/mupen64plus");
+    return install_dir() / "mupen64plus";
 }
 
 fs::path AppSettings::m64p_dir() const
