@@ -14,10 +14,12 @@ namespace BuildInfo
 #define GIT_SHA1_ "@GIT_REV@"
 #define GIT_DESC_ "@GIT_DESC@"
 #define GIT_BRANCH_ "@GIT_BRANCH@"
+#define GIT_TAG_ "@GIT_TAG@"
 
 const char GIT_REV[]{GIT_SHA1_};
 const char GIT_DESC[]{GIT_DESC_};
 const char GIT_BRANCH[]{GIT_BRANCH_};
+const char GIT_TAG[]{GIT_TAG_};
 
 const char BUILD_DATE[]{__DATE__};
 

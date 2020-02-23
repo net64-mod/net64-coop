@@ -13,7 +13,8 @@ namespace BuildInfo
 
 extern const char GIT_REV[],
                   GIT_DESC[],
-                  GIT_BRANCH[];
+                  GIT_BRANCH[],
+                  GIT_TAG[];
 
 extern const char BUILD_DATE[];
 
