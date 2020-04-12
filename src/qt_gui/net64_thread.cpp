@@ -31,19 +31,8 @@ Net64Obj::Net64Obj(AppSettings& config):
 }
 
 Net64Obj::~Net64Obj()
-{/*
-    if(client_.has_value())
-    {
-        if(client_->connected())
-            disconnect();
-        destroy_net64();
-    }
-    if(emulator_)
-    {
-        if(emulator_->running())
-            stop_emulation();
-        destroy_emulator();
-    }*/
+{
+
 }
 
 void Net64Obj::set_config(AppSettings* config)
@@ -111,7 +100,6 @@ Net64Thread::Net64Thread(AppSettings& config)
     qRegisterMetaType<std::string>("std::string");
     qRegisterMetaType<std::uint16_t>("std::uint16_t");
     qRegisterMetaType<std::vector<std::byte>>("std::vector<std::byte>");
-    //qRegisterMetaType<Net64::>("Net64::Memory::MemHandle");
 
     auto* obj{new Net64Obj(config)};
 
