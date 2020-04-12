@@ -20,12 +20,18 @@ Client::Client(Memory::MemHandle mem_hdl):
 {
     if(!host_)
         throw std::system_error(make_error_code(Net::Error::ENET_HOST_CREATION));
-}
 
-Client::~Client()
-{
-    peer_.reset();
-    host_.reset();
+    if(net64_header_->field(&Game::net64_header_t::compat_version) != Game::CLIENT_COMPAT_VER)
+    {
+        logger()->error("Incompatible patch version. Patch version: {}, Client version: {}",
+                  net64_header_->field(&Game::net64_header_t::compat_version).read(), Game::CLIENT_COMPAT_VER);
+        std::abort();
+        //@todo: Client error codes
+    }
+
+    logger()->info("Initialized Net64 client version {} (Compatibility: {})",
+                   net64_header_->field(&Game::net64_header_t::version),
+                   net64_header_->field(&Game::net64_header_t::compat_version));
 }
 
 std::error_code Client::connect(const char* ip, std::uint16_t port)
@@ -56,7 +62,7 @@ std::error_code Client::connect(const char* ip, std::uint16_t port)
         peer_ = std::move(peer);
         on_connect();
 
-        return {0, std::generic_category()};
+        return {};
     }
 
     return make_error_code(Net::Error::TIMED_OUT);

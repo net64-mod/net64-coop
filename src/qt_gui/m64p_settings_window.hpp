@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <QMainWindow>
 #ifndef Q_MOC_RUN
@@ -19,7 +19,7 @@ class M64PSettings : public QMainWindow
     Q_OBJECT
 
 public:
-    M64PSettings(QWidget* parent, AppSettings& settings);
+    M64PSettings(AppSettings& settings, QWidget* parent = nullptr);
     ~M64PSettings() override;
 
 private slots:

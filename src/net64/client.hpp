@@ -28,8 +28,6 @@ struct Client
 
     explicit Client(Memory::MemHandle mem_hdl);
 
-    ~Client();
-
     std::error_code connect(const char* ip, std::uint16_t port);
     void disconnect();
 
@@ -57,6 +55,8 @@ private:
     HostHandle host_;
     PeerHandle peer_;
     std::uint32_t disconnect_code_{};
+
+    CLASS_LOGGER_("client")
 };
 
 } // Net64

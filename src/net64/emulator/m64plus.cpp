@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <net64/error_codes.hpp>
 #include "net64/memory/util.hpp"
 
 
@@ -36,7 +37,9 @@ Mupen64Plus::~Mupen64Plus()
 {
     if(core_.handle())
     {
+        std::error_code ec;
         stop();
+        join(ec);
         if(rom_loaded_)
             unload_rom();
     }
@@ -46,7 +49,7 @@ Mupen64Plus::~Mupen64Plus()
 void Mupen64Plus::add_plugin(const std::string& lib_path)
 {
     std::lock_guard g(mutex_);
-    assert(!running());
+    assert(state_ == MupenState::Stopped);
 
     auto plugin = new Plugin(core_, lib_path);
     plugins_[plugin->info().type] = std::unique_ptr<Plugin>(plugin);
@@ -55,7 +58,7 @@ void Mupen64Plus::add_plugin(const std::string& lib_path)
 void Mupen64Plus::remove_plugin(M64PTypes::m64p_plugin_type type)
 {
     std::lock_guard g(mutex_);
-    assert(!running());
+    assert(state_ == MupenState::Stopped);
 
     plugins_[type].reset();
 }
@@ -79,7 +82,7 @@ void Mupen64Plus::unload_rom()
 {
     std::lock_guard g(mutex_);
     assert(rom_loaded_);
-    assert(!running());
+    assert(state_ == MupenState::Stopped);
 
     rom_loaded_ = false;
 
@@ -91,23 +94,20 @@ void Mupen64Plus::unload_rom()
     }
 }
 
-void Mupen64Plus::execute(const StateCallback& fn)
+void Mupen64Plus::start(const StateCallback& fn)
 {
     // NOTE: This code is unfortunately complicated. Take care to not violate the assumptions
     // documented below and in the stop() function.
+
     assert(rom_loaded_);
 
-    // Safely call user provided callback
-    auto notify{[this, &fn](Emulator::State state) noexcept
+    // Safely call callback
+    auto notify{[fn](Emulator::State state) noexcept
     {
-        try
-        {
-            if(fn)
-                fn(state);
-        }
+        try{if(fn) fn(state);}
         catch(...)
         {
-            loginfo_noexcept("Exception in user state callback");
+            log_noexcept(spdlog::level::warn, "Exception in user state callback");
         }
     }};
 
@@ -116,65 +116,91 @@ void Mupen64Plus::execute(const StateCallback& fn)
     mutex_.lock();
 
     // Do nothing if the emulator is not stopped
-    if(state_ != State::Stopped)
+    if(state_ != MupenState::Stopped)
     {
         mutex_.unlock();
         return;
     }
 
-    state_ = State::Starting;
-    notify(Emulator::State::STARTING);
-    core_.prepare_config_file();
-    attach_plugins();
-    core_.set_state_callback([this, &notify](M64PTypes::m64p_core_param param_type, int new_value) noexcept
+    log_noexcept(spdlog::level::info, "Starting n64 emulation");
+    state_ = MupenState::Starting;
+
+    emulation_thread_ = std::async([this, notify]()
     {
-        if(param_type == M64PTypes::M64CORE_EMU_STATE)
+        try
         {
-            switch (new_value)
+            core_.prepare_config_file();
+            attach_plugins();
+        }
+        catch(...)
+        {
+            state_ = MupenState::Joinable;
+            mutex_.unlock();
+            throw;
+        }
+
+        core_.set_state_callback([this, &notify](M64PTypes::m64p_core_param param_type, int new_value) noexcept
+        {
+            if(param_type != M64PTypes::M64CORE_EMU_STATE)
+                return;
+
+            switch(new_value)
             {
-            case M64PTypes::M64EMU_STOPPED:
-                // This is to guarantee execute() owns mutex_ when do_cmd returns
-                mutex_.lock();
-                state_ = State::Stopped;
-                break;
             case M64PTypes::M64EMU_RUNNING:
-                if(state_ == State::Starting)
+                if(state_ == MupenState::Starting)
                 {
                     // To guarantee that stop() cannot be entered while starting we kept mutex_
-                    // now that we are running we want to be able to stop, so unlock it.
-                    state_ = State::Running;
+                    // now that the emulator is running we want to be able to stop, so unlock it
+                    state_ = MupenState::Running;
                     mutex_.unlock();
-                    loginfo_noexcept("Started n64 emulation");
+                    log_noexcept(spdlog::level::info, "Started n64 emulation");
                 }
                 notify(Emulator::State::RUNNING);
                 break;
             case M64PTypes::M64EMU_PAUSED:
                 mutex_.lock();
-                state_ = State::Paused;
+                state_ = MupenState::Paused;
                 mutex_.unlock();
                 notify(Emulator::State::PAUSED);
                 break;
+            case M64PTypes::M64EMU_STOPPED:
+                // This is to guarantee we own mutex_ when do_cmd returns
+                mutex_.lock();
+                state_ = MupenState::Joinable;
+                break;
             default:
                 assert(false);
+                break;
             }
+        });
+
+        // Blocking call to execute rom
+        auto ret{core_.do_cmd(M64PTypes::M64CMD_EXECUTE, 0, nullptr)};
+
+        detach_plugins();
+
+        if(failed(ret))
+        {
+            // If do_cmd failed before reaching the "running" state we still need to notify about it
+            bool notify_about_running{state_ == MupenState::Starting};
+            std::system_error err{make_error_code(ret), "Failed to execute ROM image"};
+
+            state_ = MupenState::Joinable;
+            mutex_.unlock();
+
+            if(notify_about_running)
+                notify(Emulator::State::RUNNING);
+
+            logger()->error(err.what());
+            notify(Emulator::State::JOINABLE);
+            throw err;
         }
-    });
-    loginfo_noexcept("Starting n64 emulation");
-    auto ret{core_.do_cmd(M64PTypes::M64CMD_EXECUTE, 0, nullptr)};
-    detach_plugins();
-    assert(state_ == State::Stopped);
 
-    if(failed(ret))
-    {
-        std::system_error err{make_error_code(ret), "Failed to execute ROM image"};
+        assert(state_ == MupenState::Joinable);
+        log_noexcept(spdlog::level::info, "Stopped n64 emulation");
         mutex_.unlock();
-        logger()->error(err.what());
-        throw err;
-    }
-
-    loginfo_noexcept("Stopped n64 emulation");
-    mutex_.unlock();
-    notify(Emulator::State::STOPPED);
+        notify(Emulator::State::JOINABLE);
+    });
 }
 
 void Mupen64Plus::stop()
@@ -183,25 +209,25 @@ void Mupen64Plus::stop()
     // while we own mutex_.
     mutex_.lock();
 
-    // Do nothing if already stopped or stopping
-    if(state_ == State::Stopped || state_ == State::Stopping)
+    // Do nothing if already stopped, stopping or joinable
+    if(state_ == MupenState::Stopped || state_ == MupenState::Stopping || state_ == MupenState::Joinable)
     {
         mutex_.unlock();
         return;
     }
 
-    // We cannot be starting because execute() owns mutex_ until state_ == State::Started,
-    // because we own mutex_ execute() cannot be between Starting and Started.
-    assert(state_ == State::Running || state_ == State::Paused);
+    // We cannot be starting because the emulation thread owns mutex_ until state_ == State::Started,
+    // because we own mutex_ the emulation thread cannot be between Starting and Started.
+    assert(state_ == MupenState::Running || state_ == MupenState::Paused);
 
-    // Stop the emulator
-    loginfo_noexcept("Stopping n64 emulation");
+    // Emulator running, stop it
+    log_noexcept(spdlog::level::info, "Stopping n64 emulation");
     core_.do_cmd(M64PTypes::M64CMD_STOP, 0, nullptr);
-    state_ = State::Stopping;
+    state_ = MupenState::Stopping;
     mutex_.unlock();
 
     // Wait for the emulator to be stopped
-    while(state_ != State::Stopped)
+    while(state_ != MupenState::Joinable)
     {
         std::this_thread::yield();
         // Workaround for: https://github.com/mupen64plus/mupen64plus-core/issues/681
@@ -209,9 +235,51 @@ void Mupen64Plus::stop()
     }
 }
 
-bool Mupen64Plus::running() const
+void Mupen64Plus::join(std::error_code& exit_code)
 {
-    return state_ != State::Stopped;
+    if(state_ == MupenState::Stopped)
+        return;
+
+    assert(state_ == MupenState::Joinable);
+
+    // Emulator is stopped, join the emulation thread
+    mutex_.lock();
+    try{emulation_thread_.get();}
+    catch(const std::system_error& e)
+    {
+        exit_code = e.code();
+    }
+    catch(const std::exception& e)
+    {
+        exit_code = make_error_code(Net64::ErrorCode::UNKNOWN);
+    }
+    catch(...)
+    {
+        exit_code = make_error_code(Net64::ErrorCode::UNKNOWN);
+    }
+
+    state_ = MupenState::Stopped;
+    mutex_.unlock();
+    logger()->info("Joined emulation thread");
+}
+
+State Mupen64Plus::state() const
+{
+    std::scoped_lock m(mutex_);
+
+    switch(state_)
+    {
+    case MupenState::Running:
+        return Emulator::State::RUNNING;
+    case MupenState::Joinable:
+        return Emulator::State::JOINABLE;
+    case MupenState::Paused:
+        return Emulator::State::PAUSED;
+    case MupenState::Stopped:
+        return Emulator::State::STOPPED;
+    }
+
+    assert(false);
 }
 
 bool Mupen64Plus::rom_loaded() const
@@ -241,6 +309,16 @@ void Mupen64Plus::detach_plugins() noexcept
     core_.detach_plugin(plugins_[M64PLUGIN_RSP]->info().type);
 }
 
+void Mupen64Plus::logical2physical(addr_t& addr)
+{
+    if(addr < LOGICAL_BASE)
+    {
+        logger()->error("Logical address {:#x} does not map to any physical address", addr);
+        throw std::system_error(Error::INVALID_ADDR);
+    }
+    addr -= LOGICAL_BASE;
+}
+
 void Mupen64Plus::check_bounds(addr_t addr, usize_t size)
 {
     if(addr + size > RAM_SIZE)
@@ -252,11 +330,11 @@ void Mupen64Plus::check_bounds(addr_t addr, usize_t size)
     }
 }
 
-void Mupen64Plus::loginfo_noexcept(const char* msg) noexcept
+void Mupen64Plus::log_noexcept(spdlog::level::level_enum lvl, const char* msg) noexcept
 {
     try
     {
-        logger()->info(msg);
+        logger()->log(lvl, msg);
     }
     catch (...)
     {
@@ -274,6 +352,7 @@ bool Mupen64Plus::has_plugin(M64PTypes::m64p_plugin_type type) const
 
 void Mupen64Plus::read_memory(addr_t addr, void* data, usize_t n)
 {
+    logical2physical(addr);
     check_bounds(addr, n);
 
     auto ptr{get_mem_ptr<u8>()};
@@ -323,6 +402,7 @@ void Mupen64Plus::write_memory(addr_t addr, const void* data, usize_t n)
            aligned_len{n + begin_padding + end_padding};
 
 
+    logical2physical(addr);
     check_bounds(aligned_addr, aligned_len);
 
 
@@ -348,6 +428,7 @@ void Mupen64Plus::write_memory(addr_t addr, const void* data, usize_t n)
 
 void Mupen64Plus::read(addr_t addr, u8& val)
 {
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -359,8 +440,6 @@ void Mupen64Plus::read(addr_t addr, u8& val)
 
 void Mupen64Plus::read(addr_t addr, u16& val)
 {
-    check_bounds(addr, sizeof(val));
-
     u8 tmp[2];
     read(addr, tmp[0]);
     read(addr + 1, tmp[1]);
@@ -370,8 +449,6 @@ void Mupen64Plus::read(addr_t addr, u16& val)
 
 void Mupen64Plus::read(addr_t addr, u32& val)
 {
-    check_bounds(addr, sizeof(val));
-
     u8 tmp[4];
     read(addr, tmp[0]);
     read(addr + 1, tmp[1]);
@@ -384,8 +461,6 @@ void Mupen64Plus::read(addr_t addr, u32& val)
 
 void Mupen64Plus::read(addr_t addr, u64& val)
 {
-    check_bounds(addr, sizeof(val));
-
     u32 tmp[2];
     read(addr, tmp[0]);
     read(addr + 4, tmp[1]);
@@ -398,6 +473,7 @@ void Mupen64Plus::read(addr_t addr, f32& val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -412,6 +488,7 @@ void Mupen64Plus::read(addr_t addr, f64& val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -423,6 +500,7 @@ void Mupen64Plus::read(addr_t addr, f64& val)
 
 void Mupen64Plus::write(addr_t addr, u8 val)
 {
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -434,16 +512,12 @@ void Mupen64Plus::write(addr_t addr, u8 val)
 
 void Mupen64Plus::write(addr_t addr, u16 val)
 {
-    check_bounds(addr, sizeof(val));
-
     write(addr + 1, static_cast<u8>(val & 0xffu));
     write(addr, static_cast<u8>((val & 0xff00u) >> 8u));
 }
 
 void Mupen64Plus::write(addr_t addr, u32 val)
 {
-    check_bounds(addr, sizeof(val));
-
     write(addr + 3, static_cast<u8>(val & 0xffu));
     write(addr + 2, static_cast<u8>((val & 0xff00u) >> 8u));
     write(addr + 1, static_cast<u8>((val & 0xff0000u) >> 16u));
@@ -452,8 +526,6 @@ void Mupen64Plus::write(addr_t addr, u32 val)
 
 void Mupen64Plus::write(addr_t addr, u64 val)
 {
-    check_bounds(addr, sizeof(val));
-
     write(addr + 4, static_cast<u32>(val & 0xffffffffu));
     write(addr, static_cast<u32>((val & 0xffffffff00000000u) >> 32u));
 }
@@ -463,6 +535,7 @@ void Mupen64Plus::write(addr_t addr, f32 val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};
@@ -477,6 +550,7 @@ void Mupen64Plus::write(addr_t addr, f64 val)
     // @todo: make this work unaligned
     assert(addr % BSWAP_SIZE == 0);
 
+    logical2physical(addr);
     check_bounds(addr, sizeof(val));
 
     auto ptr{get_mem_ptr<u8>()};

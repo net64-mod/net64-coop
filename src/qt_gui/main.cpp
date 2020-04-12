@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by henrik on 02.02.19.
 // Copyright 2019 Net64 Coop Project
 // Licensed under GPLv3
@@ -15,7 +15,7 @@
 #include "build_info.hpp"
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
-#include "qt_gui/mainframe.hpp"
+#include "qt_gui/main_window.hpp"
 
 
 namespace Frontend
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 {
     using namespace Frontend;
 
-    QCoreApplication::setApplicationName("Net64-Coop");
+    QCoreApplication::setApplicationName("Net64");
     QCoreApplication::setOrganizationName("Net64 Project");
     QCoreApplication::setApplicationVersion({BuildInfo::GIT_DESC});
 
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
         logger->info("Configuration folder: {}", settings.appdata_path);
 
-        MainFrame win(nullptr, settings);
+        MainWindow win(settings);
 
         win.show();
 

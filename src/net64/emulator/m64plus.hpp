@@ -9,6 +9,7 @@
 
 #include <array>
 #include <atomic>
+#include <future>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -300,9 +301,12 @@ public:
 
     void unload_rom() override;
 
-    void execute(const StateCallback& fn = {}) override;
+    //void execute(const StateCallback& fn = {}) override;
+    void start(const StateCallback& fn) override;
 
     void stop() override;
+
+    void join(std::error_code& exit_code) override;
 
     // Read & Write implementations
     void read_memory(addr_t addr, void* data, usize_t n) override;
@@ -322,7 +326,7 @@ public:
     void write(addr_t addr, f32 val) final;
     void write(addr_t addr, f64 val) final;
 
-    bool running() const override;
+    State state() const override;
 
     const char* name() const override
     {
@@ -337,8 +341,9 @@ public:
 private:
     void attach_plugins() noexcept;
     void detach_plugins() noexcept;
+    inline static void logical2physical(addr_t& addr);
     inline static void check_bounds(addr_t addr, usize_t size);
-    void loginfo_noexcept(const char* msg) noexcept;
+    static void log_noexcept(spdlog::level::level_enum lvl, const char* msg) noexcept;
 
     template<typename T>
     volatile T* get_mem_ptr()
@@ -361,16 +366,18 @@ private:
 
     bool rom_loaded_{};
 
-    enum class State
+    enum class MupenState
     {
         Stopped,
         Stopping,
         Starting,
         Running,
         Paused,
+        Joinable
     };
-    std::atomic<State> state_{State::Stopped}; // Only modify while owning mutex_!
-    std::mutex mutex_;
+    std::atomic<MupenState> state_{MupenState::Stopped}; // Only modify while owning mutex_!
+    mutable std::mutex mutex_;
+    std::future<void> emulation_thread_;
 
     inline static bool has_instance = false;
 

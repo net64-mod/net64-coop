@@ -18,7 +18,8 @@ enum struct ErrorCode
 {
     INVALID_OFFSET = 1,    ///< Trying to access invalid memory offset
     FAILED_PROC_START,     ///< Failed to start child process
-    EMU_NOT_RUNNING        ///< Emulator not running
+    EMU_NOT_RUNNING,       ///< Emulator not running
+    UNKNOWN                ///< Unkown error
 };
 
 } // Net64

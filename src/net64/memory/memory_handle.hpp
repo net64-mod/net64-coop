@@ -85,11 +85,11 @@ struct MemHandle
     template<typename>
     static bool valid_offset(addr_t offset)
     {
-        return offset < Emulator::IEmulator::RAM_SIZE;
+        return (Emulator::IEmulator::LOGICAL_BASE <= offset
+                && offset < Emulator::IEmulator::LOGICAL_BASE + Emulator::IEmulator::RAM_SIZE);
     }
 
 private:
-
     /**
      * Helper alias to find the readable / writeable version of a type.
      * Casts signed integers to their unsigned counterpart

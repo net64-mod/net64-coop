@@ -1,4 +1,4 @@
-SET(CMAKE_AUTOMOC ON)
+﻿SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTOUIC ON)
 SET(CMAKE_AUTORCC ON)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -6,16 +6,20 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_executable(net64_qt_gui
                 resources.qrc
                 main.cpp
-                mainframe.cpp
-                mainframe.hpp
                 m64p_settings_window.cpp
                 m64p_settings_window.hpp
                 app_settings.hpp
                 app_settings.cpp
+                multiplayer_settings_window.cpp
+                multiplayer_settings_window.hpp
+                main_window.cpp
+                main_window.hpp
                 vcdiff_patcher.cpp
                 vcdiff_patcher.hpp
                 patch_dialog.hpp
-                patch_dialog.cpp)
+                patch_dialog.cpp
+                net64_thread.hpp
+                net64_thread.cpp)
 
 target_link_libraries(net64_qt_gui net64_core)
 

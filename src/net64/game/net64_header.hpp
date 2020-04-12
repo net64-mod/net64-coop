@@ -32,6 +32,7 @@ constexpr u16 CLIENT_COMPAT_VER{0};
 constexpr u32 MAGIC_NUMBER{0x43303050}; // "C00P"
 
 /// Fixed addresses in the game
+/// These are all logical addresses (0x80000000 - 0x807FFFFF)
 namespace FixedAddr
 {
 

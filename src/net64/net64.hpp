@@ -8,9 +8,11 @@
 #pragma once
 
 #include "net64/client.hpp"
+#include "net64/error_codes.hpp"
 #include "net64/logging.hpp"
 #include "net64/server.hpp"
 #include "net64/emulator/m64plus.hpp"
+#include "net64/memory/pointer.hpp"
 
 
 namespace Net64

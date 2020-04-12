@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by henrik on 07.06.19
 // Copyright 2019 Net64 Coop Project
 // Licensed under GPLv3
@@ -30,6 +30,9 @@ struct AppSettings
     fs::path main_config_file_path() const;
 
     fs::path rom_file_path;
+
+    // User settings
+    std::string username;
 
     // Mupen64Plus configuration
     static const char* M64P_DEFAULT_PLUGIN_DIR,
