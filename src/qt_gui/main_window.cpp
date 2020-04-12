@@ -209,7 +209,7 @@ void MainWindow::start_emulation()
         auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
             (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(),
             settings_->m64p_dir().string(),
-            settings_->m64p_plugin_dir()
+            settings_->m64p_plugin_dir().string()
         )};
 
         auto add_plugin{[&emu, this](const std::string& str){emu->add_plugin((settings_->m64p_plugin_dir() / str).string());}};
