@@ -178,17 +178,25 @@ void Mupen64Plus::start(const StateCallback& fn)
         auto ret{core_.do_cmd(M64PTypes::M64CMD_EXECUTE, 0, nullptr)};
 
         detach_plugins();
-        assert(state_ == MupenState::Joinable);
 
         if(failed(ret))
         {
+            // If do_cmd failed before reaching the "running" state we still need to notify about it
+            bool notify_about_running{state_ == MupenState::Starting};
             std::system_error err{make_error_code(ret), "Failed to execute ROM image"};
+
+            state_ = MupenState::Joinable;
             mutex_.unlock();
+
+            if(notify_about_running)
+                notify(Emulator::State::RUNNING);
+
             logger()->error(err.what());
             notify(Emulator::State::JOINABLE);
             throw err;
         }
 
+        assert(state_ == MupenState::Joinable);
         log_noexcept(spdlog::level::info, "Stopped n64 emulation");
         mutex_.unlock();
         notify(Emulator::State::JOINABLE);
