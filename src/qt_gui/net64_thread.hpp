@@ -34,39 +34,26 @@ public:
 public slots:
     void set_config(AppSettings* config);
 
-    void initialize_emulator();
-    void start_emulation(std::vector<std::byte> rom_image);
-    void initialize_net64();
+    void initialize_net64(Net64::Emulator::IEmulator* emu);
     void connect(std::string ip, std::uint16_t port);
     void disconnect();
     void destroy_net64();
-    void stop_emulation();
-    void destroy_emulator();
 
 signals:
-    void emulator_initialized(std::error_code ec);
-    void emulation_started(std::error_code ec);
     void net64_initialized(std::error_code ec);
     void connected(std::error_code ec);
     void disconnected();
     void net64_destroyed();
-    void emulation_stopped(std::error_code ec);
-    void emulator_destroyed();
-
-private slots:
-    void on_emulator_stopped();
 
 private:
     void tick();
 
     QTimer* timer_{new QTimer(this)};
-    std::unique_ptr<Net64::Emulator::IEmulator> emulator_;
     std::optional<Net64::Client> client_;
-    AppSettings* config_;
+    std::optional<Net64::Memory::MemHandle> memory_hdl_;
+    AppSettings* settings_;
 
     bool initializing_net64_{false};
-
-    std::future<void> emulation_thread_;
 
     CLASS_LOGGER_("net64-thread")
 };
@@ -81,58 +68,40 @@ public:
 
     void set_config(AppSettings& config);
 
-    bool is_emulator_initialized() const;
-    bool is_emulation_running() const;
-    bool is_net64_initialized() const;
+    bool is_initializing() const;
+    bool is_initialized() const;
     bool is_connected() const;
 
 public slots:
-    void initialize_emulator();
-    void start_emulation(std::vector<std::byte> rom_image);
-    void initialize_net64();
+    void initialize_net64(Net64::Emulator::IEmulator* emu);
     void connect(std::string ip, std::uint16_t port);
     void disconnect();
     void destroy_net64();
-    void stop_emulation();
-    void destroy_emulator();
 
 signals:
-    void emulator_initialized(std::error_code ec);
-    void emulation_started(std::error_code ec);
     void net64_initialized(std::error_code ec);
     void connected(std::error_code ec);
     void disconnected();
     void net64_destroyed();
-    void emulation_stopped(std::error_code ec);
-    void emulator_destroyed();
 
 private slots:
-    void o_emulator_initialized(std::error_code ec);
-    void o_emulation_started(std::error_code ec);
     void o_net64_initialized(std::error_code ec);
     void o_connected(std::error_code ec);
     void o_disconnected();
     void o_net64_destroyed();
-    void o_emulation_stopped(std::error_code ec);
-    void o_emulator_destroyed();
 
 signals:
     void s_set_config(AppSettings*);
-    void s_initialize_emulator();
-    void s_start_emulation(std::vector<std::byte>);
-    void s_initialize_net64();
+    void s_initialize_net64(Net64::Emulator::IEmulator*);
     void s_connect(std::string, std::uint16_t);
     void s_disconnect();
     void s_destroy_net64();
-    void s_stop_emulation();
-    void s_destroy_emulator();
 
 private:
     QThread thread_;
 
-    bool is_emulator_initialized_{};
-    bool is_emulation_running_{};
-    bool is_net64_initialized_{};
+    bool is_initializing_{};
+    bool is_initialized_{};
     bool is_connected_{};
 
 };

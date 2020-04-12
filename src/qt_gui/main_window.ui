@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>397</width>
-    <height>587</height>
+    <width>912</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,181 +18,191 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
-      <widget class="QWidget" name="host_page">
-       <layout class="QVBoxLayout" name="verticalLayout_5">
+      <widget class="QWidget" name="setup_page">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QGroupBox" name="grp_server_info">
+         <widget class="QGroupBox" name="groupBox_2">
           <property name="title">
-           <string>Server info</string>
+           <string>Join Game</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
-            <widget class="QLineEdit" name="tbx_server_name">
+            <widget class="QLineEdit" name="tbx_join_ip">
              <property name="placeholderText">
-              <string>Server name</string>
+              <string>Join server via IP address</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QTextEdit" name="tbx_server_description">
-             <property name="placeholderText">
-              <string>Server description</string>
+            <widget class="QPushButton" name="btn_connect_ip">
+             <property name="text">
+              <string>Join</string>
              </property>
             </widget>
            </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="game_settings_box">
-          <property name="title">
-           <string>Game settings</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <widget class="QComboBox" name="chc_romhack">
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>469</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QPushButton" name="btn_join_server">
              <property name="enabled">
               <bool>false</bool>
              </property>
-             <item>
-              <property name="text">
-               <string>Super Mario 64 (US)</string>
-              </property>
-             </item>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Join server</string>
+             </property>
             </widget>
            </item>
           </layout>
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="grp_network_settings">
+         <widget class="QGroupBox" name="groupBox">
           <property name="title">
-           <string>Network settings</string>
+           <string>Host Game</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="lbl_port">
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <widget class="QGroupBox" name="grp_server_info">
+             <property name="title">
+              <string>Server info</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <widget class="QLineEdit" name="tbx_server_name">
+                <property name="placeholderText">
+                 <string>Server name</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTextEdit" name="tbx_server_description">
+                <property name="placeholderText">
+                 <string>Server description</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="game_settings_box">
+             <property name="title">
+              <string>Game settings</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QComboBox" name="chc_romhack">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Super Mario 64 (US)</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="grp_network_settings">
+             <property name="title">
+              <string>Network settings</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="lbl_port">
+                <property name="text">
+                 <string>Port</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="lbl_max_players">
+                <property name="text">
+                 <string>Max players</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QSpinBox" name="sbx_port">
+                <property name="frame">
+                 <bool>true</bool>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>65536</number>
+                </property>
+                <property name="value">
+                 <number>3678</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSpinBox" name="sbx_max_players">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="maximum">
+                 <number>24</number>
+                </property>
+                <property name="value">
+                 <number>4</number>
+                </property>
+                <property name="displayIntegerBase">
+                 <number>10</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QCheckBox" name="cbx_upnp">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>UPnP</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QPushButton" name="btn_start_server">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
-              <string>Port</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="lbl_max_players">
-             <property name="text">
-              <string>Max players</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QSpinBox" name="sbx_port">
-             <property name="frame">
-              <bool>true</bool>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>65536</number>
-             </property>
-             <property name="value">
-              <number>3678</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QSpinBox" name="sbx_max_players">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="maximum">
-              <number>24</number>
-             </property>
-             <property name="value">
-              <number>4</number>
-             </property>
-             <property name="displayIntegerBase">
-              <number>10</number>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QCheckBox" name="cbx_upnp">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>UPnP</string>
+              <string>Start server</string>
              </property>
             </widget>
            </item>
           </layout>
-         </widget>
-        </item>
-        <item alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="btn_start_server">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Start server</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="join_page">
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLineEdit" name="tbx_join_ip">
-            <property name="placeholderText">
-             <string>Join server via IP address</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_connect_ip">
-            <property name="text">
-             <string>Join</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="btn_join_server">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Join server</string>
-          </property>
          </widget>
         </item>
        </layout>
@@ -221,7 +231,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>397</width>
+     <width>912</width>
      <height>19</height>
     </rect>
    </property>

@@ -18,10 +18,10 @@ namespace Net64::Emulator
 
 enum struct State
 {
-    STOPPED,
-    STARTING,
     RUNNING,
-    PAUSED
+    PAUSED,
+    JOINABLE,
+    STOPPED
 };
 
 /// Interface for n64 emulators
@@ -45,10 +45,16 @@ struct IEmulator
     virtual void unload_rom() = 0;
 
     /// Execute rom, blocking
-    virtual void execute(const StateCallback& fn = {}) = 0;
+    //virtual void execute(const StateCallback& fn = {}) = 0;
+
+    /// Start emulation
+    virtual void start(const StateCallback& fn = {}) = 0;
 
     /// Stop execution
     virtual void stop() = 0;
+
+    /// Join emulator thread
+    virtual void join(std::error_code& exit_code) = 0;
 
     /// Read n bytes from addr
     virtual void read_memory(addr_t addr, void* data, usize_t n) = 0;
@@ -73,7 +79,7 @@ struct IEmulator
     virtual void write(addr_t addr, f64 val) = 0;
 
     /// Check if emulator is running
-    virtual bool running() const = 0;
+    virtual State state() const = 0;
 
     /// Return name of emulator
     virtual const char* name() const = 0;

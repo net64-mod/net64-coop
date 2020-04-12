@@ -13,7 +13,7 @@ using namespace std::string_literals;
 
 static QString format_error_msg(std::error_code ec)
 {
-    return "[" + QString::fromStdString(ec.category().name()) + ":" + QString(ec.value()) + "] " + QString::fromStdString(ec.message());
+    return "[" + QString::fromStdString(ec.category().name()) + ":" + QString::fromStdString(std::to_string(ec.value())) + "] " + QString::fromStdString(ec.message());
 }
 
 static void error_popup(const char* action, const QString& reason)
@@ -28,25 +28,26 @@ static void error_popup(const char* action, const QString& reason)
 MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    settings_(&settings)
+    settings_(&settings),
+    net64_thread_(*settings_)
 {
     qRegisterMetaType<Net64::Emulator::State>("Net64::Emulator::State");
 
     ui->setupUi(this);
+    setWindowIcon(QIcon{":/icons/net64-icon128.png"});
     setFixedSize(size());
     ui->statusbar->setSizeGripEnabled(false);
     ui->statusbar->addWidget(statustext_ = new QLabel);
     statustext_->setText("Ready");
 
-    set_page(Page::HOST);
-    ui->btn_stop->setDisabled(true);
+    set_page(Page::SETUP);
 
     setup_menus();
     setup_signals();
 
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 
-    // temp
+    // temp @todo
     std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
     if(!rom_file)
         return;
@@ -62,142 +63,95 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_join_host_changed(QAction* action)
-{
-    if(ui->stackedWidget->currentIndex() == Page::JOIN)
-    {
-        set_page(Page::HOST);
-        action->setText("Join game");
-        join_host_menu_->setTitle("Host game");
-    }
-    else if(ui->stackedWidget->currentIndex() == Page::HOST)
-    {
-        set_page(Page::JOIN);
-        action->setText("Host game");
-        join_host_menu_->setTitle("Join game");
-    }
-}
-
 void MainWindow::on_emulator_settings()
 {
 }
 
-void MainWindow::on_client_hooked(std::error_code ec)
-{
-    if(ec)
-    {
-        QMessageBox box;
-        box.setIcon(QMessageBox::Critical);
-        box.setWindowTitle("Failed to initialize Net64 client");
-        box.setText(format_error_msg(ec));
-        box.exec();
-        return;
-    }
-
-    statustext_->setText("Initialized");
-}
-
-void MainWindow::on_client_connected(std::error_code ec)
-{
-    if(ec)
-    {
-        QMessageBox box;
-        box.setIcon(QMessageBox::Critical);
-        box.setWindowTitle("Failed to connect to server");
-        box.setText(format_error_msg(ec));
-        box.exec();
-        return;
-    }
-
-    statustext_->setText("Connected");
-}
-
-void MainWindow::on_client_unhooked(std::error_code)
-{
-    statustext_->setText("Ready");
-}
-
 void MainWindow::on_start_server_btn_pressed()
 {
-
+    on_connect_btn_pressed();
 }
 
 void MainWindow::on_connect_btn_pressed()
 {
-    if(!net64_thread_.is_emulator_initialized())
-    {
-        connect_once(&net64_thread_, &Net64Thread::emulator_initialized, [this](auto ec)
-        {
-            if(ec)
-            {
-                error_popup("Failed to initialize emulator", format_error_msg(ec));
-            }
-            else
-            {
-                on_connect_btn_pressed();
-            }
-        });
-        net64_thread_.initialize_emulator();
-        return;
-    }
+    ui->btn_connect_ip->setDisabled(true);
+    ui->btn_start_server->setDisabled(true);
 
-    if(!net64_thread_.is_emulation_running())
-    {
-        connect_once(&net64_thread_, &Net64Thread::emulation_started, [this](auto ec)
-        {
-            if(ec)
-            {
-                error_popup("Failed to launch emulator", format_error_msg(ec));
-            }
-            else
-            {
-                on_connect_btn_pressed();
-            }
-        });
-        net64_thread_.start_emulation(rom_image_);
-        return;
-    }
-
-    if(!net64_thread_.is_net64_initialized())
-    {
-        connect_once(&net64_thread_, &Net64Thread::net64_initialized, [this](auto ec)
-        {
-            if(ec)
-            {
-                error_popup("Failed to initialize Net64", format_error_msg(ec));
-            }
-            else
-            {
-                on_connect_btn_pressed();
-            }
-        });
-        return;
-    }
-
-    //net64_thread_.connect(ui->tbx_join_ip->text().toStdString(), (std::uint16_t)ui->sbx_port->value());
+    connect_net64();
 }
 
 void MainWindow::on_disconnect_btn_pressed()
 {
-    if(!net64_thread_.is_connected())
-        return;
 
-    net64_thread_.disconnect();
 }
 
 void MainWindow::on_stop_server_btn_pressed()
 {
+    stop_emulation();
+}
 
+void MainWindow::on_emulator_state(Net64::Emulator::State state)
+{
+    auto old_state{emu_state_.load()};
+    emu_state_ = state;
+
+    switch(state)
+    {
+    case Net64::Emulator::State::RUNNING:
+        if(old_state == Net64::Emulator::State::PAUSED)
+            emulator_unpaused();
+        else
+            emulator_started();
+        break;
+    case Net64::Emulator::State::PAUSED:
+        emulator_paused();
+        break;
+    case Net64::Emulator::State::JOINABLE:
+        emulator_joinable();
+        break;
+    }
+}
+
+void MainWindow::on_emulator_started()
+{
+    set_page(Page::IN_GAME);
+    ui->btn_connect_ip->setDisabled(false);
+    ui->btn_start_server->setDisabled(false);
+}
+
+void MainWindow::on_emulator_paused()
+{
+
+}
+
+void MainWindow::on_emulator_unpaused()
+{
+
+}
+
+void MainWindow::on_emulator_joinable()
+{
+    if(net64_thread_.is_initializing() || net64_thread_.is_initialized())
+    {
+        connect_once(&net64_thread_, &Net64Thread::net64_destroyed, [this]{on_emulator_joinable();});
+        net64_thread_.destroy_net64();
+        return;
+    }
+
+    std::error_code ec;
+    emulator_->join(ec);
+    emulator_.reset();
+
+    set_page(Page::SETUP);
+
+    if(ec)
+        error_popup("Emulation halted due to an error", format_error_msg(ec));
 }
 
 void MainWindow::setup_menus()
 {
-    join_host_menu_ = ui->menubar->addMenu("Join game");
     auto settings_menu{ui->menubar->addMenu("Settings")};
     auto info_menu{ui->menubar->addMenu("Info")};
-
-    join_host_menu_->addAction("Host game");
-    connect(join_host_menu_, &QMenu::triggered, this, &MainWindow::on_join_host_changed);
 
     connect(settings_menu->addAction("Multiplayer"), &QAction::triggered, this, [this]()
     {
@@ -218,7 +172,7 @@ void MainWindow::setup_menus()
     });
     connect(info_menu->addAction("Discord"), &QAction::triggered, this, []()
     {
-        QDesktopServices::openUrl(QUrl("https://discord.gg/GgGUKH8"));
+        QDesktopServices::openUrl(QUrl("https://discord.gg/aUmWKaw"));
     });
     connect(info_menu->addAction("About Net64"), &QAction::triggered, this, []()
     {
@@ -229,13 +183,90 @@ void MainWindow::setup_menus()
 
 void MainWindow::setup_signals()
 {
+    connect(this, &MainWindow::emulator_started, this, &MainWindow::on_emulator_started);
+    connect(this, &MainWindow::emulator_paused, this, &MainWindow::on_emulator_paused);
+    connect(this, &MainWindow::emulator_unpaused, this, &MainWindow::on_emulator_unpaused);
+    connect(this, &MainWindow::emulator_joinable, this, &MainWindow::on_emulator_joinable);
+
     connect(ui->btn_connect_ip, &QPushButton::clicked, this, &MainWindow::on_connect_btn_pressed);
+    connect(ui->btn_start_server, &QPushButton::clicked, this, &MainWindow::on_start_server_btn_pressed);
+    connect(ui->btn_stop, &QPushButton::clicked, this, &MainWindow::on_stop_server_btn_pressed);
 }
 
-void MainWindow::set_page(int page)
+void MainWindow::set_page(Page page)
 {
-    last_page_= ui->stackedWidget->currentIndex();
-    ui->stackedWidget->setCurrentIndex(page);
+    last_page_= static_cast<Page>(ui->stackedWidget->currentIndex());
+    ui->stackedWidget->setCurrentIndex(static_cast<int>(page));
+}
+
+void MainWindow::start_emulation()
+{
+    if(emulator_)
+        return;
+
+    try
+    {
+        auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
+            (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(),
+            settings_->m64p_dir().string(),
+            settings_->m64p_plugin_dir()
+        )};
+
+        auto add_plugin{[&emu, this](const std::string& str){emu->add_plugin((settings_->m64p_plugin_dir() / str).string());}};
+
+        add_plugin(settings_->m64p_video_plugin);
+        add_plugin(settings_->m64p_audio_plugin);
+        add_plugin(settings_->m64p_rsp_plugin);
+        add_plugin(settings_->m64p_input_plugin);
+
+        emulator_ = std::move(emu);
+
+        emulator_->load_rom(reinterpret_cast<void*>(rom_image_.data()), rom_image_.size());
+
+        emulator_->start([this](auto state){on_emulator_state(state);});
+    }
+    catch(const std::system_error& e)
+    {
+        error_popup("Failed to start emulation", format_error_msg(e.code()));
+        emulator_.reset();
+    }
+}
+
+void MainWindow::stop_emulation()
+{
+    emulator_->stop();
+}
+
+void MainWindow::connect_net64()
+{
+    if(!emulator_)
+    {
+        // Emulator not running, start it
+        connect_once(this, &MainWindow::emulator_started, [this]{connect_net64();});
+        start_emulation();
+        return;
+    }
+    if(!net64_thread_.is_initialized())
+    {
+        // Net64 not yet initialized
+        connect_once(&net64_thread_, &Net64Thread::net64_initialized, [this](auto ec)
+        {
+            if(ec)
+            {
+                if(ec != make_error_code(std::errc::timed_out))
+                    error_popup("Failed to initialize Net64", format_error_msg(ec));
+            }
+            else
+            {
+                connect_net64();
+            }
+        });
+        net64_thread_.initialize_net64(emulator_.get());
+        return;
+    }
+
+    // Connect to server
+    //net64_thread_.connect();
 }
 
 } // Frontend

@@ -28,42 +28,46 @@ struct MainWindow : QMainWindow
     Q_OBJECT
 
 public:
-    struct Page
+
+    enum struct Page : int
     {
-        enum
-        {
-            HOST,
-            JOIN,
-            IN_GAME
-        };
+        SETUP,
+        IN_GAME
     };
 
     explicit MainWindow(AppSettings& settings, QWidget* parent = nullptr);
     ~MainWindow() override;
 
 signals:
-    void emulator_starting();
-    void emulator_running();
+    void emulator_started();
     void emulator_paused();
-    void emulator_stopped();
+    void emulator_unpaused();
+    void emulator_joinable();
 
 private slots:
-    void on_join_host_changed(QAction* action);
     void on_emulator_settings();
-    void on_client_hooked(std::error_code ec);
-    void on_client_connected(std::error_code ec);
-    void on_client_unhooked(std::error_code ec);
 
     void on_start_server_btn_pressed();
     void on_connect_btn_pressed();
     void on_disconnect_btn_pressed();
     void on_stop_server_btn_pressed();
 
-private:
+    void on_emulator_state(Net64::Emulator::State state);
+    void on_emulator_started();
+    void on_emulator_paused();
+    void on_emulator_unpaused();
+    void on_emulator_joinable();
+
+
     void setup_menus();
     void setup_signals();
 
-    void set_page(int page);
+    void set_page(Page page);
+
+    void start_emulation();
+    void stop_emulation();
+
+    void connect_net64();
 
 private:
     template<typename T, typename... TArgs>
@@ -89,27 +93,18 @@ private:
             delete context_ptr;
         });
     }
-    template<typename Sender, typename Signal, typename Receiver, typename Slot>
-    void connect_once(Sender sender, Signal signal, Receiver receiver, Slot slot)
-    {
-        auto context_ptr{new QObject};
-        QObject::connect(sender, signal, context_ptr, [this, receiver, slot, context_ptr](auto&&... args) mutable
-        {
-            receiver->*slot(std::forward<decltype(args)>(args)...);
-            delete context_ptr;
-        });
-    }
 
     Ui::MainWindow* ui;
     QLabel* statustext_{};
     AppSettings* settings_;
-    QMenu* join_host_menu_;
     M64PSettings* m64p_cfg_win_{};
     MultiplayerSettingsWindow* multiplayer_cfg_win_{};
-    int last_page_{Page::JOIN};
+    Page last_page_{Page::SETUP};
 
-    Net64Thread net64_thread_{*settings_};
     std::vector<std::byte> rom_image_;
+    std::unique_ptr<Net64::Emulator::IEmulator> emulator_;
+    std::atomic<Net64::Emulator::State> emu_state_{Net64::Emulator::State::STOPPED};
+    Net64Thread net64_thread_;
 
     CLASS_LOGGER_("frontend")
 };
