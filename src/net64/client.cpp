@@ -30,8 +30,8 @@ Client::Client(Memory::MemHandle mem_hdl):
     }
 
     logger()->info("Initialized Net64 client version {} (Compatibility: {})",
-                   net64_header_->field(&Game::net64_header_t::version),
-                   net64_header_->field(&Game::net64_header_t::compat_version));
+                   net64_header_->field(&Game::net64_header_t::version).read(),
+                   net64_header_->field(&Game::net64_header_t::compat_version).read());
 }
 
 std::error_code Client::connect(const char* ip, std::uint16_t port)
