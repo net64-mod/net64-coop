@@ -25,3 +25,12 @@ matrix:
         - make
         - make install
         - bash ../scripts/create_appimage.sh install
+    - env: NAME="clang-format"
+      os: linux
+      dist: bionic
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - clang-format-9
+      script: "bash scripts/clang-format-pr-check.sh"
