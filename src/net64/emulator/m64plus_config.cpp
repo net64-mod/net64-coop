@@ -10,7 +10,7 @@
 
 namespace Net64::Emulator::M64PlusHelper
 {
-Config::Config(dynlib_t core_lib): core_(core_lib)
+Config::Config(shared_object_t core_lib): core_(core_lib)
 {
     load_symbols();
 }
@@ -66,23 +66,17 @@ void Config::revert_changes(const char* section)
 
 void Config::load_symbols()
 {
-    auto resolve{[this](auto& ptr, const char* name) {
-        ptr = reinterpret_cast<std::remove_reference_t<decltype(ptr)>>(get_symbol(core_, name));
-        if(!ptr)
-            throw std::system_error(make_error_code(Error::SYM_NOT_FOUND));
-    }};
-
-    resolve(fn_.config_delete_section, "ConfigDeleteSection");
-    resolve(fn_.config_save_file, "ConfigSaveFile");
-    resolve(fn_.config_has_unsaved_changes, "ConfigHasUnsavedChanges");
-    resolve(fn_.config_open_section, "ConfigOpenSection");
-    resolve(fn_.config_list_sections, "ConfigListSections");
-    resolve(fn_.config_revert_changes, "ConfigRevertChanges");
-    resolve(fn_.config_save_section, "ConfigSaveSection");
+    load_function(core_, fn_.config_delete_section, "ConfigDeleteSection");
+    load_function(core_, fn_.config_save_file, "ConfigSaveFile");
+    load_function(core_, fn_.config_has_unsaved_changes, "ConfigHasUnsavedChanges");
+    load_function(core_, fn_.config_open_section, "ConfigOpenSection");
+    load_function(core_, fn_.config_list_sections, "ConfigListSections");
+    load_function(core_, fn_.config_revert_changes, "ConfigRevertChanges");
+    load_function(core_, fn_.config_save_section, "ConfigSaveSection");
 }
 
 
-ConfigSection::ConfigSection(dynlib_t core_lib, cfg_section_hdl_t section_hdl):
+ConfigSection::ConfigSection(shared_object_t core_lib, cfg_section_hdl_t section_hdl):
     core_(core_lib), section_hdl_(section_hdl)
 {
     load_symbols();
@@ -217,21 +211,15 @@ std::string ConfigSection::get_string(const char* param)
 
 void ConfigSection::load_symbols()
 {
-    auto resolve{[this](auto& ptr, const char* name) {
-        ptr = reinterpret_cast<std::remove_reference_t<decltype(ptr)>>(get_symbol(core_, name));
-        if(!ptr)
-            throw std::system_error(make_error_code(Error::SYM_NOT_FOUND));
-    }};
-
-    resolve(fn_.config_list_parameters, "ConfigListParameters");
-    resolve(fn_.config_get_parameter, "ConfigGetParameter");
-    resolve(fn_.config_get_parameter_help, "ConfigGetParameterHelp");
-    resolve(fn_.config_get_parameter_type, "ConfigGetParameterType");
-    resolve(fn_.config_set_default_bool, "ConfigSetDefaultBool");
-    resolve(fn_.config_set_default_float, "ConfigSetDefaultFloat");
-    resolve(fn_.config_set_default_int, "ConfigSetDefaultInt");
-    resolve(fn_.config_set_default_string, "ConfigSetDefaultString");
-    resolve(fn_.config_set_parameter, "ConfigSetParameter");
+    load_function(core_, fn_.config_list_parameters, "ConfigListParameters");
+    load_function(core_, fn_.config_get_parameter, "ConfigGetParameter");
+    load_function(core_, fn_.config_get_parameter_help, "ConfigGetParameterHelp");
+    load_function(core_, fn_.config_get_parameter_type, "ConfigGetParameterType");
+    load_function(core_, fn_.config_set_default_bool, "ConfigSetDefaultBool");
+    load_function(core_, fn_.config_set_default_float, "ConfigSetDefaultFloat");
+    load_function(core_, fn_.config_set_default_int, "ConfigSetDefaultInt");
+    load_function(core_, fn_.config_set_default_string, "ConfigSetDefaultString");
+    load_function(core_, fn_.config_set_parameter, "ConfigSetParameter");
 }
 
 } // namespace Net64::Emulator::M64PlusHelper

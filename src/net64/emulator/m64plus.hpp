@@ -16,10 +16,10 @@
 #include <string_view>
 #include <system_error>
 
+#include "common/shared_object.hpp"
 #include "net64/emulator/emulator.hpp"
 #include "net64/emulator/m64plus_error.hpp"
 #include "net64/emulator/m64plus_plugin.hpp"
-#include "net64/emulator/shared_library.hpp"
 #include "net64/logging.hpp"
 
 

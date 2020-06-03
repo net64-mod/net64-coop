@@ -11,8 +11,8 @@
 
 #include <mupen64plus/m64p_types.h>
 
+#include "common/shared_object.hpp"
 #include "net64/emulator/m64plus_error.hpp"
-#include "net64/emulator/shared_library.hpp"
 
 
 namespace Net64::Emulator::M64PlusHelper
@@ -21,7 +21,7 @@ struct ConfigSection;
 
 struct Config
 {
-    explicit Config(dynlib_t core_lib);
+    explicit Config(shared_object_t core_lib);
 
     ConfigSection open_section(const char* name);
 
@@ -49,7 +49,7 @@ struct Config
 private:
     void load_symbols();
 
-    dynlib_t core_;
+    shared_object_t core_;
 
     struct
     {
@@ -70,7 +70,7 @@ struct ConfigSection
 
     static constexpr std::size_t STRING_BUF_LEN{128};
 
-    ConfigSection(dynlib_t core_lib, cfg_section_hdl_t section_hdl);
+    ConfigSection(shared_object_t core_lib, cfg_section_hdl_t section_hdl);
 
     template<typename Fn>
     void list_parameters(const Fn& fn)
@@ -105,7 +105,7 @@ struct ConfigSection
 private:
     void load_symbols();
 
-    dynlib_t core_;
+    shared_object_t core_;
     cfg_section_hdl_t section_hdl_;
 
     struct

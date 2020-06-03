@@ -34,7 +34,7 @@ public:
      * Returns type = M64PLUGIN_NULL if not a plugin
      */
     static PluginInfo get_plugin_info(const std::string& file);
-    static PluginInfo get_plugin_info(dynlib_t lib);
+    static PluginInfo get_plugin_info(shared_object_t lib);
 
     /// Get string representation of plugin type id
     static const char* type_str(m64p_plugin_type type_id);
@@ -46,7 +46,7 @@ private:
     using plugin_get_version_t = Error(CALL*)(m64p_plugin_type*, int*, int*, const char**, int*);
 
     /// Create plugin from dynamic library handle
-    Plugin(Core& core, dynlib_t lib);
+    Plugin(Core& core, shared_object_t lib);
 
     /// Create plugin from library path
     Plugin(Core& core, const std::string& lib_path);
@@ -55,19 +55,14 @@ private:
     const PluginInfo& info() const;
 
     /// Return native library handle
-    dynlib_t handle();
+    shared_object_t handle();
 
     void init_symbols();
-    void init_plugin(dynlib_t core_lib);
+    void init_plugin(shared_object_t core_lib);
     void destroy_plugin();
 
-    template<typename T>
-    void resolve_symbol(T& fn_ptr, const char* name)
-    {
-        fn_ptr = reinterpret_cast<T>(get_symbol(handle_.lib, name));
-    }
 
-    UniqueLib handle_{};
+    SharedObjectHandle handle_{};
     struct
     {
         plugin_startup_t startup;

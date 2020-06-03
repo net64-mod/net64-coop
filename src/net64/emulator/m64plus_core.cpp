@@ -27,13 +27,13 @@ bool all_true(const TArgs&... args)
 
 
 Core::Core(std::string root_path, std::string data_path):
-    Core(get_current_process(), std::move(root_path), std::move(data_path))
+    Core(shared_object_from_current_proc(), std::move(root_path), std::move(data_path))
 {
     init_symbols();
     init_core();
 }
 
-Core::Core(dynlib_t lib, std::string root_path, std::string data_path):
+Core::Core(shared_object_t lib, std::string root_path, std::string data_path):
     handle_{lib}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
 {
     init_symbols();
@@ -41,12 +41,12 @@ Core::Core(dynlib_t lib, std::string root_path, std::string data_path):
 }
 
 Core::Core(const std::string& lib_path, std::string root_path, std::string data_path):
-    handle_{load_library(lib_path.c_str())}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
+    handle_{lib_path}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
 {
-    if(!handle_.lib)
+    if(!handle_)
     {
         // Library file does not exist
-        logger()->error("Failed to open library file: \"{}\"", get_lib_error_msg());
+        logger()->error("Failed to open library file: \"{}\"", get_shared_object_error());
         throw std::system_error(make_error_code(Error::LIB_LOAD_FAILED), "Failed to init Mupen64Plus Core");
     }
     init_symbols();
@@ -55,7 +55,7 @@ Core::Core(const std::string& lib_path, std::string root_path, std::string data_
 
 Core::~Core()
 {
-    if(!handle_.lib)
+    if(!handle_)
         return;
 
     destroy_core();
@@ -111,26 +111,13 @@ void Core::set_debug_callback(debug_callback_f cb) noexcept
 
 void Core::init_symbols()
 {
-    resolve_symbol(fn_.plugin_get_version, "PluginGetVersion");
-    resolve_symbol(fn_.core_startup, "CoreStartup");
-    resolve_symbol(fn_.core_shutdown, "CoreShutdown");
-    resolve_symbol(fn_.core_attach_plugin, "CoreAttachPlugin");
-    resolve_symbol(fn_.core_detach_plugin, "CoreDetachPlugin");
-    resolve_symbol(fn_.core_do_cmd, "CoreDoCommand");
-    resolve_symbol(fn_.debug_get_mem_ptr, "DebugMemGetPointer");
-
-    if(!all_true(fn_.plugin_get_version,
-                 fn_.core_attach_plugin,
-                 fn_.core_detach_plugin,
-                 fn_.core_startup,
-                 fn_.core_shutdown,
-                 fn_.core_do_cmd,
-                 fn_.debug_get_mem_ptr))
-    {
-        std::system_error err{make_error_code(Error::SYM_NOT_FOUND), "Failed to resolve core symbole"};
-        logger()->error(err.what());
-        throw err;
-    }
+    handle_.load_function(fn_.plugin_get_version, "PluginGetVersion");
+    handle_.load_function(fn_.core_startup, "CoreStartup");
+    handle_.load_function(fn_.core_shutdown, "CoreShutdown");
+    handle_.load_function(fn_.core_attach_plugin, "CoreAttachPlugin");
+    handle_.load_function(fn_.core_detach_plugin, "CoreDetachPlugin");
+    handle_.load_function(fn_.core_do_cmd, "CoreDoCommand");
+    handle_.load_function(fn_.debug_get_mem_ptr, "DebugMemGetPointer");
 }
 
 void Core::init_core()
@@ -221,9 +208,9 @@ void Core::debug_callback_c(void* context, int level, const char* message)
         (*cb)(level, message);
 }
 
-dynlib_t Core::handle()
+shared_object_t Core::handle()
 {
-    return handle_.lib;
+    return handle_.get();
 }
 
 const PluginInfo& Core::info() const
