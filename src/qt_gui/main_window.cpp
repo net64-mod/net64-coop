@@ -42,12 +42,22 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
 
     set_page(Page::SETUP);
 
+
+    emu_settings_win_ = new EmulatorSettings(*settings_, this);
+
     setup_menus();
     setup_signals();
 
     setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 
-    // temp @todo
+    // Start SDL event handling
+    sdl_event_timer_ = new QTimer(this);
+    connect(sdl_event_timer_, &QTimer::timeout, this, &MainWindow::on_handle_sdl_events);
+    sdl_event_timer_->start(30);
+
+    // temp @todo: Put these on a startup thread
+    create_emulator();
+
     std::ifstream rom_file(settings_->rom_file_path.string(), std::ios::ate | std::ios::binary);
     if(!rom_file)
         return;
@@ -61,6 +71,24 @@ MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::reload_emulator()
+{
+    if(emulator_ && emulator_->state() != Net64::Emulator::State::STOPPED)
+    {
+        reload_emulator_after_stop_ = true;
+        return;
+    }
+
+    reload_emulator_after_stop_ = false;
+    destroy_emulator();
+    create_emulator();
+}
+
+void MainWindow::on_handle_sdl_events()
+{
+    SDL_EventHandler::poll_events();
 }
 
 void MainWindow::on_emulator_settings()
@@ -140,12 +168,15 @@ void MainWindow::on_emulator_joinable()
 
     std::error_code ec;
     emulator_->join(ec);
-    emulator_.reset();
+    emulator_->unload_rom();
 
     set_page(Page::SETUP);
 
     if(ec)
         error_popup("Emulation halted due to an error", format_error_msg(ec));
+
+    if(reload_emulator_after_stop_)
+        reload_emulator();
 }
 
 void MainWindow::setup_menus()
@@ -159,7 +190,7 @@ void MainWindow::setup_menus()
     });
     connect(settings_menu->addAction("Emulator"), &QAction::triggered, this, [this]()
     {
-        show_window(m64p_cfg_win_, *settings_);
+        show_window(emu_settings_win_, *settings_);
     });
 
     connect(info_menu->addAction("Website"), &QAction::triggered, this, []()
@@ -183,6 +214,9 @@ void MainWindow::setup_menus()
 
 void MainWindow::setup_signals()
 {
+    connect(this, &MainWindow::emulator_object_changed, emu_settings_win_, &EmulatorSettings::set_emulator_object);
+    connect(emu_settings_win_, &EmulatorSettings::reload_emulator, this, &MainWindow::reload_emulator);
+
     connect(this, &MainWindow::emulator_started, this, &MainWindow::on_emulator_started);
     connect(this, &MainWindow::emulator_paused, this, &MainWindow::on_emulator_paused);
     connect(this, &MainWindow::emulator_unpaused, this, &MainWindow::on_emulator_unpaused);
@@ -199,10 +233,10 @@ void MainWindow::set_page(Page page)
     ui->stackedWidget->setCurrentIndex(static_cast<int>(page));
 }
 
-void MainWindow::start_emulation()
+bool MainWindow::create_emulator()
 {
     if(emulator_)
-        return;
+        return true;
 
     try
     {
@@ -212,14 +246,31 @@ void MainWindow::start_emulation()
             settings_->m64p_plugin_dir().string()
         )};
 
-        auto add_plugin{[&emu, this](const std::string& str){emu->add_plugin((settings_->m64p_plugin_dir() / str).string());}};
+        emulator_ = std::move(emu);
+    }
+    catch(const std::system_error& e)
+    {
+        error_popup("Failed to construct emulator", format_error_msg(e.code()));
+        return false;
+    }
+
+    emulator_object_changed(emulator_.get());
+    return true;
+}
+
+void MainWindow::start_emulation()
+{
+    if(!create_emulator())
+        return;
+
+    try
+    {
+        auto add_plugin{[this](const std::string& str){emulator_->add_plugin((settings_->m64p_plugin_dir() / str).string());}};
 
         add_plugin(settings_->m64p_video_plugin);
         add_plugin(settings_->m64p_audio_plugin);
         add_plugin(settings_->m64p_rsp_plugin);
         add_plugin(settings_->m64p_input_plugin);
-
-        emulator_ = std::move(emu);
 
         emulator_->load_rom(reinterpret_cast<void*>(rom_image_.data()), rom_image_.size());
 
@@ -234,12 +285,22 @@ void MainWindow::start_emulation()
 
 void MainWindow::stop_emulation()
 {
-    emulator_->stop();
+    if(emulator_)
+        emulator_->stop();
+}
+
+void MainWindow::destroy_emulator()
+{
+    if(emulator_ && emulator_->state() == Net64::Emulator::State::STOPPED)
+    {
+        emulator_.reset();
+        emulator_object_changed(emulator_.get());
+    }
 }
 
 void MainWindow::connect_net64()
 {
-    if(!emulator_)
+    if(!emulator_ || emulator_->state() == Net64::Emulator::State::STOPPED)
     {
         // Emulator not running, start it
         connect_once(this, &MainWindow::emulator_started, [this]{connect_net64();});

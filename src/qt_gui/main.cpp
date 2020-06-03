@@ -10,6 +10,7 @@
 #include <QApplication>
 #include <QStandardPaths>
 #include <QDir>
+#include <SDL.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "build_info.hpp"
@@ -25,7 +26,6 @@ using Net64::LoggerPtr;
 
 static void set_default_mupen_plugins(AppSettings& settings)
 {
-    using namespace Net64::Emulator::M64PTypes;
     using Net64::Emulator::M64PlusHelper::Plugin;
 
     // Helper function
@@ -110,6 +110,7 @@ static void setup_logging()
 
 } // Frontend
 
+
 int main(int argc, char* argv[])
 {
     using namespace Frontend;
@@ -133,6 +134,12 @@ int main(int argc, char* argv[])
     if(!Net64::initialize())
     {
         logger->critical("Failed to Net64 library");
+        return EXIT_FAILURE;
+    }
+
+    if(SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_EVENTS) != 0)
+    {
+        logger->critical("Failed to initialize SDL: {}", SDL_GetError());
         return EXIT_FAILURE;
     }
 
@@ -162,6 +169,8 @@ int main(int argc, char* argv[])
     settings.save(settings.main_config_file_path());
 
     Net64::deinitialize();
+
+    SDL_Quit();
 
     return ret;
 }

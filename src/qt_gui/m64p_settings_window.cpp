@@ -61,6 +61,12 @@ void M64PSettings::closeEvent(QCloseEvent*)
         to = from.currentText().toStdString();
     };
 
+    if(ui->core_plugin_box->currentText().toStdString() != settings_->m64p_core_plugin)
+    {
+        // Core lib changed
+        core_lib_changed();
+    }
+
     save(settings_->m64p_core_plugin, *ui->core_plugin_box);
     save(settings_->m64p_video_plugin, *ui->video_plugin_box);
     save(settings_->m64p_audio_plugin, *ui->audio_plugin_box);
@@ -72,8 +78,6 @@ void M64PSettings::closeEvent(QCloseEvent*)
 
 void M64PSettings::refresh_plugins()
 {
-    using namespace Net64::Emulator::M64PTypes;
-
     ui->audio_plugin_box->clear();
     ui->core_plugin_box->clear();
     ui->video_plugin_box->clear();

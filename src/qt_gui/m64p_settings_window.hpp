@@ -14,13 +14,16 @@ class M64PSettings;
 namespace Frontend
 {
 
-class M64PSettings : public QMainWindow
+struct M64PSettings : QMainWindow
 {
     Q_OBJECT
 
 public:
     M64PSettings(AppSettings& settings, QWidget* parent = nullptr);
     ~M64PSettings() override;
+
+signals:
+    void core_lib_changed();
 
 private slots:
     void on_close_pressed();

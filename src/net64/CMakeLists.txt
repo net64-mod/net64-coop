@@ -39,11 +39,24 @@ add_library(net64_core STATIC
         net/protocol.cpp
         net64.cpp
         net64.hpp
-        ../install_dir.cpp)
+        ../install_dir.cpp
+        emulator/m64plus_core.hpp
+        emulator/m64plus_plugin.hpp
+        emulator/m64plus_config.hpp
+        emulator/m64plus_config.cpp
+        emulator/m64plus_error.hpp
+        emulator/m64plus_error.cpp
+        )
+
+target_compile_options(net64_core PRIVATE ${ADDITIONAL_CXXFLAGS})
 
 include(ENet)
 include_directories(${ENET_INCLUDES})
 target_link_libraries(net64_core enet_lib)
+
+include(SDL2_finder)
+requires_sdl2()
+target_link_libraries(net64_core SDL2::Core)
 
 if(UNIX)
     target_link_libraries(net64_core -ldl)

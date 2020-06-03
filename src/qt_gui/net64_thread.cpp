@@ -78,6 +78,7 @@ void Net64Obj::tick()
             try{client_ = Net64::Client(*memory_hdl_);}
             catch(const std::system_error& e)
             {
+                logger()->error("Error while starting Net64 client: {}", error_msg(e));
                 ec = e.code();
             }
             catch(const std::exception& e)

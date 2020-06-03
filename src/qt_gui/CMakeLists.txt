@@ -19,7 +19,22 @@ add_executable(net64_qt_gui
                 patch_dialog.hpp
                 patch_dialog.cpp
                 net64_thread.hpp
-                net64_thread.cpp)
+                net64_thread.cpp
+                emulatorsettings.cpp
+                emulatorsettings.hpp
+                emulator_audio_configuration.hpp
+                emulator_audio_configuration.cpp
+                emulator_video_configuration.hpp
+                emulator_video_configuration.cpp
+                emulator_controller_configuration.cpp
+                emulator_controller_configuration.hpp
+                ../common/sdl_event_handler.cpp
+                ../common/sdl_event_handler.hpp
+                sdl_bind_button.cpp
+                sdl_bind_button.hpp
+        )
+
+target_compile_options(net64_qt_gui PRIVATE ${ADDITIONAL_CXXFLAGS})
 
 target_link_libraries(net64_qt_gui net64_core)
 
@@ -35,6 +50,10 @@ target_include_directories(net64_qt_gui PRIVATE "${JSON_INCLUDES}")
 # vcdiff library
 target_link_libraries(net64_qt_gui vcddec vcdenc)
 target_include_directories(net64_qt_gui PRIVATE "${PROJECT_SOURCE_DIR}/externals/open-vcdiff/src")
+
+include(SDL2_finder)
+requires_sdl2()
+target_link_libraries(net64_qt_gui SDL2::SDL2)
 
 if(UNIX)
     target_link_libraries(net64_qt_gui -lpthread -lstdc++fs)

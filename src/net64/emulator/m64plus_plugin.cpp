@@ -96,10 +96,8 @@ PluginInfo Plugin::get_plugin_info(dynlib_t lib)
     return info;
 }
 
-const char* Plugin::type_str(M64PTypes::m64p_plugin_type type_id)
+const char* Plugin::type_str(m64p_plugin_type type_id)
 {
-    using namespace M64PTypes;
-
     switch(type_id)
     {
     case M64PLUGIN_RSP:
