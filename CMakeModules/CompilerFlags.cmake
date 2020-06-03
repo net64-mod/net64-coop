@@ -1,7 +1,4 @@
-set(GCC_WERROR "-Werror")
-set(MSVC_WERROR "/Wx")
-
-set(GCC_WARNINGS
+set(GCC_FLAGS
         -Wall
         -Wextra
         -Wno-attributes
@@ -23,9 +20,9 @@ set(GCC_WARNINGS
         #-Wsuggest-override
         -Wno-switch)
 
-set(MSVC_WARNINGS
+set(MSVC_FLAGS
         /permissive
-        /W4
+        /W3
         /w14640
         /w14242
         /w14254
@@ -45,12 +42,8 @@ set(MSVC_WARNINGS
         /w14826
         /w14928)
 
-option(ENABLE_WARNINGS "Enable warnings" ON)
-
-if(ENABLE_WARNINGS)
-    if(MSVC)
-        add_compile_options(${MSVC_WARNINGS})
-    else(MSVC)
-        add_compile_options(${GCC_WARNINGS})
-    endif(MSVC)
-endif(ENABLE_WARNINGS)
+if(MSVC)
+    set(ADDITIONAL_CXXFLAGS ${MSVC_FLAGS})
+else()
+    set(ADDITIONAL_CXXFLAGS ${GCC_FLAGS})
+endif()

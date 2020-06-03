@@ -8,8 +8,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modul
 
 set(CMAKE_INSTALL_MESSAGE LAZY)
 
-add_compile_definitions(NOMINMAX)
-include(CompilerWarnings)
+add_compile_definitions(NOMINMAX _WINSOCKAPI_ _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING)
+include(CompilerFlags)
 
 # Generate revision information
 include(GetGitRevisionDescription)

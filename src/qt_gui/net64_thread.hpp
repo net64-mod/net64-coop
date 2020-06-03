@@ -10,17 +10,16 @@
 #include <chrono>
 #include <functional>
 #include <future>
+
 #include <QThread>
 #include <QTimer>
-#ifndef Q_MOC_RUN
+
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
-#endif
 
 
 namespace Frontend
 {
-
 struct Net64Obj : QObject
 {
     Q_OBJECT
@@ -103,7 +102,6 @@ private:
     bool is_initializing_{};
     bool is_initialized_{};
     bool is_connected_{};
-
 };
 
-} // Frontend
+} // namespace Frontend

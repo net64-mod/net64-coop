@@ -1,16 +1,16 @@
 ﻿#include "m64p_settings_window.hpp"
-#include "ui_m64p_settings_window.h"
-#include "filesystem.hpp"
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QUrl>
 
+#include "filesystem.hpp"
+#include "ui_m64p_settings_window.h"
+
 
 namespace Frontend
 {
-
-M64PSettings::M64PSettings(AppSettings& settings, QWidget* parent)
-:QMainWindow(parent), ui(new Ui::M64PSettings), settings_{&settings}
+M64PSettings::M64PSettings(AppSettings& settings, QWidget* parent):
+    QMainWindow(parent), ui(new Ui::M64PSettings), settings_{&settings}
 {
     ui->setupUi(this);
     adjustSize();
@@ -36,9 +36,8 @@ void M64PSettings::on_open_plugin_folder()
 
 void M64PSettings::on_set_plugin_folder()
 {
-    auto dir{QFileDialog::getExistingDirectory(this, "Mupen64Plus Directory",
-        ui->folder_path_field->text(), QFileDialog::ShowDirsOnly)
-    };
+    auto dir{QFileDialog::getExistingDirectory(
+        this, "Mupen64Plus Directory", ui->folder_path_field->text(), QFileDialog::ShowDirsOnly)};
 
     if(!dir.isEmpty())
     {
@@ -56,10 +55,13 @@ void M64PSettings::on_reset_plugin_folder()
 
 void M64PSettings::closeEvent(QCloseEvent*)
 {
-    auto save = [](auto& to, const QComboBox& from)
+    auto save = [](auto& to, const QComboBox& from) { to = from.currentText().toStdString(); };
+
+    if(ui->core_plugin_box->currentText().toStdString() != settings_->m64p_core_plugin)
     {
-        to = from.currentText().toStdString();
-    };
+        // Core lib changed
+        core_lib_changed();
+    }
 
     save(settings_->m64p_core_plugin, *ui->core_plugin_box);
     save(settings_->m64p_video_plugin, *ui->video_plugin_box);
@@ -72,8 +74,6 @@ void M64PSettings::closeEvent(QCloseEvent*)
 
 void M64PSettings::refresh_plugins()
 {
-    using namespace Net64::Emulator::M64PTypes;
-
     ui->audio_plugin_box->clear();
     ui->core_plugin_box->clear();
     ui->video_plugin_box->clear();
@@ -89,7 +89,7 @@ void M64PSettings::refresh_plugins()
             {
             case M64PLUGIN_CORE:
                 ui->core_plugin_box->addItem(file);
-            break;
+                break;
             case M64PLUGIN_RSP:
                 ui->rsp_plugin_box->addItem(file);
                 break;
@@ -101,7 +101,8 @@ void M64PSettings::refresh_plugins()
                 break;
             case M64PLUGIN_INPUT:
                 ui->input_plugin_box->addItem(file);
-            default: break;
+            default:
+                break;
             }
         }
     }
@@ -110,8 +111,7 @@ void M64PSettings::refresh_plugins()
         logger()->warn("Failed to inspect plugin folder {}: {}", ui->folder_path_field->text().toStdString(), e.what());
     }
 
-    auto set_index_if_found = [](QComboBox& widget, const std::string& text)
-    {
+    auto set_index_if_found = [](QComboBox& widget, const std::string& text) {
         int index{-1};
         if((index = widget.findText(QString::fromStdString(text))) != -1)
             widget.setCurrentIndex(index);
@@ -124,4 +124,4 @@ void M64PSettings::refresh_plugins()
     set_index_if_found(*ui->rsp_plugin_box, settings_->m64p_rsp_plugin);
 }
 
-} // Frontend
+} // namespace Frontend

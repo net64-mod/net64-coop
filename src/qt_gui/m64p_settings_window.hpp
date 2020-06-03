@@ -1,26 +1,28 @@
 ﻿#pragma once
 
 #include <QMainWindow>
-#ifndef Q_MOC_RUN
+
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
-#endif
 
 
-namespace Ui {
+namespace Ui
+{
 class M64PSettings;
 }
 
 namespace Frontend
 {
-
-class M64PSettings : public QMainWindow
+struct M64PSettings : QMainWindow
 {
     Q_OBJECT
 
 public:
     M64PSettings(AppSettings& settings, QWidget* parent = nullptr);
     ~M64PSettings() override;
+
+signals:
+    void core_lib_changed();
 
 private slots:
     void on_close_pressed();
@@ -38,4 +40,4 @@ private:
     CLASS_LOGGER_("frontend")
 };
 
-} // Frontend
+} // namespace Frontend

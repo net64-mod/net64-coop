@@ -1,9 +1,11 @@
+
+
 language: cpp
 matrix:
   include:
     - env: NAME="linux gcc"
       os: linux
-      dist: xenial
+      dist: bionic
       compiler: gcc
       sudo: required
       addons:
@@ -11,16 +13,17 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-7
+            - g++-8
             - cmake
             - qtbase5-dev
             - qtbase5-dev-tools
+            - libsdl2-dev
       before_script:
         - mkdir build
         - cd build
-        - export CC=gcc-7
-        - export CXX=g++-7
-        - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7
+        - export CC=gcc-8
+        - export CXX=g++-8
+        - cmake .. -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_C_COMPILER=gcc-8
       script:
         - make
         - make install
