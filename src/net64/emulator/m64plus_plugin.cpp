@@ -25,19 +25,19 @@ bool all_true(const TArgs&... args)
 
 } // namespace
 
-Plugin::Plugin(Core& core, dynlib_t lib): handle_{lib}
+Plugin::Plugin(Core& core, shared_object_t lib): handle_{lib}
 {
     init_symbols();
     init_plugin(core.handle());
 }
 
-Plugin::Plugin(Core& core, const std::string& lib_path): handle_{load_library(lib_path.c_str())}
+Plugin::Plugin(Core& core, const std::string& lib_path): handle_{lib_path.c_str()}
 {
-    if(!handle_.lib)
+    if(!handle_)
     {
         // Library file does not exist
         std::system_error err(make_error_code(Error::LIB_LOAD_FAILED),
-                              "Failed to load plugin library file " + std::string(get_lib_error_msg()));
+                              "Failed to load plugin library file " + std::string(get_shared_object_error()));
         logger()->error(err.what());
         throw err;
     }
@@ -47,7 +47,7 @@ Plugin::Plugin(Core& core, const std::string& lib_path): handle_{load_library(li
 
 Plugin::~Plugin()
 {
-    if(!handle_.lib)
+    if(!handle_)
         return;
 
     destroy_plugin();
@@ -58,30 +58,29 @@ const PluginInfo& Plugin::info() const
     return info_;
 }
 
-dynlib_t Plugin::handle()
+shared_object_t Plugin::handle()
 {
-    return handle_.lib;
+    return handle_.get();
 }
 
 PluginInfo Plugin::get_plugin_info(const std::string& file)
 {
-    auto lib{load_library(file.c_str())};
+    SharedObjectHandle lib(file);
 
     if(!lib)
     {
-        logger()->debug("Failed to load file {} as library: {}", file, get_lib_error_msg());
+        logger()->debug("Failed to load file {} as library: {}", file, get_shared_object_error());
         return {};
     }
 
-    auto ret{get_plugin_info(lib)};
-    free_library(lib);
-    return ret;
+    return get_plugin_info(lib.get());
 }
 
-PluginInfo Plugin::get_plugin_info(dynlib_t lib)
+PluginInfo Plugin::get_plugin_info(shared_object_t lib)
 {
     PluginInfo info{};
-    auto get_version{reinterpret_cast<plugin_get_version_t>(get_symbol(lib, "PluginGetVersion"))};
+    plugin_get_version_t get_version{};
+    load_function(lib, get_version, "PluginGetVersion");
     if(!get_version)
         return {};
 
@@ -115,20 +114,12 @@ const char* Plugin::type_str(m64p_plugin_type type_id)
 
 void Plugin::init_symbols()
 {
-    resolve_symbol(fn_.startup, "PluginStartup");
-    resolve_symbol(fn_.shutdown, "PluginShutdown");
-    resolve_symbol(fn_.get_version, "PluginGetVersion");
-
-    if(!all_true(fn_.startup, fn_.shutdown, fn_.get_version))
-    {
-        // Failed to resolve symbol
-        std::system_error err{make_error_code(Error::SYM_NOT_FOUND), "Failed to resolve plugin symbol"};
-        logger()->error(err.what());
-        throw err;
-    }
+    handle_.load_function(fn_.startup, "PluginStartup");
+    handle_.load_function(fn_.shutdown, "PluginShutdown");
+    handle_.load_function(fn_.get_version, "PluginGetVersion");
 }
 
-void Plugin::init_plugin(dynlib_t core_lib)
+void Plugin::init_plugin(shared_object_t core_lib)
 {
     const char* name_ptr{};
     auto ret{fn_.get_version(&info_.type, &info_.plugin_version, &info_.api_version, &name_ptr, &info_.capabilities)};

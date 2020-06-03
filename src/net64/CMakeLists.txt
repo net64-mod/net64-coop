@@ -17,8 +17,6 @@ add_library(net64_core STATIC
         emulator/emulator.hpp
         emulator/m64plus.cpp
         emulator/m64plus.hpp
-        emulator/shared_library.cpp
-        emulator/shared_library.hpp
         emulator/m64plus_core.cpp
         emulator/m64plus_plugin.cpp
         game/client_messages.hpp
@@ -46,6 +44,9 @@ add_library(net64_core STATIC
         emulator/m64plus_config.cpp
         emulator/m64plus_error.hpp
         emulator/m64plus_error.cpp
+        ../common/resource_handle.hpp
+        ../common/shared_object.cpp
+        ../common/shared_object.hpp
         )
 
 target_compile_options(net64_core PRIVATE ${ADDITIONAL_CXXFLAGS})

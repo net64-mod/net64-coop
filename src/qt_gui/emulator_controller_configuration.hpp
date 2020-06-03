@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-#include "common/deleter.hpp"
+#include "common/resource_handle.hpp"
 #include "net64/emulator/emulator.hpp"
 #include "qt_gui/sdl_bind_button.hpp"
 
@@ -41,7 +41,7 @@ private:
     void setup_sdl_buttons();
 
     Ui::EmulatorControllerConfiguration* ui;
-    std::unique_ptr<SDL_Joystick, Deleter<&SDL_JoystickClose>> joystick_;
+    ResourceHandle<&SDL_JoystickClose> joystick_;
     std::vector<SDL_BindButton*> sdl_bind_buttons_;
     std::unique_ptr<Net64::Emulator::IControllerSettings> controller_settings_;
 

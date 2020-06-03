@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include "common/shared_object.hpp"
 #include "net64/emulator/m64plus_config.hpp"
 #include "net64/emulator/m64plus_error.hpp"
-#include "net64/emulator/shared_library.hpp"
 #include "net64/logging.hpp"
 
 
@@ -63,7 +63,7 @@ class Core final
     Core(std::string root_path, std::string data_path);
 
     /// Create core from dynamic library handle
-    Core(dynlib_t lib, std::string root_path, std::string data_path);
+    Core(shared_object_t lib, std::string root_path, std::string data_path);
 
     /// Create core from library file
     Core(const std::string& lib_path, std::string root_path, std::string data_path);
@@ -94,7 +94,7 @@ private:
     void set_debug_callback(debug_callback_f cb) noexcept;
 
     /// Return native library handle
-    dynlib_t handle();
+    shared_object_t handle();
 
     /// Return general information about the core
     const PluginInfo& info() const;
@@ -107,13 +107,8 @@ private:
     static void state_callback_c(void* context, m64p_core_param param_type, int new_value);
     static void debug_callback_c(void* context, int level, const char* message);
 
-    template<typename T>
-    void resolve_symbol(T& fn_ptr, const char* name)
-    {
-        fn_ptr = reinterpret_cast<T>(get_symbol(handle_.lib, name));
-    }
 
-    UniqueLib handle_{};
+    SharedObjectHandle handle_{};
     struct CoreFunctions
     {
         plugin_get_version_t plugin_get_version;

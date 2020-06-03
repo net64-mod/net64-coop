@@ -8,23 +8,24 @@
 #pragma once
 
 #include <memory>
+
+#include <common/resource_handle.hpp>
 #include <enet/enet.h>
-#include <common/deleter.hpp>
-#include "net64/net/errors.hpp"
-#include "net64/net/protocol.hpp"
+
 #include "net64/game/msg_queue.hpp"
 #include "net64/game/net64_header.hpp"
 #include "net64/memory/pointer.hpp"
+#include "net64/net/errors.hpp"
+#include "net64/net/protocol.hpp"
 #include "types.hpp"
 
 
 namespace Net64
 {
-
 struct Client
 {
-    using HostHandle = std::unique_ptr<ENetHost, Deleter<&enet_host_destroy>>;
-    using PeerHandle = std::unique_ptr<ENetPeer, Deleter<&enet_peer_reset>>;
+    using HostHandle = ResourceHandle<&enet_host_destroy>;
+    using PeerHandle = ResourceHandle<&enet_peer_reset>;
 
     explicit Client(Memory::MemHandle mem_hdl);
 
@@ -33,11 +34,9 @@ struct Client
 
     void tick();
 
-    [[nodiscard]]
-    bool connected() const;
+    [[nodiscard]] bool connected() const;
 
-    [[nodiscard]]
-    std::uint32_t disconnect_code() const;
+    [[nodiscard]] std::uint32_t disconnect_code() const;
 
     static bool game_initialized(Memory::MemHandle mem_hdl);
 
@@ -59,4 +58,4 @@ private:
     CLASS_LOGGER_("client")
 };
 
-} // Net64
+} // namespace Net64
