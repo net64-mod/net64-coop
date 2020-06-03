@@ -10,40 +10,38 @@
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 namespace
 {
-
 bool failed(Mupen64Plus::Error err)
 {
     return err != Mupen64Plus::Error::SUCCESS;
 }
 
 template<typename... TArgs>
-bool all_true(const TArgs& ... args)
+bool all_true(const TArgs&... args)
 {
     return (args && ...);
 }
 
-}
+} // namespace
 
 
-Core::Core(std::string root_path, std::string data_path)
-:Core(get_current_process(), std::move(root_path), std::move(data_path))
+Core::Core(std::string root_path, std::string data_path):
+    Core(get_current_process(), std::move(root_path), std::move(data_path))
 {
     init_symbols();
     init_core();
 }
 
-Core::Core(dynlib_t lib, std::string root_path, std::string data_path)
-:handle_{lib}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
+Core::Core(dynlib_t lib, std::string root_path, std::string data_path):
+    handle_{lib}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
 {
     init_symbols();
     init_core();
 }
 
-Core::Core(const std::string& lib_path, std::string root_path, std::string data_path)
-:handle_{load_library(lib_path.c_str())}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
+Core::Core(const std::string& lib_path, std::string root_path, std::string data_path):
+    handle_{load_library(lib_path.c_str())}, root_path_{std::move(root_path)}, data_path_{std::move(data_path)}
 {
     if(!handle_.lib)
     {
@@ -121,8 +119,13 @@ void Core::init_symbols()
     resolve_symbol(fn_.core_do_cmd, "CoreDoCommand");
     resolve_symbol(fn_.debug_get_mem_ptr, "DebugMemGetPointer");
 
-    if(!all_true(fn_.plugin_get_version, fn_.core_attach_plugin, fn_.core_detach_plugin, fn_.core_startup,
-                 fn_.core_shutdown, fn_.core_do_cmd, fn_.debug_get_mem_ptr))
+    if(!all_true(fn_.plugin_get_version,
+                 fn_.core_attach_plugin,
+                 fn_.core_detach_plugin,
+                 fn_.core_startup,
+                 fn_.core_shutdown,
+                 fn_.core_do_cmd,
+                 fn_.debug_get_mem_ptr))
     {
         std::system_error err{make_error_code(Error::SYM_NOT_FOUND), "Failed to resolve core symbole"};
         logger()->error(err.what());
@@ -134,7 +137,7 @@ void Core::init_core()
 {
     const char* name_ptr{};
     auto ret{
-    fn_.plugin_get_version(&info_.type, &info_.plugin_version, &info_.api_version, &name_ptr, &info_.capabilities)};
+        fn_.plugin_get_version(&info_.type, &info_.plugin_version, &info_.api_version, &name_ptr, &info_.capabilities)};
     if(failed(ret))
     {
         // Failed to get core info
@@ -147,27 +150,39 @@ void Core::init_core()
 
     std::string config_path{(fs::path(root_path_) / "config").string()};
 
-    ret = fn_.core_startup(API_VERSION, config_path.c_str(), data_path_.c_str(), debug_callback_.get(), debug_callback_c, state_callback_.get(), state_callback_c);
+    ret = fn_.core_startup(API_VERSION,
+                           config_path.c_str(),
+                           data_path_.c_str(),
+                           debug_callback_.get(),
+                           debug_callback_c,
+                           state_callback_.get(),
+                           state_callback_c);
     if(failed(ret))
     {
         // Failed to startup core
         auto errc{make_error_code(ret)};
-        logger()->error("Failed to start {} v{}, api: {} (capabilities: {:#x}): {}", name_ptr, info_.plugin_version,
-                        info_.api_version, info_.capabilities, errc.message());
+        logger()->error("Failed to start {} v{}, api: {} (capabilities: {:#x}): {}",
+                        name_ptr,
+                        info_.plugin_version,
+                        info_.api_version,
+                        info_.capabilities,
+                        errc.message());
         info_ = {};
         throw std::system_error(errc, "Failed to start Mupen64Plus Core " + std::string(name_ptr));
     }
 
     create_folder_structure();
 
-    logger()->info("Initialized {} v{}, api: {:#x} (capabilities: {:#x})", name_ptr, info_.plugin_version,
-                   info_.api_version, info_.capabilities);
+    logger()->info("Initialized {} v{}, api: {:#x} (capabilities: {:#x})",
+                   name_ptr,
+                   info_.plugin_version,
+                   info_.api_version,
+                   info_.capabilities);
 }
 
 void Core::create_folder_structure()
 {
-    auto create_dir{[](const fs::path& dir)
-    {
+    auto create_dir{[](const fs::path& dir) {
         if(!fs::exists(dir))
         {
             fs::create_directories(dir);
@@ -195,14 +210,14 @@ void Core::destroy_core()
 void Core::state_callback_c(void* context, m64p_core_param param_type, int new_value)
 {
     auto cb = reinterpret_cast<state_callback_f*>(context);
-    if (*cb)
+    if(*cb)
         (*cb)(param_type, new_value);
 }
 
 void Core::debug_callback_c(void* context, int level, const char* message)
 {
     auto cb = reinterpret_cast<debug_callback_f*>(context);
-    if (*cb)
+    if(*cb)
         (*cb)(level, message);
 }
 
@@ -216,4 +231,4 @@ const PluginInfo& Core::info() const
     return info_;
 }
 
-} // Net64::Emulator::M64PlusHelpers
+} // namespace Net64::Emulator::M64PlusHelper

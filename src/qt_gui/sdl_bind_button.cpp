@@ -5,22 +5,21 @@
 // Refer to the LICENSE file included
 //
 
-#include "sdl_bind_button.hpp"
-
 #include <unordered_map>
+
+#include <QInputEvent>
 #include <SDL_joystick.h>
 #include <SDL_keycode.h>
 #include <SDL_mouse.h>
-#include <QInputEvent>
+
+#include "sdl_bind_button.hpp"
 
 
 namespace Frontend
 {
-
 extern const std::unordered_map<Qt::Key, SDL_Keycode> QT_SDL_KEYMAP;
 
-SDL_BindButton::SDL_BindButton(QWidget* parent):
-    QPushButton(parent)
+SDL_BindButton::SDL_BindButton(QWidget* parent): QPushButton(parent)
 {
 }
 
@@ -95,8 +94,14 @@ void SDL_BindButton::keyPressEvent(QKeyEvent* event)
     }
 
     input_.type = sdl_input_t::Type::KEY;
-    try{input_.key_code = QT_SDL_KEYMAP.at((Qt::Key)event->key());}
-    catch(const std::out_of_range&){return;}
+    try
+    {
+        input_.key_code = QT_SDL_KEYMAP.at((Qt::Key)event->key());
+    }
+    catch(const std::out_of_range&)
+    {
+        return;
+    }
 
     set_bind(input_);
 }
@@ -183,8 +188,7 @@ void SDL_BindButton::update_text()
         return;
     }
 
-    auto hat_dir{[](int val) -> std::string
-    {
+    auto hat_dir{[](int val) -> std::string {
         if(val & SDL_HAT_UP)
             return "UP";
         if(val & SDL_HAT_DOWN)
@@ -224,97 +228,95 @@ void SDL_BindButton::update_text()
     setText(QString::fromStdString(label));
 }
 
-const std::unordered_map<Qt::Key, SDL_Keycode> QT_SDL_KEYMAP{
-    {Qt::Key_A, SDLK_a},
-    {Qt::Key_B, SDLK_b},
-    {Qt::Key_C, SDLK_c},
-    {Qt::Key_D, SDLK_d},
-    {Qt::Key_E, SDLK_e},
-    {Qt::Key_F, SDLK_f},
-    {Qt::Key_G, SDLK_g},
-    {Qt::Key_H, SDLK_h},
-    {Qt::Key_I, SDLK_i},
-    {Qt::Key_J, SDLK_j},
-    {Qt::Key_K, SDLK_k},
-    {Qt::Key_L, SDLK_l},
-    {Qt::Key_M, SDLK_m},
-    {Qt::Key_N, SDLK_n},
-    {Qt::Key_O, SDLK_o},
-    {Qt::Key_P, SDLK_p},
-    {Qt::Key_Q, SDLK_q},
-    {Qt::Key_R, SDLK_r},
-    {Qt::Key_S, SDLK_s},
-    {Qt::Key_T, SDLK_t},
-    {Qt::Key_U, SDLK_u},
-    {Qt::Key_V, SDLK_v},
-    {Qt::Key_W, SDLK_w},
-    {Qt::Key_X, SDLK_x},
-    {Qt::Key_Y, SDLK_y},
-    {Qt::Key_Z, SDLK_z},
-    {Qt::Key_0, SDLK_0},
-    {Qt::Key_1, SDLK_1},
-    {Qt::Key_2, SDLK_2},
-    {Qt::Key_3, SDLK_3},
-    {Qt::Key_4, SDLK_4},
-    {Qt::Key_5, SDLK_5},
-    {Qt::Key_6, SDLK_6},
-    {Qt::Key_7, SDLK_7},
-    {Qt::Key_8, SDLK_8},
-    {Qt::Key_9, SDLK_9},
-    {Qt::Key_F1, SDLK_F1},
-    {Qt::Key_F2, SDLK_F2},
-    {Qt::Key_F3, SDLK_F3},
-    {Qt::Key_F4, SDLK_F4},
-    {Qt::Key_F5, SDLK_F5},
-    {Qt::Key_F6, SDLK_F6},
-    {Qt::Key_F7, SDLK_F7},
-    {Qt::Key_F8, SDLK_F8},
-    {Qt::Key_F9, SDLK_F9},
-    {Qt::Key_F10, SDLK_F10},
-    {Qt::Key_F11, SDLK_F11},
-    {Qt::Key_F12, SDLK_F12},
-    {Qt::Key_F13, SDLK_F13},
-    {Qt::Key_F14, SDLK_F14},
-    {Qt::Key_F15, SDLK_F15},
-    {Qt::Key_Insert, SDLK_INSERT},
-    {Qt::Key_Delete, SDLK_DELETE},
-    {Qt::Key_Home, SDLK_HOME},
-    {Qt::Key_End, SDLK_END},
-    {Qt::Key_PageUp, SDLK_PAGEUP},
-    {Qt::Key_PageDown, SDLK_PAGEDOWN},
-    {Qt::Key_Up, SDLK_UP},
-    {Qt::Key_Down, SDLK_DOWN},
-    {Qt::Key_Left, SDLK_LEFT},
-    {Qt::Key_Right, SDLK_RIGHT},
-    {Qt::Key_Return, SDLK_RETURN},
-    {Qt::Key_Enter, SDLK_RETURN2},
-    {Qt::Key_Escape, SDLK_ESCAPE},
-    {Qt::Key_Pause, SDLK_PAUSE},
-    {Qt::Key_QuoteLeft, SDLK_QUOTEDBL},
-    {Qt::Key_Backspace, SDLK_BACKSPACE},
-    {Qt::Key_Tab, SDLK_TAB},
-    {Qt::Key_CapsLock, SDLK_CAPSLOCK},
-    {Qt::Key_Space, SDLK_SPACE},
-    {Qt::Key_Slash, SDLK_SLASH},
-    {Qt::Key_Backslash, SDLK_BACKSLASH},
-    {Qt::Key_Minus, SDLK_MINUS},
-    {Qt::Key_Plus, SDLK_UNKNOWN},
-    {Qt::Key_Equal, SDLK_EQUALS},
-    {Qt::Key_BracketLeft, SDLK_LEFTBRACKET},
-    {Qt::Key_BracketRight, SDLK_RIGHTBRACKET},
-    {Qt::Key_Semicolon, SDLK_SEMICOLON},
-    {Qt::Key_Apostrophe, SDLK_QUOTE},
-    {Qt::Key_Comma, SDLK_COMMA},
-    {Qt::Key_Period, SDLK_PERIOD},
-    {Qt::Key_Alt, SDLK_LALT},
-    {Qt::Key_Control, SDLK_LCTRL},
-    {Qt::Key_Shift, SDLK_LSHIFT},
-    {Qt::Key_Print, SDLK_PRINTSCREEN},
-    {Qt::Key_ScrollLock, SDLK_SCROLLLOCK},
-    {Qt::Key_Meta, SDLK_LGUI},
-    {Qt::Key_Super_L, SDLK_LGUI},
-    {Qt::Key_Super_R, SDLK_RGUI},
-    {Qt::Key_unknown, SDLK_UNKNOWN}
-};
+const std::unordered_map<Qt::Key, SDL_Keycode> QT_SDL_KEYMAP{{Qt::Key_A, SDLK_a},
+                                                             {Qt::Key_B, SDLK_b},
+                                                             {Qt::Key_C, SDLK_c},
+                                                             {Qt::Key_D, SDLK_d},
+                                                             {Qt::Key_E, SDLK_e},
+                                                             {Qt::Key_F, SDLK_f},
+                                                             {Qt::Key_G, SDLK_g},
+                                                             {Qt::Key_H, SDLK_h},
+                                                             {Qt::Key_I, SDLK_i},
+                                                             {Qt::Key_J, SDLK_j},
+                                                             {Qt::Key_K, SDLK_k},
+                                                             {Qt::Key_L, SDLK_l},
+                                                             {Qt::Key_M, SDLK_m},
+                                                             {Qt::Key_N, SDLK_n},
+                                                             {Qt::Key_O, SDLK_o},
+                                                             {Qt::Key_P, SDLK_p},
+                                                             {Qt::Key_Q, SDLK_q},
+                                                             {Qt::Key_R, SDLK_r},
+                                                             {Qt::Key_S, SDLK_s},
+                                                             {Qt::Key_T, SDLK_t},
+                                                             {Qt::Key_U, SDLK_u},
+                                                             {Qt::Key_V, SDLK_v},
+                                                             {Qt::Key_W, SDLK_w},
+                                                             {Qt::Key_X, SDLK_x},
+                                                             {Qt::Key_Y, SDLK_y},
+                                                             {Qt::Key_Z, SDLK_z},
+                                                             {Qt::Key_0, SDLK_0},
+                                                             {Qt::Key_1, SDLK_1},
+                                                             {Qt::Key_2, SDLK_2},
+                                                             {Qt::Key_3, SDLK_3},
+                                                             {Qt::Key_4, SDLK_4},
+                                                             {Qt::Key_5, SDLK_5},
+                                                             {Qt::Key_6, SDLK_6},
+                                                             {Qt::Key_7, SDLK_7},
+                                                             {Qt::Key_8, SDLK_8},
+                                                             {Qt::Key_9, SDLK_9},
+                                                             {Qt::Key_F1, SDLK_F1},
+                                                             {Qt::Key_F2, SDLK_F2},
+                                                             {Qt::Key_F3, SDLK_F3},
+                                                             {Qt::Key_F4, SDLK_F4},
+                                                             {Qt::Key_F5, SDLK_F5},
+                                                             {Qt::Key_F6, SDLK_F6},
+                                                             {Qt::Key_F7, SDLK_F7},
+                                                             {Qt::Key_F8, SDLK_F8},
+                                                             {Qt::Key_F9, SDLK_F9},
+                                                             {Qt::Key_F10, SDLK_F10},
+                                                             {Qt::Key_F11, SDLK_F11},
+                                                             {Qt::Key_F12, SDLK_F12},
+                                                             {Qt::Key_F13, SDLK_F13},
+                                                             {Qt::Key_F14, SDLK_F14},
+                                                             {Qt::Key_F15, SDLK_F15},
+                                                             {Qt::Key_Insert, SDLK_INSERT},
+                                                             {Qt::Key_Delete, SDLK_DELETE},
+                                                             {Qt::Key_Home, SDLK_HOME},
+                                                             {Qt::Key_End, SDLK_END},
+                                                             {Qt::Key_PageUp, SDLK_PAGEUP},
+                                                             {Qt::Key_PageDown, SDLK_PAGEDOWN},
+                                                             {Qt::Key_Up, SDLK_UP},
+                                                             {Qt::Key_Down, SDLK_DOWN},
+                                                             {Qt::Key_Left, SDLK_LEFT},
+                                                             {Qt::Key_Right, SDLK_RIGHT},
+                                                             {Qt::Key_Return, SDLK_RETURN},
+                                                             {Qt::Key_Enter, SDLK_RETURN2},
+                                                             {Qt::Key_Escape, SDLK_ESCAPE},
+                                                             {Qt::Key_Pause, SDLK_PAUSE},
+                                                             {Qt::Key_QuoteLeft, SDLK_QUOTEDBL},
+                                                             {Qt::Key_Backspace, SDLK_BACKSPACE},
+                                                             {Qt::Key_Tab, SDLK_TAB},
+                                                             {Qt::Key_CapsLock, SDLK_CAPSLOCK},
+                                                             {Qt::Key_Space, SDLK_SPACE},
+                                                             {Qt::Key_Slash, SDLK_SLASH},
+                                                             {Qt::Key_Backslash, SDLK_BACKSLASH},
+                                                             {Qt::Key_Minus, SDLK_MINUS},
+                                                             {Qt::Key_Plus, SDLK_UNKNOWN},
+                                                             {Qt::Key_Equal, SDLK_EQUALS},
+                                                             {Qt::Key_BracketLeft, SDLK_LEFTBRACKET},
+                                                             {Qt::Key_BracketRight, SDLK_RIGHTBRACKET},
+                                                             {Qt::Key_Semicolon, SDLK_SEMICOLON},
+                                                             {Qt::Key_Apostrophe, SDLK_QUOTE},
+                                                             {Qt::Key_Comma, SDLK_COMMA},
+                                                             {Qt::Key_Period, SDLK_PERIOD},
+                                                             {Qt::Key_Alt, SDLK_LALT},
+                                                             {Qt::Key_Control, SDLK_LCTRL},
+                                                             {Qt::Key_Shift, SDLK_LSHIFT},
+                                                             {Qt::Key_Print, SDLK_PRINTSCREEN},
+                                                             {Qt::Key_ScrollLock, SDLK_SCROLLLOCK},
+                                                             {Qt::Key_Meta, SDLK_LGUI},
+                                                             {Qt::Key_Super_L, SDLK_LGUI},
+                                                             {Qt::Key_Super_R, SDLK_RGUI},
+                                                             {Qt::Key_unknown, SDLK_UNKNOWN}};
 
-}
+} // namespace Frontend

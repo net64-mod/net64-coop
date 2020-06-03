@@ -1,19 +1,18 @@
 ﻿#pragma once
 
 #include <QMainWindow>
-#ifndef Q_MOC_RUN
+
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
-#endif
 
 
-namespace Ui {
+namespace Ui
+{
 class M64PSettings;
 }
 
 namespace Frontend
 {
-
 struct M64PSettings : QMainWindow
 {
     Q_OBJECT
@@ -41,4 +40,4 @@ private:
     CLASS_LOGGER_("frontend")
 };
 
-} // Frontend
+} // namespace Frontend

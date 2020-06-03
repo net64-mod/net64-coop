@@ -1,45 +1,39 @@
-#include "emulator_video_configuration.hpp"
-#include "ui_emulator_video_configuration.h"
-
 #include <QCheckBox>
 #include <QSpinBox>
+
+#include "emulator_video_configuration.hpp"
+#include "ui_emulator_video_configuration.h"
 
 
 namespace Frontend
 {
-
 EmulatorVideoConfiguration::EmulatorVideoConfiguration(QWidget* parent):
-    QWidget(parent),
-    ui(new Ui::EmulatorVideoConfiguration)
+    QWidget(parent), ui(new Ui::EmulatorVideoConfiguration)
 {
     ui->setupUi(this);
 
-    connect(ui->vsync_cbx, &QCheckBox::stateChanged, [this](int state)
-    {
+    connect(ui->vsync_cbx, &QCheckBox::stateChanged, [this](int state) {
         if(!video_settings_)
             return;
 
         video_settings_->set_vsync(static_cast<bool>(state));
     });
 
-    connect(ui->fullscreen_cbx, &QCheckBox::stateChanged, [this](int state)
-    {
+    connect(ui->fullscreen_cbx, &QCheckBox::stateChanged, [this](int state) {
         if(!video_settings_)
             return;
 
         video_settings_->set_fullscreen(static_cast<bool>(state));
     });
 
-    connect(ui->width_sbx, qOverload<int>(&QSpinBox::valueChanged), [this](int value)
-    {
+    connect(ui->width_sbx, qOverload<int>(&QSpinBox::valueChanged), [this](int value) {
         if(!video_settings_)
             return;
 
         video_settings_->set_dimensions(static_cast<unsigned>(value), static_cast<unsigned>(ui->height_sbx->value()));
     });
 
-    connect(ui->height_sbx, qOverload<int>(&QSpinBox::valueChanged), [this](int value)
-    {
+    connect(ui->height_sbx, qOverload<int>(&QSpinBox::valueChanged), [this](int value) {
         if(!video_settings_)
             return;
 
@@ -107,4 +101,4 @@ void EmulatorVideoConfiguration::load_settings()
     ui->width_sbx->setValue((int)width);
 }
 
-} // Frontend
+} // namespace Frontend

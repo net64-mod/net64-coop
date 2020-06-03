@@ -8,14 +8,15 @@
 #pragma once
 
 #include <string>
+
 #include <mupen64plus/m64p_types.h>
+
 #include "net64/emulator/m64plus_error.hpp"
 #include "net64/emulator/shared_library.hpp"
 
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 struct ConfigSection;
 
 struct Config
@@ -27,8 +28,7 @@ struct Config
     template<typename Fn>
     void list_sections(const Fn& fn)
     {
-        auto ret = fn_.config_list_sections(const_cast<Fn*>(&fn), [](void* context, const char* section)
-        {
+        auto ret = fn_.config_list_sections(const_cast<Fn*>(&fn), [](void* context, const char* section) {
             (*reinterpret_cast<const Fn*>(context))(section);
         });
 
@@ -53,14 +53,14 @@ private:
 
     struct
     {
-        Error(*config_list_sections)(void*, void(*)(void*, const char*));
-        Error(*config_open_section)(const char*, m64p_handle*);
-        int(*config_has_unsaved_changes)(const char*);
-        Error(*config_delete_section)(const char*);
-        Error(*config_save_file)();
-        Error(*config_save_section)(const char*);
-        Error(*config_revert_changes)(const char*);
-    }fn_{};
+        Error (*config_list_sections)(void*, void (*)(void*, const char*));
+        Error (*config_open_section)(const char*, m64p_handle*);
+        int (*config_has_unsaved_changes)(const char*);
+        Error (*config_delete_section)(const char*);
+        Error (*config_save_file)();
+        Error (*config_save_section)(const char*);
+        Error (*config_revert_changes)(const char*);
+    } fn_{};
 };
 
 struct ConfigSection
@@ -75,10 +75,10 @@ struct ConfigSection
     template<typename Fn>
     void list_parameters(const Fn& fn)
     {
-        auto ret = fn_.config_list_parameters(const_cast<Fn*>(&fn), [](void* context, const char* name, param_type_t type)
-        {
-            (*reinterpret_cast<const Fn*>(context))(name, type);
-        });
+        auto ret =
+            fn_.config_list_parameters(const_cast<Fn*>(&fn), [](void* context, const char* name, param_type_t type) {
+                (*reinterpret_cast<const Fn*>(context))(name, type);
+            });
 
         if(ret != Error::SUCCESS)
             throw std::system_error(make_error_code(ret));
@@ -110,16 +110,16 @@ private:
 
     struct
     {
-        Error(*config_list_parameters)(cfg_section_hdl_t, void*, void(*)(void*, const char*, param_type_t));
-        Error(*config_set_parameter)(m64p_handle, const char*, m64p_type, const void*);
-        Error(*config_get_parameter)(m64p_handle, const char*, m64p_type, void*, int);
-        Error(*config_get_parameter_type)(m64p_handle, const char*, m64p_type*);
-        const char*(*config_get_parameter_help)(m64p_handle, const char*);
-        Error(*config_set_default_int)(m64p_handle, const char*, int, const char*);
-        Error(*config_set_default_float)(m64p_handle, const char*, float, const char*);
-        Error(*config_set_default_bool)(m64p_handle, const char*, int, const char*);
-        Error(*config_set_default_string)(m64p_handle, const char*, const char*, const char*);
-    }fn_{};
+        Error (*config_list_parameters)(cfg_section_hdl_t, void*, void (*)(void*, const char*, param_type_t));
+        Error (*config_set_parameter)(m64p_handle, const char*, m64p_type, const void*);
+        Error (*config_get_parameter)(m64p_handle, const char*, m64p_type, void*, int);
+        Error (*config_get_parameter_type)(m64p_handle, const char*, m64p_type*);
+        const char* (*config_get_parameter_help)(m64p_handle, const char*);
+        Error (*config_set_default_int)(m64p_handle, const char*, int, const char*);
+        Error (*config_set_default_float)(m64p_handle, const char*, float, const char*);
+        Error (*config_set_default_bool)(m64p_handle, const char*, int, const char*);
+        Error (*config_set_default_string)(m64p_handle, const char*, const char*, const char*);
+    } fn_{};
 };
 
-}
+} // namespace Net64::Emulator::M64PlusHelper

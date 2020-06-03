@@ -8,6 +8,7 @@
 #pragma once
 
 #include <mutex>
+
 #include <SDL_events.h>
 
 
@@ -20,7 +21,7 @@ struct SDL_EventHandler
     static void poll_events();
 
 protected:
-    virtual void handle_sdl_event(const SDL_Event&){}
+    virtual void handle_sdl_event(const SDL_Event&) {}
 
 private:
     static void register_obj(SDL_EventHandler& obj);

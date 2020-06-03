@@ -1,19 +1,21 @@
 ﻿#include "main_window.hpp"
-#include "ui_main_window.h"
 #include <fstream>
 #include <string>
+
 #include <QDesktopServices>
 #include <QMessageBox>
+
+#include "ui_main_window.h"
 
 
 namespace Frontend
 {
-
 using namespace std::string_literals;
 
 static QString format_error_msg(std::error_code ec)
 {
-    return "[" + QString::fromStdString(ec.category().name()) + ":" + QString::fromStdString(std::to_string(ec.value())) + "] " + QString::fromStdString(ec.message());
+    return "[" + QString::fromStdString(ec.category().name()) + ":" +
+           QString::fromStdString(std::to_string(ec.value())) + "] " + QString::fromStdString(ec.message());
 }
 
 static void error_popup(const char* action, const QString& reason)
@@ -25,11 +27,8 @@ static void error_popup(const char* action, const QString& reason)
     box.exec();
 }
 
-MainWindow::MainWindow(AppSettings& settings, QWidget* parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    settings_(&settings),
-    net64_thread_(*settings_)
+MainWindow::MainWindow(AppSettings& settings, QWidget* parent):
+    QMainWindow(parent), ui(new Ui::MainWindow), settings_(&settings), net64_thread_(*settings_)
 {
     qRegisterMetaType<Net64::Emulator::State>("Net64::Emulator::State");
 
@@ -110,7 +109,6 @@ void MainWindow::on_connect_btn_pressed()
 
 void MainWindow::on_disconnect_btn_pressed()
 {
-
 }
 
 void MainWindow::on_stop_server_btn_pressed()
@@ -149,19 +147,17 @@ void MainWindow::on_emulator_started()
 
 void MainWindow::on_emulator_paused()
 {
-
 }
 
 void MainWindow::on_emulator_unpaused()
 {
-
 }
 
 void MainWindow::on_emulator_joinable()
 {
     if(net64_thread_.is_initializing() || net64_thread_.is_initialized())
     {
-        connect_once(&net64_thread_, &Net64Thread::net64_destroyed, [this]{on_emulator_joinable();});
+        connect_once(&net64_thread_, &Net64Thread::net64_destroyed, [this] { on_emulator_joinable(); });
         net64_thread_.destroy_net64();
         return;
     }
@@ -184,29 +180,23 @@ void MainWindow::setup_menus()
     auto settings_menu{ui->menubar->addMenu("Settings")};
     auto info_menu{ui->menubar->addMenu("Info")};
 
-    connect(settings_menu->addAction("Multiplayer"), &QAction::triggered, this, [this]()
-    {
+    connect(settings_menu->addAction("Multiplayer"), &QAction::triggered, this, [this]() {
         show_window(multiplayer_cfg_win_, *settings_);
     });
-    connect(settings_menu->addAction("Emulator"), &QAction::triggered, this, [this]()
-    {
+    connect(settings_menu->addAction("Emulator"), &QAction::triggered, this, [this]() {
         show_window(emu_settings_win_, *settings_);
     });
 
-    connect(info_menu->addAction("Website"), &QAction::triggered, this, []()
-    {
+    connect(info_menu->addAction("Website"), &QAction::triggered, this, []() {
         QDesktopServices::openUrl(QUrl("https://net64-mod.github.io"));
     });
-    connect(info_menu->addAction("GitHub"), &QAction::triggered, this, []()
-    {
+    connect(info_menu->addAction("GitHub"), &QAction::triggered, this, []() {
         QDesktopServices::openUrl(QUrl("https://github.com/net64-mod/net64-coop"));
     });
-    connect(info_menu->addAction("Discord"), &QAction::triggered, this, []()
-    {
+    connect(info_menu->addAction("Discord"), &QAction::triggered, this, []() {
         QDesktopServices::openUrl(QUrl("https://discord.gg/aUmWKaw"));
     });
-    connect(info_menu->addAction("About Net64"), &QAction::triggered, this, []()
-    {
+    connect(info_menu->addAction("About Net64"), &QAction::triggered, this, []() {
 
     });
     connect(info_menu->addAction("About Qt"), &QAction::triggered, this, &QApplication::aboutQt);
@@ -229,7 +219,7 @@ void MainWindow::setup_signals()
 
 void MainWindow::set_page(Page page)
 {
-    last_page_= static_cast<Page>(ui->stackedWidget->currentIndex());
+    last_page_ = static_cast<Page>(ui->stackedWidget->currentIndex());
     ui->stackedWidget->setCurrentIndex(static_cast<int>(page));
 }
 
@@ -243,8 +233,7 @@ bool MainWindow::create_emulator()
         auto emu{std::make_unique<Net64::Emulator::Mupen64Plus>(
             (settings_->m64p_plugin_dir() / settings_->m64p_core_plugin).string(),
             settings_->m64p_dir().string(),
-            settings_->m64p_plugin_dir().string()
-        )};
+            settings_->m64p_plugin_dir().string())};
 
         emulator_ = std::move(emu);
     }
@@ -265,7 +254,8 @@ void MainWindow::start_emulation()
 
     try
     {
-        auto add_plugin{[this](const std::string& str){emulator_->add_plugin((settings_->m64p_plugin_dir() / str).string());}};
+        auto add_plugin{
+            [this](const std::string& str) { emulator_->add_plugin((settings_->m64p_plugin_dir() / str).string()); }};
 
         add_plugin(settings_->m64p_video_plugin);
         add_plugin(settings_->m64p_audio_plugin);
@@ -274,7 +264,7 @@ void MainWindow::start_emulation()
 
         emulator_->load_rom(reinterpret_cast<void*>(rom_image_.data()), rom_image_.size());
 
-        emulator_->start([this](auto state){on_emulator_state(state);});
+        emulator_->start([this](auto state) { on_emulator_state(state); });
     }
     catch(const std::system_error& e)
     {
@@ -303,15 +293,14 @@ void MainWindow::connect_net64()
     if(!emulator_ || emulator_->state() == Net64::Emulator::State::STOPPED)
     {
         // Emulator not running, start it
-        connect_once(this, &MainWindow::emulator_started, [this]{connect_net64();});
+        connect_once(this, &MainWindow::emulator_started, [this] { connect_net64(); });
         start_emulation();
         return;
     }
     if(!net64_thread_.is_initialized())
     {
         // Net64 not yet initialized
-        connect_once(&net64_thread_, &Net64Thread::net64_initialized, [this](auto ec)
-        {
+        connect_once(&net64_thread_, &Net64Thread::net64_initialized, [this](auto ec) {
             if(ec)
             {
                 if(ec != make_error_code(std::errc::timed_out))
@@ -327,7 +316,7 @@ void MainWindow::connect_net64()
     }
 
     // Connect to server
-    //net64_thread_.connect();
+    // net64_thread_.connect();
 }
 
-} // Frontend
+} // namespace Frontend

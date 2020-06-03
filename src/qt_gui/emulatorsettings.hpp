@@ -1,26 +1,24 @@
 #pragma once
 
 #include <QDialog>
-#ifndef Q_MOC_RUN
+
 #include "net64/emulator/emulator.hpp"
-#endif
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/m64p_settings_window.hpp"
 
 
-namespace Ui {
+namespace Ui
+{
 class EmulatorSettings;
 }
 
 namespace Frontend
 {
-
 struct EmulatorSettings : QDialog
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
-
     struct Tab
     {
         enum
@@ -66,4 +64,4 @@ private:
     Net64::Emulator::IEmulator* emulator_{};
 };
 
-} // Frontend
+} // namespace Frontend

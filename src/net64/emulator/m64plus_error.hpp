@@ -8,12 +8,12 @@
 #pragma once
 
 #include <system_error>
+
 #include <mupen64plus/m64p_types.h>
 
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 /// Mupen64Plus error codes
 enum struct Error
 {
@@ -33,7 +33,7 @@ enum struct Error
     SYSTEM_FAIL,     ///< A system function call, such as an SDL or file operation, failed
     UNSUPPORTED,     ///< Function call is not supported (ie, core not built with debugger)
     WRONG_TYPE,      ///< A given input type parameter cannot be used for desired operation
-    // Interface errors
+                     // Interface errors
     LIB_LOAD_FAILED, ///< Failed to load library file
     INVALID_ADDR,    ///< Tried to access out of bounds memory
     SYM_NOT_FOUND    ///< A symbol required by the API could not be located in the specified module
@@ -42,4 +42,4 @@ enum struct Error
 /// Overload for Mupen64Plus error codes
 std::error_code make_error_code(Error e) noexcept;
 
-}
+} // namespace Net64::Emulator::M64PlusHelper

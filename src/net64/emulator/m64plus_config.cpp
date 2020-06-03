@@ -10,9 +10,7 @@
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
-Config::Config(dynlib_t core_lib):
-    core_(core_lib)
+Config::Config(dynlib_t core_lib): core_(core_lib)
 {
     load_symbols();
 }
@@ -68,8 +66,7 @@ void Config::revert_changes(const char* section)
 
 void Config::load_symbols()
 {
-    auto resolve{[this](auto& ptr, const char* name)
-    {
+    auto resolve{[this](auto& ptr, const char* name) {
         ptr = reinterpret_cast<std::remove_reference_t<decltype(ptr)>>(get_symbol(core_, name));
         if(!ptr)
             throw std::system_error(make_error_code(Error::SYM_NOT_FOUND));
@@ -209,7 +206,8 @@ bool ConfigSection::get_bool(const char* param)
 std::string ConfigSection::get_string(const char* param)
 {
     std::string value(STRING_BUF_LEN, '\0');
-    auto ret = fn_.config_get_parameter(section_hdl_, param, param_type_t::M64TYPE_STRING, value.data(), (int)value.size());
+    auto ret =
+        fn_.config_get_parameter(section_hdl_, param, param_type_t::M64TYPE_STRING, value.data(), (int)value.size());
 
     if(ret != Error::SUCCESS)
         throw std::system_error(make_error_code(ret));
@@ -219,8 +217,7 @@ std::string ConfigSection::get_string(const char* param)
 
 void ConfigSection::load_symbols()
 {
-    auto resolve{[this](auto& ptr, const char* name)
-    {
+    auto resolve{[this](auto& ptr, const char* name) {
         ptr = reinterpret_cast<std::remove_reference_t<decltype(ptr)>>(get_symbol(core_, name));
         if(!ptr)
             throw std::system_error(make_error_code(Error::SYM_NOT_FOUND));
@@ -237,4 +234,4 @@ void ConfigSection::load_symbols()
     resolve(fn_.config_set_parameter, "ConfigSetParameter");
 }
 
-}
+} // namespace Net64::Emulator::M64PlusHelper

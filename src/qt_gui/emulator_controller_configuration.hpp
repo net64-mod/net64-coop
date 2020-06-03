@@ -1,19 +1,18 @@
 ﻿#pragma once
 
 #include <QWidget>
-#include "qt_gui/sdl_bind_button.hpp"
-#ifndef Q_MOC_RUN
+
 #include "common/deleter.hpp"
 #include "net64/emulator/emulator.hpp"
-#endif
+#include "qt_gui/sdl_bind_button.hpp"
 
-namespace Ui {
+namespace Ui
+{
 class EmulatorControllerConfiguration;
 }
 
 namespace Frontend
 {
-
 struct EmulatorControllerConfiguration : QWidget, SDL_EventHandler
 {
     Q_OBJECT
@@ -41,7 +40,7 @@ private:
     void load_settings();
     void setup_sdl_buttons();
 
-    Ui::EmulatorControllerConfiguration *ui;
+    Ui::EmulatorControllerConfiguration* ui;
     std::unique_ptr<SDL_Joystick, Deleter<&SDL_JoystickClose>> joystick_;
     std::vector<SDL_BindButton*> sdl_bind_buttons_;
     std::unique_ptr<Net64::Emulator::IControllerSettings> controller_settings_;
@@ -49,4 +48,4 @@ private:
     CLASS_LOGGER_("frontend")
 };
 
-}
+} // namespace Frontend

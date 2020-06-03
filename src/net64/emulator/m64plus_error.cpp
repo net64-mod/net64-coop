@@ -9,13 +9,9 @@
 
 namespace
 {
-
 const struct M64PlusErrorCategory : std::error_category
 {
-    const char* name() const noexcept override
-    {
-        return "mupen64plus";
-    }
+    const char* name() const noexcept override { return "mupen64plus"; }
     std::string message(int ev) const override
     {
         using Net64::Emulator::M64PlusHelper::Error;
@@ -61,16 +57,15 @@ const struct M64PlusErrorCategory : std::error_category
             return "[Unknown Error]";
         }
     }
-}m64p_error_category_g;
+} m64p_error_category_g;
 
-} // anonymous
+} // namespace
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 std::error_code make_error_code(Error e) noexcept
 {
     return {static_cast<int>(e), m64p_error_category_g};
 }
 
-} // Net64::Emulator::M64PlusHelper
+} // namespace Net64::Emulator::M64PlusHelper

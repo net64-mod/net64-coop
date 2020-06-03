@@ -10,38 +10,34 @@
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 namespace
 {
-
 bool failed(Mupen64Plus::Error err)
 {
     return err != Mupen64Plus::Error::SUCCESS;
 }
 
 template<typename... TArgs>
-bool all_true(const TArgs& ... args)
+bool all_true(const TArgs&... args)
 {
     return (args && ...);
 }
 
-}
+} // namespace
 
-Plugin::Plugin(Core& core, dynlib_t lib)
-:handle_{lib}
+Plugin::Plugin(Core& core, dynlib_t lib): handle_{lib}
 {
     init_symbols();
     init_plugin(core.handle());
 }
 
-Plugin::Plugin(Core& core, const std::string& lib_path)
-:handle_{load_library(lib_path.c_str())}
+Plugin::Plugin(Core& core, const std::string& lib_path): handle_{load_library(lib_path.c_str())}
 {
     if(!handle_.lib)
     {
         // Library file does not exist
-        std::system_error err(make_error_code(Error::LIB_LOAD_FAILED), "Failed to load plugin library file " +
-                              std::string(get_lib_error_msg()));
+        std::system_error err(make_error_code(Error::LIB_LOAD_FAILED),
+                              "Failed to load plugin library file " + std::string(get_lib_error_msg()));
         logger()->error(err.what());
         throw err;
     }
@@ -151,8 +147,12 @@ void Plugin::init_plugin(dynlib_t core_lib)
         // Plugin failed to initialize
         auto errc{make_error_code(ret)};
         logger()->error("Failed to start {} plugin {} v{}, api: {} (capabilities: {:#x}): {}",
-                        Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version,
-                        info_.capabilities, errc.message());
+                        Plugin::type_str(info_.type),
+                        name_ptr,
+                        info_.plugin_version,
+                        info_.api_version,
+                        info_.capabilities,
+                        errc.message());
         info_ = {};
         throw std::system_error(errc, "Failed to start " + std::string(Plugin::type_str(info_.type)) + " plugin");
     }
@@ -160,7 +160,11 @@ void Plugin::init_plugin(dynlib_t core_lib)
     info_.name = name_ptr;
 
     logger()->info("Initialized {} plugin {} v{}, api: {:#x} (capabilities: {:#x})",
-                   Plugin::type_str(info_.type), name_ptr, info_.plugin_version, info_.api_version, info_.capabilities);
+                   Plugin::type_str(info_.type),
+                   name_ptr,
+                   info_.plugin_version,
+                   info_.api_version,
+                   info_.capabilities);
 }
 
 void Plugin::destroy_plugin()
@@ -176,4 +180,4 @@ void Plugin::destroy_plugin()
     logger()->info("Shutdown {} plugin", Plugin::type_str(info_.type));
 }
 
-} // Net64::Emulator::M64PlusHelper
+} // namespace Net64::Emulator::M64PlusHelper

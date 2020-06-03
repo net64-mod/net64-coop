@@ -15,23 +15,19 @@
 
 namespace Net64::Emulator
 {
-
 struct Mupen64Plus;
 
 }
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 class Plugin;
 
 /// Contains information retrieved via PluginGetVersion
 struct PluginInfo
 {
     m64p_plugin_type type{M64PLUGIN_NULL};
-    int plugin_version{},
-        api_version{},
-        capabilities{};
+    int plugin_version{}, api_version{}, capabilities{};
     std::string name;
 };
 
@@ -46,17 +42,16 @@ class Core final
     // Function pointer types
     using plugin_get_version_t = Error(CALL*)(m64p_plugin_type*, int*, int*, const char**, int*);
     using debug_context_t = void*;
-    using debug_callback_t = void(*)(void*, int, const char*);
+    using debug_callback_t = void (*)(void*, int, const char*);
     using state_context_t = void*;
-    using state_callback_t = void(*)(void*, m64p_core_param, int);
-    using core_startup_t = Error(CALL*)(int, const char*, const char*,
-    debug_context_t, debug_callback_t,
-    state_context_t, state_callback_t);
+    using state_callback_t = void (*)(void*, m64p_core_param, int);
+    using core_startup_t = Error(CALL*)(
+        int, const char*, const char*, debug_context_t, debug_callback_t, state_context_t, state_callback_t);
     using core_shutdown_t = Error(CALL*)();
     using core_attach_plugin_t = Error(CALL*)(m64p_plugin_type, m64p_dynlib_handle);
     using core_detach_plugin_t = Error(CALL*)(m64p_plugin_type);
     using core_do_cmd_t = Error(CALL*)(m64p_command, int, void*);
-    using debug_get_mem_ptr_t = volatile void* (CALL*)(m64p_dbg_memptr_type);
+    using debug_get_mem_ptr_t = volatile void*(CALL*)(m64p_dbg_memptr_type);
 
     using state_callback_f = std::function<void(m64p_core_param, int)>;
     using debug_callback_f = std::function<void(int, const char*)>;
@@ -84,8 +79,8 @@ class Core final
     // @todo:
 public:
     Config config();
-private:
 
+private:
     void attach_plugin(Plugin& plugin);
 
     void detach_plugin(m64p_plugin_type type);
@@ -128,7 +123,7 @@ private:
         core_detach_plugin_t core_detach_plugin;
         core_do_cmd_t core_do_cmd;
         debug_get_mem_ptr_t debug_get_mem_ptr;
-    }fn_{};
+    } fn_{};
     PluginInfo info_;
     std::unique_ptr<state_callback_f> state_callback_ = std::make_unique<state_callback_f>();
     std::unique_ptr<debug_callback_f> debug_callback_ = std::make_unique<debug_callback_f>();
@@ -138,4 +133,4 @@ private:
     CLASS_LOGGER_("mupen64plus");
 };
 
-} // Net64::Emulator::M64PlusHelper
+} // namespace Net64::Emulator::M64PlusHelper

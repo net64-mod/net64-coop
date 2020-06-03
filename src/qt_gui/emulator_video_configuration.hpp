@@ -1,20 +1,19 @@
 #pragma once
 
 #include <QWidget>
-#ifndef Q_MOC_RUN
-#include "net64/emulator/emulator.hpp"
-#endif
 
-namespace Ui {
+#include "net64/emulator/emulator.hpp"
+
+namespace Ui
+{
 class EmulatorVideoConfiguration;
 }
 
 namespace Frontend
 {
-
 struct EmulatorVideoConfiguration : QWidget
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit EmulatorVideoConfiguration(QWidget* parent = nullptr);
@@ -33,4 +32,4 @@ private:
     std::unique_ptr<Net64::Emulator::IVideoSettings> video_settings_;
 };
 
-} // Frontend
+} // namespace Frontend

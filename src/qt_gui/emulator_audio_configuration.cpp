@@ -4,15 +4,12 @@
 
 namespace Frontend
 {
-
 EmulatorAudioConfiguration::EmulatorAudioConfiguration(QWidget* parent):
-    QWidget(parent),
-    ui(new Ui::EmulatorAudioConfiguration)
+    QWidget(parent), ui(new Ui::EmulatorAudioConfiguration)
 {
     ui->setupUi(this);
 
-    connect(ui->volume_slider, &QSlider::valueChanged, [this](int position)
-    {
+    connect(ui->volume_slider, &QSlider::valueChanged, [this](int position) {
         ui->volume_percentage_lbl->setText(QString::fromStdString(std::to_string(position) + "%"));
 
         if(audio_settings_)
@@ -64,4 +61,4 @@ void EmulatorAudioConfiguration::load_settings()
     ui->volume_slider->setValue(static_cast<int>(volume * 100));
 }
 
-} // Frontend
+} // namespace Frontend

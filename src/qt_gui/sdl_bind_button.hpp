@@ -8,15 +8,13 @@
 #pragma once
 
 #include <QPushButton>
-#ifndef Q_MOC_RUN
+
 #include "common/sdl_event_handler.hpp"
 #include "net64/emulator/emulator.hpp"
-#endif
 
 
 namespace Frontend
 {
-
 struct SDL_BindButton : QPushButton, SDL_EventHandler
 {
     Q_OBJECT
@@ -60,4 +58,4 @@ private:
     Net64::Emulator::IControllerSettings* settings_handle_{};
 };
 
-} // Frontend
+} // namespace Frontend

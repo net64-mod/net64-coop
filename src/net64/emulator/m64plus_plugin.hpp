@@ -12,7 +12,6 @@
 
 namespace Net64::Emulator::M64PlusHelper
 {
-
 /**
  * Dynamically loaded Mupen64Plus plugin
  */
@@ -74,7 +73,7 @@ private:
         plugin_startup_t startup;
         plugin_shutdown_t shutdown;
         plugin_get_version_t get_version;
-    }fn_{};
+    } fn_{};
     PluginInfo info_;
 
     CLASS_LOGGER_("mupen64plus");
@@ -82,4 +81,4 @@ private:
 
 #undef CALL
 
-} // M64PlusHelper
+} // namespace Net64::Emulator::M64PlusHelper

@@ -10,11 +10,12 @@
 #include <array>
 #include <atomic>
 #include <future>
+#include <mutex>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
-#include <optional>
-#include <mutex>
+
 #include "net64/emulator/emulator.hpp"
 #include "net64/emulator/m64plus_error.hpp"
 #include "net64/emulator/m64plus_plugin.hpp"
@@ -24,7 +25,6 @@
 
 namespace Net64::Emulator
 {
-
 /**
  * Mupen64Plus instance. Only one instance of this class can be alive at a time.
  */
@@ -65,7 +65,7 @@ struct Mupen64Plus final : IEmulator
 
     void unload_rom() override;
 
-    //void execute(const StateCallback& fn = {}) override;
+    // void execute(const StateCallback& fn = {}) override;
     void start(const StateCallback& fn) override;
 
     void stop() override;
@@ -92,10 +92,7 @@ struct Mupen64Plus final : IEmulator
 
     State state() const override;
 
-    const char* name() const override
-    {
-        return "mupen64plus";
-    }
+    const char* name() const override { return "mupen64plus"; }
 
     bool rom_loaded() const;
 
@@ -152,9 +149,11 @@ private:
     CLASS_LOGGER_("mupen64plus")
 };
 
-} // Net64::Emulator
+} // namespace Net64::Emulator
 
 
 /// Specialization for Mupen64Plus error codes
 template<>
-struct std::is_error_code_enum<::Net64::Emulator::Mupen64Plus::Error> : std::true_type{};
+struct std::is_error_code_enum<::Net64::Emulator::Mupen64Plus::Error> : std::true_type
+{
+};

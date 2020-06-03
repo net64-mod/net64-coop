@@ -3,11 +3,8 @@
 
 namespace Frontend
 {
-
 EmulatorSettings::EmulatorSettings(AppSettings& settings, QWidget* parent):
-    QDialog(parent),
-    ui(new Ui::EmulatorSettings),
-    config_{&settings}
+    QDialog(parent), ui(new Ui::EmulatorSettings), config_{&settings}
 {
     ui->setupUi(this);
     setFixedSize(sizeHint());
@@ -16,10 +13,7 @@ EmulatorSettings::EmulatorSettings(AppSettings& settings, QWidget* parent):
 
     connect(m64p_config_win_, &M64PSettings::core_lib_changed, this, &EmulatorSettings::on_core_lib_changed);
 
-    connect(ui->config_emu_btn, &QPushButton::pressed, [this]()
-    {
-        show_window(m64p_config_win_, *config_);
-    });
+    connect(ui->config_emu_btn, &QPushButton::pressed, [this]() { show_window(m64p_config_win_, *config_); });
 
     update_interface();
 }
@@ -65,4 +59,4 @@ void EmulatorSettings::on_core_lib_changed()
     reload_emulator();
 }
 
-}
+} // namespace Frontend

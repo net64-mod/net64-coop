@@ -2,22 +2,20 @@
 
 #include <QWidget>
 
-#ifndef Q_MOC_RUN
 #include "net64/emulator/emulator.hpp"
-#endif
 
 
-namespace Ui {
+namespace Ui
+{
 class EmulatorAudioConfiguration;
 }
 
 
 namespace Frontend
 {
-
 struct EmulatorAudioConfiguration : QWidget
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit EmulatorAudioConfiguration(QWidget* parent = nullptr);
@@ -36,4 +34,4 @@ private:
     std::unique_ptr<Net64::Emulator::IAudioSettings> audio_settings_;
 };
 
-} // Frontend
+} // namespace Frontend

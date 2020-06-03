@@ -5,39 +5,37 @@
 // Refer to the LICENSE file included
 //
 
-#include "m64plus.hpp"
-
 #include <algorithm>
+
 #include <SDL_joystick.h>
 #include <net64/error_codes.hpp>
+
+#include "m64plus.hpp"
 #include "net64/memory/util.hpp"
 
 
 namespace Net64::Emulator
 {
-
 namespace
 {
-
 bool failed(Mupen64Plus::Error err)
 {
     return err != Mupen64Plus::Error::SUCCESS;
 }
 
-const std::array<const char*, 7> FORBIDDEN_HOTKEYS{
-    "Kbd Mapping Load State", "Kbd Mapping Speed Down",
-    "Kbd Mapping Speed Up", "Kbd Mapping Pause",
-    "Kbd Mapping Fast Forward", "Kbd Mapping Frame Advance",
-    "Kbd Mapping Gameshark"
-};
+const std::array<const char*, 7> FORBIDDEN_HOTKEYS{"Kbd Mapping Load State",
+                                                   "Kbd Mapping Speed Down",
+                                                   "Kbd Mapping Speed Up",
+                                                   "Kbd Mapping Pause",
+                                                   "Kbd Mapping Fast Forward",
+                                                   "Kbd Mapping Frame Advance",
+                                                   "Kbd Mapping Gameshark"};
 
-}
+} // namespace
 
 struct Mupen64PlusAudioSettings : IAudioSettings
 {
-    explicit Mupen64PlusAudioSettings(M64PlusHelper::Core& core):
-        core_(&core)
-    {}
+    explicit Mupen64PlusAudioSettings(M64PlusHelper::Core& core): core_(&core) {}
 
     bool get_volume(float& vol) override
     {
@@ -89,9 +87,7 @@ private:
 
 struct Mupen64PlusVideoSettings : IVideoSettings
 {
-    explicit Mupen64PlusVideoSettings(M64PlusHelper::Core& core):
-        core_(&core)
-    {}
+    explicit Mupen64PlusVideoSettings(M64PlusHelper::Core& core): core_(&core) {}
 
     bool get_fullscreen(bool& fullscreen) override
     {
@@ -217,7 +213,8 @@ struct Mupen64PlusControllerSettings : IControllerSettings
 {
     explicit Mupen64PlusControllerSettings(M64PlusHelper::Core& core, unsigned short joy_index):
         core_{&core}, joy_index_{joy_index}
-    {}
+    {
+    }
 
     bool get_device(std::string& device, int& device_index) override
     {
@@ -333,7 +330,7 @@ struct Mupen64PlusControllerSettings : IControllerSettings
         {
             auto section{open_section()};
 
-            auto[x, y]{parse_analog_xy(section.get_string("AnalogDeadzone"))};
+            auto [x, y]{parse_analog_xy(section.get_string("AnalogDeadzone"))};
 
             // Ignore the  y deadzone
             (void)y;
@@ -353,7 +350,7 @@ struct Mupen64PlusControllerSettings : IControllerSettings
         {
             auto section{open_section()};
 
-            auto[x, y]{parse_analog_xy(section.get_string("AnalogPeak"))};
+            auto [x, y]{parse_analog_xy(section.get_string("AnalogPeak"))};
 
             // Ignore the  y peak
             (void)y;
@@ -541,7 +538,8 @@ struct Mupen64PlusControllerSettings : IControllerSettings
         {
             auto section{open_section()};
 
-            auto absolute_deadzone{std::to_string(static_cast<unsigned>(deadzone * std::numeric_limits<std::int16_t>::max()))};
+            auto absolute_deadzone{
+                std::to_string(static_cast<unsigned>(deadzone * std::numeric_limits<std::int16_t>::max()))};
 
             section.set("AnalogDeadzone", std::string(absolute_deadzone + ',' + absolute_deadzone).c_str());
 
@@ -565,7 +563,8 @@ struct Mupen64PlusControllerSettings : IControllerSettings
         {
             auto section{open_section()};
 
-            auto absolute_peak{std::to_string(static_cast<unsigned>(peak * (std::numeric_limits<std::uint16_t>::max() / 2)))};
+            auto absolute_peak{
+                std::to_string(static_cast<unsigned>(peak * (std::numeric_limits<std::uint16_t>::max() / 2)))};
 
             section.set("AnalogPeak", std::string(absolute_peak + ',' + absolute_peak).c_str());
 
@@ -605,15 +604,10 @@ struct Mupen64PlusControllerSettings : IControllerSettings
 private:
     M64PlusHelper::ConfigSection open_section()
     {
-        return core_->config().open_section(
-            std::string("Input-SDL-Control" + std::to_string(joy_index_ + 1)).c_str()
-        );
+        return core_->config().open_section(std::string("Input-SDL-Control" + std::to_string(joy_index_ + 1)).c_str());
     }
 
-    void save()
-    {
-        core_->config().save(std::string("Input-SDL-Control" + std::to_string(joy_index_ + 1)).c_str());
-    }
+    void save() { core_->config().save(std::string("Input-SDL-Control" + std::to_string(joy_index_ + 1)).c_str()); }
 
     static std::string format_analog_xy(std::int16_t x, std::int16_t y)
     {
@@ -629,11 +623,10 @@ private:
 
         try
         {
-            auto xy{std::make_pair<unsigned long , unsigned long>(std::stoul(str), std::stoul(str.c_str() + c + 1))};
+            auto xy{std::make_pair<unsigned long, unsigned long>(std::stoul(str), std::stoul(str.c_str() + c + 1))};
             std::pair<std::int16_t, std::int16_t> ret(
                 std::clamp(xy.first, 0ul, (unsigned long)std::numeric_limits<std::int16_t>::max()),
-                std::clamp(xy.second, 0ul, (unsigned long)std::numeric_limits<std::int16_t>::max())
-            );
+                std::clamp(xy.second, 0ul, (unsigned long)std::numeric_limits<std::int16_t>::max()));
 
             return ret;
         }
@@ -643,10 +636,7 @@ private:
         }
     }
 
-    static const char* n64_button_str(N64Button btn)
-    {
-        return btn_enum2str_s[static_cast<unsigned>(btn)];
-    }
+    static const char* n64_button_str(N64Button btn) { return btn_enum2str_s[static_cast<unsigned>(btn)]; }
 
     static std::pair<sdl_input_t, sdl_input_t> parse_sdl_input(const std::string& str)
     {
@@ -658,8 +648,7 @@ private:
             return input;
 
         /// Splits string at ',' & ' '
-        auto get_args{[](std::string_view str) -> std::vector<std::string>
-        {
+        auto get_args{[](std::string_view str) -> std::vector<std::string> {
             std::vector<std::string> args;
 
             auto begin{str.find_first_of('(') + 1};
@@ -718,7 +707,7 @@ private:
             input.first.type = sdl_input_t::Type::JOY_AXIS;
             input.first.joy.index = std::stoi(args[0]);
             input.first.joy.value = (args[0].back() == '+' ? 1 : -1);
-            
+
             if(args.size() > 1)
             {
                 input.second.type = input.first.type;
@@ -728,8 +717,7 @@ private:
         }
         else if((begin = str.find("hat(")) != std::string::npos)
         {
-            auto parse_dir = [](std::string_view str, int& c)
-            {
+            auto parse_dir = [](std::string_view str, int& c) {
                 if(str == "Up")
                     c = SDL_HAT_UP;
                 else if(str == "Down")
@@ -782,18 +770,14 @@ private:
     static void set_button(M64PlusHelper::ConfigSection section, N64Button n64_button, sdl_input_t input)
     {
         // Special treatment for analog stick
-        if(n64_button == N64Button::ANALOG_DOWN  ||
-           n64_button == N64Button::ANALOG_UP ||
-           n64_button == N64Button::ANALOG_LEFT ||
-           n64_button == N64Button::ANALOG_RIGHT)
+        if(n64_button == N64Button::ANALOG_DOWN || n64_button == N64Button::ANALOG_UP ||
+           n64_button == N64Button::ANALOG_LEFT || n64_button == N64Button::ANALOG_RIGHT)
         {
-            auto set{[&section](N64Button n64_button, const std::string& str)
-            {
+            auto set{[&section](N64Button n64_button, const std::string& str) {
                 section.set(n64_button_str(n64_button), str.c_str());
             }};
 
-            auto get_pair{[&section, input, n64_button]() -> std::pair<sdl_input_t, sdl_input_t>
-            {
+            auto get_pair{[&section, input, n64_button]() -> std::pair<sdl_input_t, sdl_input_t> {
                 N64Button first{n64_button}, second{};
 
                 switch(n64_button)
@@ -818,7 +802,8 @@ private:
                 if(first == N64Button::ANALOG_RIGHT || first == N64Button::ANALOG_DOWN)
                     swap = true;
 
-                // Mupen64Plus doesn't support binding two different input types to the same axis (or two different hats)
+                // Mupen64Plus doesn't support binding two different input types to the same axis (or two different
+                // hats)
                 if(opposite_bind.type != input.type ||
                    (input.type == sdl_input_t::Type::JOY_HAT && input.joy.index != opposite_bind.joy.index))
                 {
@@ -832,38 +817,45 @@ private:
             }};
 
 
-            auto[first, second]{get_pair()};
+            auto [first, second]{get_pair()};
 
             switch(input.type != sdl_input_t::Type::NONE ? input.type : second.type)
             {
             case sdl_input_t::Type::KEY:
-                set(n64_button, "key(" +
-                    (first.type == sdl_input_t::Type::NONE ? "" : std::to_string(first.key_code)) + ',' +
-                    (second.type == sdl_input_t::Type::NONE ? "" : std::to_string(second.key_code)) + ")");
+                set(n64_button,
+                    "key(" + (first.type == sdl_input_t::Type::NONE ? "" : std::to_string(first.key_code)) + ',' +
+                        (second.type == sdl_input_t::Type::NONE ? "" : std::to_string(second.key_code)) + ")");
                 break;
             case sdl_input_t::Type::JOY_AXIS:
-                set(n64_button, "axis(" +
-                    (first.type == sdl_input_t::Type::NONE ? "" :
-                        std::to_string(first.joy.index) + (first.joy.value < 0 ? "-" : "+")) + std::string(",") +
-                    (second.type == sdl_input_t::Type::NONE ? "" :
-                        std::to_string(second.joy.index) + (second.joy.value < 0 ? "-" : "+")) + std::string(")"));
+                set(n64_button,
+                    "axis(" +
+                        (first.type == sdl_input_t::Type::NONE ?
+                             "" :
+                             std::to_string(first.joy.index) + (first.joy.value < 0 ? "-" : "+")) +
+                        std::string(",") +
+                        (second.type == sdl_input_t::Type::NONE ?
+                             "" :
+                             std::to_string(second.joy.index) + (second.joy.value < 0 ? "-" : "+")) +
+                        std::string(")"));
                 break;
             case sdl_input_t::Type::JOY_BUTTON:
-                set(n64_button, "button(" +
-                    (first.type == sdl_input_t::Type::NONE ? "" : std::to_string(first.joy.index)) + ',' +
-                    (second.type == sdl_input_t::Type::NONE ? "" : std::to_string(second.joy.index)) + ")");
+                set(n64_button,
+                    "button(" + (first.type == sdl_input_t::Type::NONE ? "" : std::to_string(first.joy.index)) + ',' +
+                        (second.type == sdl_input_t::Type::NONE ? "" : std::to_string(second.joy.index)) + ")");
                 break;
             case sdl_input_t::Type::JOY_HAT:
-                set(n64_button, "hat(" +
-                    (first.type == sdl_input_t::Type::NONE ? std::to_string(second.joy.index) + " " + sdl_hat_direction(second.joy.value) :
-                        std::to_string(first.joy.index) + " " + sdl_hat_direction(first.joy.value)) +
-                    (second.type == sdl_input_t::Type::NONE ? "" :
-                        " " + sdl_hat_direction(second.joy.value)) + ")");
+                set(n64_button,
+                    "hat(" +
+                        (first.type == sdl_input_t::Type::NONE ?
+                             std::to_string(second.joy.index) + " " + sdl_hat_direction(second.joy.value) :
+                             std::to_string(first.joy.index) + " " + sdl_hat_direction(first.joy.value)) +
+                        (second.type == sdl_input_t::Type::NONE ? "" : " " + sdl_hat_direction(second.joy.value)) +
+                        ")");
                 break;
             case sdl_input_t::Type::MOUSE_BUTTON:
-                set(n64_button, "mouse(" +
-                    (first.type == sdl_input_t::Type::NONE ? "" : std::to_string(first.mouse_button)) + ',' +
-                    (second.type == sdl_input_t::Type::NONE ? "" : std::to_string(second.mouse_button)) + ")");
+                set(n64_button,
+                    "mouse(" + (first.type == sdl_input_t::Type::NONE ? "" : std::to_string(first.mouse_button)) + ',' +
+                        (second.type == sdl_input_t::Type::NONE ? "" : std::to_string(second.mouse_button)) + ")");
                 break;
             case sdl_input_t::Type::NONE:
                 set(n64_button, "");
@@ -878,8 +870,7 @@ private:
                 return;
             }
 
-            auto set{[&section](N64Button n64_button, const std::string& str)
-            {
+            auto set{[&section](N64Button n64_button, const std::string& str) {
                 section.set(n64_button_str(n64_button), str.c_str());
             }};
 
@@ -889,15 +880,16 @@ private:
                 set(n64_button, "key(" + std::to_string(input.key_code) + ")");
                 break;
             case sdl_input_t::Type::JOY_AXIS:
-                set(n64_button, "axis(" + std::to_string(input.joy.index) +
-                    (input.joy.value < 0 ? "-" : "+") +
-                    std::string(",9830)")); // We'll use a default analog to digital trigger of 30%
+                set(n64_button,
+                    "axis(" + std::to_string(input.joy.index) + (input.joy.value < 0 ? "-" : "+") +
+                        std::string(",9830)")); // We'll use a default analog to digital trigger of 30%
                 break;
             case sdl_input_t::Type::JOY_BUTTON:
                 set(n64_button, "button(" + std::to_string(input.joy.index) + ")");
                 break;
             case sdl_input_t::Type::JOY_HAT:
-                set(n64_button, "hat(" + std::to_string(input.joy.index) + ' ' + sdl_hat_direction(input.joy.value) + ")");
+                set(n64_button,
+                    "hat(" + std::to_string(input.joy.index) + ' ' + sdl_hat_direction(input.joy.value) + ")");
                 break;
             case sdl_input_t::Type::MOUSE_BUTTON:
                 set(n64_button, "mouse(" + std::to_string(input.mouse_button) + ")");
@@ -920,18 +912,29 @@ private:
     unsigned short joy_index_;
 
     inline static const std::array<const char*, static_cast<unsigned>(N64Button::NUM_BUTTONS)> btn_enum2str_s{
-            "A Button", "B Button", "Z Trig", "L Trig", "R Trig",
-            "Start", "DPad U", "DPad D", "DPad L", "DPad R",
-            "C Button U", "C Button D", "C Button L", "C Button R",
-            "Y Axis", "Y Axis",
-            "X Axis", "X Axis"
-    };
+        "A Button",
+        "B Button",
+        "Z Trig",
+        "L Trig",
+        "R Trig",
+        "Start",
+        "DPad U",
+        "DPad D",
+        "DPad L",
+        "DPad R",
+        "C Button U",
+        "C Button D",
+        "C Button L",
+        "C Button R",
+        "Y Axis",
+        "Y Axis",
+        "X Axis",
+        "X Axis"};
 };
 
 
 Mupen64Plus::Mupen64Plus(const std::string& lib_path, std::string root_path, std::string data_path):
-    core_{lib_path, root_path, std::move(data_path)},
-    emulator_root_{std::move(root_path)}
+    core_{lib_path, root_path, std::move(data_path)}, emulator_root_{std::move(root_path)}
 {
     assert(!has_instance_s);
     has_instance_s = true;
@@ -993,7 +996,7 @@ void Mupen64Plus::load_rom(void* rom_data, std::size_t n)
 
     prepare_config();
 
-    auto ret {core_.do_cmd(M64CMD_ROM_OPEN, static_cast<int>(n), rom_data)};
+    auto ret{core_.do_cmd(M64CMD_ROM_OPEN, static_cast<int>(n), rom_data)};
     if(failed(ret))
     {
         std::system_error err(make_error_code(ret), "Failed to load ROM image");
@@ -1027,9 +1030,12 @@ void Mupen64Plus::start(const StateCallback& fn)
     assert(rom_loaded_);
 
     // Safely call callback
-    auto notify{[fn](Emulator::State state) noexcept
-    {
-        try{if(fn) fn(state);}
+    auto notify{[fn](Emulator::State state) noexcept {
+        try
+        {
+            if(fn)
+                fn(state);
+        }
         catch(...)
         {
             log_noexcept(spdlog::level::warn, "Exception in user state callback");
@@ -1050,8 +1056,7 @@ void Mupen64Plus::start(const StateCallback& fn)
     log_noexcept(spdlog::level::info, "Starting n64 emulation");
     state_ = MupenState::Starting;
 
-    emulation_thread_ = std::async([this, notify]()
-    {
+    emulation_thread_ = std::async([this, notify]() {
         try
         {
             attach_plugins();
@@ -1063,8 +1068,7 @@ void Mupen64Plus::start(const StateCallback& fn)
             throw;
         }
 
-        core_.set_state_callback([this, &notify](m64p_core_param param_type, int new_value) noexcept
-        {
+        core_.set_state_callback([this, &notify](m64p_core_param param_type, int new_value) noexcept {
             if(param_type != M64CORE_EMU_STATE)
                 return;
 
@@ -1168,7 +1172,10 @@ void Mupen64Plus::join(std::error_code& exit_code)
 
     // Emulator is stopped, join the emulation thread
     mutex_.lock();
-    try{emulation_thread_.get();}
+    try
+    {
+        emulation_thread_.get();
+    }
     catch(const std::system_error& e)
     {
         exit_code = e.code();
@@ -1245,14 +1252,20 @@ void Mupen64Plus::logical2physical(addr_t& addr)
 
 void Mupen64Plus::prepare_config()
 {
-#define IGNR(x) try{x}catch(const std::system_error&){}
+#define IGNR(x)                     \
+    try                             \
+    {                               \
+        x                           \
+    }                               \
+    catch(const std::system_error&) \
+    {                               \
+    }
 
     auto config{core_.config()};
 
     try
     {
-        config.list_sections([this, &config](const char* name)
-        {
+        config.list_sections([this, &config](const char* name) {
             // Disable certain hotkeys
             if(std::strcmp(name, "CoreEvents") == 0)
             {
@@ -1305,7 +1318,7 @@ void Mupen64Plus::log_noexcept(spdlog::level::level_enum lvl, const char* msg) n
     {
         logger()->log(lvl, msg);
     }
-    catch (...)
+    catch(...)
     {
     }
 }
@@ -1314,7 +1327,7 @@ bool Mupen64Plus::has_plugin(m64p_plugin_type type) const
 {
     std::lock_guard g(const_cast<Mupen64Plus*>(this)->mutex_);
 
-    if (plugins_[type])
+    if(plugins_[type])
         return true;
     return false;
 }
@@ -1329,12 +1342,10 @@ void Mupen64Plus::read_memory(addr_t addr, void* data, usize_t n)
     // First copy the aligned chunk
 
     // Calc unaligned leftovers
-    usize_t begin_left{BSWAP_SIZE - (addr % BSWAP_SIZE)},
-            end_left{(addr + n) % BSWAP_SIZE};
+    usize_t begin_left{BSWAP_SIZE - (addr % BSWAP_SIZE)}, end_left{(addr + n) % BSWAP_SIZE};
 
     // Address and length of aligned part
-    addr_t aligned_addr{addr + begin_left},
-           aligned_len{n - end_left - (aligned_addr - addr)};
+    addr_t aligned_addr{addr + begin_left}, aligned_len{n - end_left - (aligned_addr - addr)};
 
 
     // Copy & bswap the aligned chunk
@@ -1347,8 +1358,8 @@ void Mupen64Plus::read_memory(addr_t addr, void* data, usize_t n)
     u32 begin_word{};
     read(begin_addr, begin_word);
     Memory::bswap32(&begin_word, sizeof(begin_word));
-    std::copy_n(reinterpret_cast<u8*>(&begin_word) + (BSWAP_SIZE - begin_left),
-                begin_left, reinterpret_cast<u8*>(data));
+    std::copy_n(
+        reinterpret_cast<u8*>(&begin_word) + (BSWAP_SIZE - begin_left), begin_left, reinterpret_cast<u8*>(data));
 
     // Unaligned ending
     auto end_addr{aligned_addr + aligned_len};
@@ -1363,12 +1374,10 @@ void Mupen64Plus::write_memory(addr_t addr, const void* data, usize_t n)
     auto ptr{get_mem_ptr<u8>()};
 
     // Calc unaligned padding
-    usize_t begin_padding{addr % BSWAP_SIZE},
-            end_padding{BSWAP_SIZE - ((addr + n) % BSWAP_SIZE)};
+    usize_t begin_padding{addr % BSWAP_SIZE}, end_padding{BSWAP_SIZE - ((addr + n) % BSWAP_SIZE)};
 
     // Aligned chunk
-    addr_t aligned_addr{addr - begin_padding},
-           aligned_len{n + begin_padding + end_padding};
+    addr_t aligned_addr{addr - begin_padding}, aligned_len{n + begin_padding + end_padding};
 
 
     logical2physical(addr);
@@ -1529,4 +1538,4 @@ void Mupen64Plus::write(addr_t addr, f64 val)
     std::copy_n(reinterpret_cast<u8*>(&val), sizeof(val), ptr + addr);
 }
 
-} // Net64::Emulator
+} // namespace Net64::Emulator

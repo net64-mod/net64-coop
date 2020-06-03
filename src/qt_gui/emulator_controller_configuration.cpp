@@ -3,12 +3,10 @@
 
 namespace Frontend
 {
-
 using namespace Net64::Emulator;
 
 EmulatorControllerConfiguration::EmulatorControllerConfiguration(QWidget* parent):
-    QWidget(parent),
-    ui(new Ui::EmulatorControllerConfiguration)
+    QWidget(parent), ui(new Ui::EmulatorControllerConfiguration)
 {
     ui->setupUi(this);
 
@@ -20,25 +18,24 @@ EmulatorControllerConfiguration::EmulatorControllerConfiguration(QWidget* parent
     ui->mode_box->addItem(IControllerSettings::config_mode_to_string(ConfigurationMode::AUTO_NAMED_SDL_DEV));
     ui->mode_box->addItem(IControllerSettings::config_mode_to_string(ConfigurationMode::MANUAL));
 
-    connect(ui->mode_box, qOverload<int>(&QComboBox::currentIndexChanged), [this](int)
-    {
+    connect(ui->mode_box, qOverload<int>(&QComboBox::currentIndexChanged), [this](int) {
         if(!controller_settings_)
             return;
 
-        controller_settings_->set_config_mode(IControllerSettings::config_mode_from_string(ui->mode_box->currentText().toStdString()).value());
+        controller_settings_->set_config_mode(
+            IControllerSettings::config_mode_from_string(ui->mode_box->currentText().toStdString()).value());
         update_interface();
     });
 
-    connect(ui->pak_box, qOverload<int>(&QComboBox::currentIndexChanged), [this](int)
-    {
+    connect(ui->pak_box, qOverload<int>(&QComboBox::currentIndexChanged), [this](int) {
         if(!controller_settings_)
             return;
 
-        controller_settings_->set_pak(IControllerSettings::pak_from_string(ui->pak_box->currentText().toStdString()).value());
+        controller_settings_->set_pak(
+            IControllerSettings::pak_from_string(ui->pak_box->currentText().toStdString()).value());
     });
 
-    connect(ui->device_box, qOverload<int>(&QComboBox::currentIndexChanged), [this](int)
-    {
+    connect(ui->device_box, qOverload<int>(&QComboBox::currentIndexChanged), [this](int) {
         if(!controller_settings_ || ui->device_box->count() < 2)
             return;
 
@@ -72,7 +69,9 @@ EmulatorControllerConfiguration::EmulatorControllerConfiguration(QWidget* parent
             if(!joystick_)
             {
                 logger()->error("Failed to open joystick {}:{}: {}",
-                                ui->device_box->currentText().toStdString(), joy_idx, SDL_GetError());
+                                ui->device_box->currentText().toStdString(),
+                                joy_idx,
+                                SDL_GetError());
                 return;
             }
 
@@ -117,7 +116,7 @@ bool EmulatorControllerConfiguration::has_settings_handle() const
     return bool(controller_settings_);
 }
 
-void EmulatorControllerConfiguration::handle_sdl_event(const SDL_Event &event)
+void EmulatorControllerConfiguration::handle_sdl_event(const SDL_Event& event)
 {
     switch(event.type)
     {
@@ -131,10 +130,7 @@ void EmulatorControllerConfiguration::handle_sdl_event(const SDL_Event &event)
 
 void EmulatorControllerConfiguration::scan_devices()
 {
-    auto set_combobox = [](QComboBox& box, const std::string& str)
-    {
-        box.setCurrentText(QString::fromStdString(str));
-    };
+    auto set_combobox = [](QComboBox& box, const std::string& str) { box.setCurrentText(QString::fromStdString(str)); };
 
     if(!controller_settings_)
         return;
@@ -215,10 +211,7 @@ void EmulatorControllerConfiguration::load_settings()
     if(!controller_settings_)
         return;
 
-    auto set_combobox = [](QComboBox& box, const std::string& str)
-    {
-        box.setCurrentText(QString::fromStdString(str));
-    };
+    auto set_combobox = [](QComboBox& box, const std::string& str) { box.setCurrentText(QString::fromStdString(str)); };
 
     ConfigurationMode mode{};
     controller_settings_->get_config_mode(mode);
@@ -249,31 +242,26 @@ void EmulatorControllerConfiguration::load_settings()
 
 void EmulatorControllerConfiguration::setup_sdl_buttons()
 {
-    sdl_bind_buttons_ = {
-        ui->a_button_btn,
-        ui->b_button_btn,
-        ui->z_trigger_btn,
-        ui->l_trigger_btn,
-        ui->r_trigger_btn,
-        ui->start_btn,
-        ui->d_pad_up_btn,
-        ui->d_pad_down_btn,
-        ui->d_pad_left_btn,
-        ui->d_pad_right_btn,
-        ui->c_up_btn,
-        ui->c_down_btn,
-        ui->c_left_btn,
-        ui->c_right_btn,
-        ui->stick_up_btn,
-        ui->stick_down_btn,
-        ui->stick_left_btn,
-        ui->stick_right_btn
-    };
+    sdl_bind_buttons_ = {ui->a_button_btn,
+                         ui->b_button_btn,
+                         ui->z_trigger_btn,
+                         ui->l_trigger_btn,
+                         ui->r_trigger_btn,
+                         ui->start_btn,
+                         ui->d_pad_up_btn,
+                         ui->d_pad_down_btn,
+                         ui->d_pad_left_btn,
+                         ui->d_pad_right_btn,
+                         ui->c_up_btn,
+                         ui->c_down_btn,
+                         ui->c_left_btn,
+                         ui->c_right_btn,
+                         ui->stick_up_btn,
+                         ui->stick_down_btn,
+                         ui->stick_left_btn,
+                         ui->stick_right_btn};
 
-    auto set = [this](N64Button btn)
-    {
-        sdl_bind_buttons_[static_cast<std::size_t>(btn)]->n64_button = btn;
-    };
+    auto set = [this](N64Button btn) { sdl_bind_buttons_[static_cast<std::size_t>(btn)]->n64_button = btn; };
 
     for(std::size_t i{}; i < static_cast<std::size_t>(N64Button::NUM_BUTTONS); ++i)
     {
@@ -281,4 +269,4 @@ void EmulatorControllerConfiguration::setup_sdl_buttons()
     }
 }
 
-}
+} // namespace Frontend

@@ -11,15 +11,16 @@
 #include <memory>
 #include <optional>
 #include <string>
+
 #include <SDL_joystick.h>
 #include <SDL_keycode.h>
+
 #include "net64/logging.hpp"
 #include "types.hpp"
 
 
 namespace Net64::Emulator
 {
-
 enum struct State
 {
     RUNNING,
@@ -47,16 +48,10 @@ struct IEmulator
     virtual ~IEmulator() = default;
 
     /// Get audio settings object
-    virtual std::unique_ptr<IAudioSettings> audio_settings()
-    {
-        return nullptr;
-    }
+    virtual std::unique_ptr<IAudioSettings> audio_settings() { return nullptr; }
 
     /// Get video settings object
-    virtual std::unique_ptr<IVideoSettings> video_settings()
-    {
-        return nullptr;
-    }
+    virtual std::unique_ptr<IVideoSettings> video_settings() { return nullptr; }
 
     /// Get controller settings object for controller [controller 0 - 3]
     virtual std::unique_ptr<IControllerSettings> controller_settings(unsigned short controller)
@@ -192,15 +187,14 @@ struct IControllerSettings
             JOY_AXIS,
             JOY_HAT,
             JOY_BALL
-        }type;
+        } type;
 
-        union
-        {
+        union {
             struct
             {
                 int index;
                 int value;
-            }joy;
+            } joy;
             SDL_Keycode key_code;
             unsigned mouse_button;
         };
@@ -418,4 +412,4 @@ struct IControllerSettings
     virtual bool set_bind(N64Button btn, sdl_input_t sdl_input) = 0;
 };
 
-} // Net64::Emulator
+} // namespace Net64::Emulator

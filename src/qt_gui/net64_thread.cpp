@@ -20,9 +20,7 @@ static std::string error_msg(const std::system_error& e)
 
 namespace Frontend
 {
-
-Net64Obj::Net64Obj(AppSettings& config):
-    settings_{&config}
+Net64Obj::Net64Obj(AppSettings& config): settings_{&config}
 {
     timer_->setTimerType(Qt::PreciseTimer);
     timer_->setInterval(CLIENT_INTERV.count());
@@ -32,7 +30,6 @@ Net64Obj::Net64Obj(AppSettings& config):
 
 Net64Obj::~Net64Obj()
 {
-
 }
 
 void Net64Obj::set_config(AppSettings* config)
@@ -48,12 +45,10 @@ void Net64Obj::initialize_net64(Net64::Emulator::IEmulator* emu)
 
 void Net64Obj::connect(std::string ip, std::uint16_t port)
 {
-
 }
 
 void Net64Obj::disconnect()
 {
-
 }
 
 void Net64Obj::destroy_net64()
@@ -75,7 +70,10 @@ void Net64Obj::tick()
         if(Net64::Client::game_initialized(*memory_hdl_))
         {
             std::error_code ec;
-            try{client_ = Net64::Client(*memory_hdl_);}
+            try
+            {
+                client_ = Net64::Client(*memory_hdl_);
+            }
             catch(const std::system_error& e)
             {
                 logger()->error("Error while starting Net64 client: {}", error_msg(e));
@@ -202,4 +200,4 @@ void Net64Thread::o_net64_destroyed()
     net64_destroyed();
 }
 
-} // Frontend
+} // namespace Frontend

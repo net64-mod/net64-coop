@@ -3,33 +3,32 @@
 #include <future>
 #include <memory>
 #include <optional>
+
 #include <QLabel>
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
-#ifndef Q_MOC_RUN
+
 #include "common/sdl_event_handler.hpp"
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/emulatorsettings.hpp"
 #include "qt_gui/multiplayer_settings_window.hpp"
 #include "qt_gui/net64_thread.hpp"
-#endif
 
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
 namespace Frontend
 {
-
 struct MainWindow : QMainWindow
 {
     Q_OBJECT
 
 public:
-
     enum struct Page : int
     {
         SETUP,
@@ -96,8 +95,7 @@ private:
     void connect_once(Sender sender, Signal signal, Functor fn)
     {
         auto context_ptr{new QObject};
-        QObject::connect(sender, signal, context_ptr, [this, fn, context_ptr](auto&&... args) mutable
-        {
+        QObject::connect(sender, signal, context_ptr, [this, fn, context_ptr](auto&&... args) mutable {
             fn(std::forward<decltype(args)>(args)...);
             delete context_ptr;
         });
@@ -120,4 +118,4 @@ private:
     CLASS_LOGGER_("frontend")
 };
 
-} // Frontend
+} // namespace Frontend

@@ -5,15 +5,17 @@
 // Refer to the LICENSE file included.
 //
 
-#include "filesystem.hpp"
 #include <iostream>
+
 #include <QApplication>
-#include <QStandardPaths>
 #include <QDir>
+#include <QStandardPaths>
 #include <SDL.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+
 #include "build_info.hpp"
+#include "filesystem.hpp"
 #include "net64/net64.hpp"
 #include "qt_gui/app_settings.hpp"
 #include "qt_gui/main_window.hpp"
@@ -21,7 +23,6 @@
 
 namespace Frontend
 {
-
 using Net64::LoggerPtr;
 
 static void set_default_mupen_plugins(AppSettings& settings)
@@ -29,8 +30,7 @@ static void set_default_mupen_plugins(AppSettings& settings)
     using Net64::Emulator::M64PlusHelper::Plugin;
 
     // Helper function
-    auto set_plugin_if_empty{[](auto& config_string, const auto& file_path, auto plugin_type)
-    {
+    auto set_plugin_if_empty{[](auto& config_string, const auto& file_path, auto plugin_type) {
         if(config_string.empty())
         {
             if(file_path.string().find(AppSettings::M64P_DEFAULT_PLUGINS[plugin_type]) != std::string::npos &&
@@ -40,8 +40,7 @@ static void set_default_mupen_plugins(AppSettings& settings)
             }
             else
             {
-                Net64::get_logger("frontend")->warn("Did not find default {} plugin",
-                                  Plugin::type_str(M64PLUGIN_CORE));
+                Net64::get_logger("frontend")->warn("Did not find default {} plugin", Plugin::type_str(M64PLUGIN_CORE));
             }
         }
     }};
@@ -64,7 +63,8 @@ static void install_routine(AppSettings& settings)
         try
         {
             fs::create_directories(settings.m64p_default_plugin_dir());
-            fs::copy(settings.shipped_m64p_binaries_dir(), settings.m64p_default_plugin_dir(), fs::copy_options::recursive);
+            fs::copy(
+                settings.shipped_m64p_binaries_dir(), settings.m64p_default_plugin_dir(), fs::copy_options::recursive);
             std::cout << "Mupen64Plus bin dir missing. Copied default binaries\n";
         }
         catch(const std::exception& e)
@@ -86,11 +86,8 @@ static void install_routine(AppSettings& settings)
 
 static void setup_logging()
 {
-    auto global_log_file{
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-            QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString() +
-            "/log.txt", true)
-    };
+    auto global_log_file{std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).toStdString() + "/log.txt", true)};
     global_log_file->set_level(spdlog::level::debug);
 
     // Terminal logging
@@ -99,16 +96,14 @@ static void setup_logging()
     stdout_sink->set_level(spdlog::level::info);
 
     // Pass logging configuration to core
-    Net64::init_logging_sinks([global_log_file, stdout_sink]{
-        std::vector<spdlog::sink_ptr> sinks{
-            stdout_sink, global_log_file
-        };
+    Net64::init_logging_sinks([global_log_file, stdout_sink] {
+        std::vector<spdlog::sink_ptr> sinks{stdout_sink, global_log_file};
 
         return sinks;
     });
 }
 
-} // Frontend
+} // namespace Frontend
 
 
 int main(int argc, char* argv[])
@@ -148,12 +143,14 @@ int main(int argc, char* argv[])
         QApplication app{argc, argv};
 
         // Log system information
-        logger->info("Starting {} {}", QCoreApplication::applicationName().toStdString(),
+        logger->info("Starting {} {}",
+                     QCoreApplication::applicationName().toStdString(),
                      QCoreApplication::applicationVersion().toStdString());
-        logger->info("Operating system: {} {}", QSysInfo::productType().toStdString(),
-                     QSysInfo::productVersion().toStdString());
+        logger->info(
+            "Operating system: {} {}", QSysInfo::productType().toStdString(), QSysInfo::productVersion().toStdString());
         logger->info("Kernel: {} {}", QSysInfo::kernelType().toStdString(), QSysInfo::kernelVersion().toStdString());
-        logger->info("CPU architecture: buildtime={} runtime={}", QSysInfo::buildCpuArchitecture().toStdString(),
+        logger->info("CPU architecture: buildtime={} runtime={}",
+                     QSysInfo::buildCpuArchitecture().toStdString(),
                      QSysInfo::currentCpuArchitecture().toStdString());
         logger->info("Byte order: {}", QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "Little" : "Big");
         logger->info("Configuration folder: {}", settings.appdata_path);
@@ -174,5 +171,3 @@ int main(int argc, char* argv[])
 
     return ret;
 }
-
-
