@@ -6,6 +6,7 @@
 //
 
 #include <algorithm>
+#include <condition_variable>
 
 #include <SDL_joystick.h>
 #include <net64/error_codes.hpp>
@@ -1042,21 +1043,32 @@ void Mupen64Plus::start(const StateCallback& fn)
         }
     }};
 
-    // Take ownership of mutex_, this guarantees nobody will change state_ while we own mutex_.
-    // Because we are manually managing mutex_ no exceptions can be thrown while it's locked.
-    mutex_.lock();
-
-    // Do nothing if the emulator is not stopped
-    if(state_ != MupenState::Stopped)
     {
-        mutex_.unlock();
-        return;
+        std::lock_guard g(mutex_);
+        if(state_ != MupenState::Stopped)
+            return;
+
+        state_ = MupenState::Starting;
+        log_noexcept(spdlog::level::info, "Starting n64 emulation");
     }
 
-    log_noexcept(spdlog::level::info, "Starting n64 emulation");
-    state_ = MupenState::Starting;
+    std::mutex cv_mutex;
+    std::condition_variable cv;
+    bool emu_thread_owns_mutex{};
 
-    emulation_thread_ = std::async([this, notify]() {
+    emulation_thread_ = std::async([this, notify, &cv_mutex, &emu_thread_owns_mutex, &cv]() {
+        // Take ownership of mutex_, this guarantees nobody will change state_ while we own mutex_.
+        // Because we are manually managing mutex_ no exceptions can be thrown while it's locked.
+        mutex_.lock();
+        // Notify calling thread we now own mutex
+        // Mupen64Plus::start returns after that and the condition variable goes out of scope
+        // Never use it again after that!
+        {
+            std::unique_lock g(cv_mutex);
+            emu_thread_owns_mutex = true;
+        }
+        cv.notify_one();
+
         try
         {
             attach_plugins();
@@ -1129,6 +1141,12 @@ void Mupen64Plus::start(const StateCallback& fn)
         mutex_.unlock();
         notify(Emulator::State::JOINABLE);
     });
+
+    // Wait for emulation thread to acquire mutex
+    // This guarantees when this function returns mutex is always locked and nobody can mess with state_ until state_ ==
+    // Running
+    std::unique_lock g(cv_mutex);
+    cv.wait(g, [&emu_thread_owns_mutex] { return emu_thread_owns_mutex; });
 }
 
 void Mupen64Plus::stop()
