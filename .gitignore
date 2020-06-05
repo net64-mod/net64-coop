@@ -33,3 +33,16 @@
 
 # CMake build directories
 build*/
+cmake-build*/
+
+# Clion files
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/tasks.xml
+.idea/shelf/
+.idea/dataSources.ids
+.idea/datasources.xml
+.idea/*.iml
+.idea/modules.xml
+.idea/gradle.xml
+.idea/libraries/*.xml
