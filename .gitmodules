@@ -14,3 +14,7 @@
 [submodule "externals/open-vcdiff"]
     path = externals/open-vcdiff
     url = https://github.com/google/open-vcdiff.git
+
+[submodule "externals/cereal"]
+    path = externals/cereal
+    url = https://github.com/USCiLab/cereal.git

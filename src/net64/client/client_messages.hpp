@@ -7,21 +7,20 @@
 
 #pragma once
 
-#include "core/game/msg_queue.hpp"
+#include "net64/client/msg_queue.hpp"
 #include "types.hpp"
 
 
 namespace Net64::Game
 {
-
 struct ClientMessage
 {
     enum : MsgQueue::message_type_t
     {
         RESERVED = 0,
 
-        NUM_MESSAGES
+        COUNT
     };
 };
 
-} // Net64::Game
+} // namespace Net64::Game

@@ -10,16 +10,15 @@
 
 namespace Net64::Game::MsgQueue
 {
-
 inline void inc_loop(u8& index, u8 size)
 {
     if(++index == size)
         index = 0;
 }
 
-Receiver::Receiver(Memory::Ptr<SharedState> queue)
-:state_{queue}
-{}
+Receiver::Receiver(Memory::Ptr<SharedState> queue): state_{queue}
+{
+}
 
 bool Receiver::poll(n64_message_t& msg)
 {
@@ -32,13 +31,11 @@ bool Receiver::poll(n64_message_t& msg)
     }
 
     // Read message from slot
-    Memory::Ptr<n64_message_t> msg_ptr{
-        state_->field(&SharedState::msg_array) + index
-    };
+    Memory::Ptr<n64_message_t> msg_ptr{state_->field(&SharedState::msg_array) + index};
 
     msg.msg_type = msg_ptr->field(&n64_message_t::msg_type);
     auto hdl{msg_ptr.hdl()};
-    hdl.read_raw(msg_ptr->field(&n64_message_t::msg_data).ptr().offset(), msg.msg_data, sizeof(msg.msg_data));
+    hdl->read_raw(msg_ptr->field(&n64_message_t::msg_data).ptr().offset(), msg.msg_data, sizeof(msg.msg_data));
 
     // Slot is empty now
     state_->field(&SharedState::descriptor_array)[index] = SlotState::FREE;
@@ -51,9 +48,9 @@ bool Receiver::poll(n64_message_t& msg)
 }
 
 
-Sender::Sender(Memory::Ptr<SharedState> queue)
-:state_{queue}
-{}
+Sender::Sender(Memory::Ptr<SharedState> queue): state_{queue}
+{
+}
 
 bool Sender::send(n64_message_t msg)
 {
@@ -66,13 +63,11 @@ bool Sender::send(n64_message_t msg)
     }
 
     // Write message into slot
-    Memory::Ptr<n64_message_t> msg_ptr{
-        state_->field(&SharedState::msg_array) + index
-    };
+    Memory::Ptr<n64_message_t> msg_ptr{state_->field(&SharedState::msg_array) + index};
 
     msg_ptr->field(&n64_message_t::msg_type) = msg.msg_type;
     auto hdl{msg_ptr.hdl()};
-    hdl.write_raw((msg_ptr->field(&n64_message_t::msg_data)).ptr().offset(), msg.msg_data, sizeof(msg.msg_data));
+    hdl->write_raw((msg_ptr->field(&n64_message_t::msg_data)).ptr().offset(), msg.msg_data, sizeof(msg.msg_data));
 
     // Slot is in use now
     state_->field(&SharedState::descriptor_array)[index] = SlotState::IN_USE;
@@ -84,4 +79,4 @@ bool Sender::send(n64_message_t msg)
     return true;
 }
 
-}
+} // namespace Net64::Game::MsgQueue

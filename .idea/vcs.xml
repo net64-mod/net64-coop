@@ -2,8 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/externals/cereal" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/externals/enet-lib" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/externals/json" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/externals/mem64" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/externals/mupen-builds" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/externals/open-vcdiff" vcs="Git" />

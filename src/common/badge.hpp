@@ -8,16 +8,11 @@
 #pragma once
 
 
-namespace Common
-{
-
 template<typename T>
 struct Badge
 {
     friend T;
 
 private:
-    Badge(){}
+    Badge() {}
 };
-
-} // Common

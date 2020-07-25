@@ -5,19 +5,20 @@
 // Refer to the LICENSE file included
 //
 
-#include "message_listener.hpp"
+#include "message_handler.hpp"
+#include "net64/client.hpp"
+#include "net64/client/local_player.hpp"
 
 
 namespace Net64::Game
 {
-
-void MessageListener::push_message(const n64_message_t& message)
+void MessageHandler::push_message(Client& client, const n64_message_t& message)
 {
     if(subscribed_messages_[message.msg_type])
-        handle_message(message);
+        handle_message(client, message);
 }
 
-MessageListener::MessageListener(std::initializer_list<message_type_t> subscribed_messages)
+MessageHandler::MessageHandler(std::initializer_list<message_type_t> subscribed_messages)
 {
     for(auto message_type : subscribed_messages)
     {
@@ -25,7 +26,7 @@ MessageListener::MessageListener(std::initializer_list<message_type_t> subscribe
     }
 }
 
-void MessageListener::set_subsribed_messages(std::initializer_list<message_type_t> subscribed_messages)
+void MessageHandler::set_subsribed_messages(std::initializer_list<message_type_t> subscribed_messages)
 {
     subscribed_messages_.reset();
 
@@ -35,19 +36,19 @@ void MessageListener::set_subsribed_messages(std::initializer_list<message_type_
     }
 }
 
-void MessageListener::subscribe(message_type_t message)
+void MessageHandler::subscribe(message_type_t message)
 {
     subscribed_messages_[message] = true;
 }
 
-void MessageListener::unsubscribe(message_type_t message)
+void MessageHandler::unsubscribe(message_type_t message)
 {
     subscribed_messages_[message] = false;
 }
 
-bool MessageListener::is_subscribed(message_type_t message) const
+bool MessageHandler::is_subscribed(message_type_t message) const
 {
     return subscribed_messages_[message];
 }
 
-}
+} // namespace Net64::Game
