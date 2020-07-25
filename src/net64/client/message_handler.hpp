@@ -9,28 +9,34 @@
 
 #include <bitset>
 #include <initializer_list>
-#include "net64/game/game_messages.hpp"
-#include "net64/game/msg_queue.hpp"
 
+#include "net64/client/game_messages.hpp"
+#include "net64/client/msg_queue.hpp"
+
+
+namespace Net64
+{
+struct Client;
+struct LocalPlayer;
+} // namespace Net64
 
 namespace Net64::Game
 {
-
 /**
  * Base class for receiving game messages
  */
-struct MessageListener
+struct MessageHandler
 {
     using n64_message_t = MsgQueue::n64_message_t;
     using message_type_t = MsgQueue::message_type_t;
     static constexpr n64_usize_t MSG_DATA_LEN{MsgQueue::MSG_DATA_LEN};
 
-    virtual ~MessageListener() = default;
+    virtual ~MessageHandler() = default;
 
-    void push_message(const n64_message_t& message);
+    void push_message(Net64::Client& client, const n64_message_t& message);
 
 protected:
-    MessageListener(std::initializer_list<message_type_t> subscribed_messages);
+    MessageHandler(std::initializer_list<message_type_t> subscribed_messages);
 
     void set_subsribed_messages(std::initializer_list<message_type_t> subscribed_messages);
 
@@ -40,10 +46,10 @@ protected:
 
     bool is_subscribed(message_type_t message) const;
 
-    virtual void handle_message(const n64_message_t& message) = 0;
+    virtual void handle_message(Client& client, const n64_message_t& message) = 0;
 
 private:
-    std::bitset<GameMessage::NUM_MESSAGES> subscribed_messages_;
+    std::bitset<Game::Message::COUNT> subscribed_messages_;
 };
 
-} // Net64::Game
+} // namespace Net64::Game

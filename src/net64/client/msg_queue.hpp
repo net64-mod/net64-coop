@@ -8,6 +8,7 @@
 #pragma once
 
 #include <optional>
+
 #include "net64/memory/pointer.hpp"
 #include "types.hpp"
 
@@ -19,15 +20,14 @@
  */
 namespace Net64::Game::MsgQueue
 {
-
 using message_type_t = u16;
 constexpr n64_usize_t MSG_DATA_LEN{14};
 
 /// Message type
 struct n64_message_t
 {
-    message_type_t msg_type;    //< Reserved for type of message
-    u8 msg_data[MSG_DATA_LEN];  //< Message contents
+    message_type_t msg_type;   //< Reserved for type of message
+    u8 msg_data[MSG_DATA_LEN]; //< Message contents
 };
 
 /// State of one queue slot
@@ -42,7 +42,7 @@ struct SharedState
 {
     [[maybe_unused]] u8 game_index;                //< Index of game, unused in net code
     u8 client_index,                               //< Current read/write index
-       size;                                       //< Size of the queue
+        size;                                      //< Size of the queue
     Memory::NestedPtr<SlotState> descriptor_array; //< Pointer to descriptor array
     Memory::NestedPtr<n64_message_t> msg_array;    //< Pointer to message array
 };
@@ -83,4 +83,4 @@ private:
     Memory::Ptr<SharedState> state_;
 };
 
-}
+} // namespace Net64::Game::MsgQueue

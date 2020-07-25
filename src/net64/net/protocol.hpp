@@ -7,49 +7,67 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <system_error>
+
+#include <enet/enet.h>
 
 
 namespace Net64::Net
 {
+std::string format_ip4(ENetAddress addr);
 
-constexpr std::size_t CHANNEL_COUNT{1};
 constexpr std::uint32_t CONNECT_TIMEOUT{5000}, // ms
-                        DISCONNECT_TIMEOUT{3000}, // ms
-                        CLIENT_SERVICE_WAIT{100}, // ms
-                        SERVER_SERVICE_WAIT{100}; // ms
+    DISCONNECT_TIMEOUT{3000},                  // ms
+    CLIENT_SERVICE_WAIT{100},                  // ms
+    SERVER_SERVICE_WAIT{100};                  // ms
 
 constexpr std::uint32_t PROTO_VER{0x0};
 
-struct S_DisconnectCode
+using player_id_t = std::uint16_t;
+
+
+enum struct Channel : std::uint8_t
 {
-    enum _s_disconnect_code_enum : std::uint32_t
-    {
-        KICKED = 1,
-        BANNED,
-        SERVER_SHUTDOWN,
-        NOT_ACCEPTED,
-        INCOMPATIBLE
-    };
+    DEFAULT,
+    META,
+
+    COUNT
 };
 
-struct C_DisconnectCode
+std::uint8_t channel_count();
+
+inline std::array<std::uint32_t, static_cast<std::size_t>(Channel::COUNT)> CHANNEL_FLAGS{ENET_PACKET_FLAG_RELIABLE,
+                                                                                         ENET_PACKET_FLAG_RELIABLE};
+
+std::uint32_t channel_flags(Channel channel);
+
+enum struct S_DisconnectCode
 {
-    enum : std::uint32_t
-    {
-        USER_DISCONNECT = 1
-    };
+    KICKED = 1,
+    BANNED,
+    SERVER_SHUTDOWN,
+    NOT_ACCEPTED,
+    INCOMPATIBLE,
+    PROTOCOL_VIOLATION,
+    SERVER_FULL
 };
 
-std::error_code make_error_code(Net64::Net::S_DisconnectCode::_s_disconnect_code_enum e);
+enum struct C_DisconnectCode
+{
+    USER_DISCONNECT = 1
+};
 
-}
+std::error_code make_error_code(Net64::Net::S_DisconnectCode e);
+
+} // namespace Net64::Net
 
 namespace std
 {
-
 template<>
-struct is_error_code_enum<Net64::Net::S_DisconnectCode::_s_disconnect_code_enum> : std::true_type{};
+struct is_error_code_enum<Net64::Net::S_DisconnectCode> : std::true_type
+{
+};
 
-}
+} // namespace std

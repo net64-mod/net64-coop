@@ -18,8 +18,6 @@ add_executable(net64_qt_gui
                 vcdiff_patcher.hpp
                 patch_dialog.hpp
                 patch_dialog.cpp
-                net64_thread.hpp
-                net64_thread.cpp
                 emulatorsettings.cpp
                 emulatorsettings.hpp
                 emulator_audio_configuration.hpp
